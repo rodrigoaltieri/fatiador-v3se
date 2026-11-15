@@ -215,6 +215,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); height: 28px; }
           <label class="btn primary" for="file">Escolher arquivo</label>
           <button class="btn" id="ex-cube">Cubo 20 mm</button>
           <button class="btn" id="ex-cyl">Cilindro Ø20</button>
+          <button class="btn" id="ex-benchy">3DBenchy</button>
         </div>
       </div>
     </div>
@@ -932,6 +933,21 @@ function cylTris(r, h, n) {
 }
 $('ex-cube').addEventListener('click', function () { loadModel('cubo_20mm', boxTris(20)); });
 $('ex-cyl').addEventListener('click', function () { loadModel('cilindro_20mm', cylTris(10, 20, 128)); });
+// 3DBenchy original (CC0), baixado só quando pedido: são 11 MB (modelos/LEIA-ME.md)
+$('ex-benchy').addEventListener('click', async function () {
+  var b = $('ex-benchy');
+  if (b.disabled) return;
+  b.disabled = true; setStatus('Baixando o 3DBenchy (11 MB)…'); setProg(0.05);
+  try {
+    var r = await fetch('modelos/3DBenchy.stl');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    var tris = parseSTL(await r.arrayBuffer());
+    loadModel('3DBenchy', tris, null, meshWarning(tris));
+  } catch (e) {
+    setStatus('Não consegui baixar o 3DBenchy (' + (e.message || e) + '). Na primeira vez precisa de internet; depois ele fica guardado no aparelho.');
+  }
+  setProg(null); b.disabled = false;
+});
 
 /* ================= Fatiamento ================= */
 var worker = null, workerOK = true, result = null, busy = false;

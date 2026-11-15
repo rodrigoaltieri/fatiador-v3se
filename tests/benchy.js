@@ -1,5 +1,5 @@
 const T = require('./lib.js'), fs = require('fs');
-const buf = fs.readFileSync(process.argv[2] || require('path').join(__dirname, 'models', 'benchy.stl'));
+const buf = fs.readFileSync(process.argv[2] || require('path').join(__dirname, '..', 'modelos', '3DBenchy.stl'));
 const n = buf.readUInt32LE(80); if (84 + n * 50 !== buf.length) throw new Error('não é STL binário');
 const tris = new Float32Array(n * 9);
 for (let i = 0; i < n; i++) for (let j = 0; j < 9; j++) tris[i * 9 + j] = buf.readFloatLE(84 + i * 50 + 12 + j * 4);

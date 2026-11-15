@@ -25,6 +25,13 @@ async def main():
                 st = await pg.inner_text('#status')
                 if st.startswith('G-code pronto') or st.startswith('Falhou'): return st
             return 'TIMEOUT: ' + await pg.inner_text('#status')
+        await pg.click('#ex-benchy')
+        for _ in range(40):
+            await pg.wait_for_timeout(250)
+            st = await pg.inner_text('#status')
+            if not st.startswith('Baixando'): break
+        print('benchy:', st, '|', await pg.inner_text('#hud'))
+        await pg.reload(); await pg.wait_for_timeout(1200)
         await pg.click('#ex-cyl'); await pg.wait_for_timeout(200)
         await pg.click('#go'); print('fatiar:', await wait_slice(), '|', await pg.inner_text('#r-time'))
         async with pg.expect_download() as d: await pg.click('#dl-zip')
