@@ -11,6 +11,7 @@
 | 5. Vazão máxima | 14/11 | Falha a partir de 16 mm³/s → **13 mm³/s** |
 | 6. Cantos e costura | 14–15/11 | Inconclusivo: todos os cubos com cantos estufados, a velocidade não mudou nada. Lados de 19,9 a 20,1 mm. Costura na quina ficou melhor no cubo |
 | Cubo v12 × cubo do Orca | 15/11 | **Os dois com as mesmas protuberâncias nos cantos.** O G-code do próprio OrcaSlicer 2.5.1, com o perfil calibrado, dá o mesmo defeito: a causa não é a trajetória do fatiador |
+| 6. Cantos (teste novo) | — | Falta. Quatro cubos, uma mudança em cada: referência, parede externa primeiro, cantos mais rápidos, fluxo 6% menor |
 | 7. Encaixe | — | Falta |
 | 8. Aceleração (ghosting) | — | Falta |
 
@@ -37,6 +38,7 @@
 - **v10:** costura "atrás, no meio da face"; teste de cantos e costura.
 - **v11:** limites de máquina iguais aos do Orca (`M205 J0.100` etc.), aceleração de retração 500.
 - **v12 (15/11/2026):** comparação com o OrcaSlicer 2.5.1 real (`docs/comparacao-orca.md`). Paredes internas de 0,45 mm e distância externa → interna do Orca; retração e limpeza sempre que sai da parede externa; salto até a externa com a aceleração dela; costura alinhada entre camadas; folga de 0,04 mm em todas as paredes; tempo mínimo de camada cortando primeiro os trechos mais rápidos; preenchimento em linhas ligadas de 0,45 mm; marcadores `;TYPE:` do Orca. No cubo de 20 mm as paredes coincidem com as do Orca (desvio 0,0000 mm). Benchy: 69,6 min estimados (v11: 66,4), fatia em ~2,3 s.
+- **v13 (15/11/2026):** ajustes "Ordem das paredes" (internas primeiro ou externa primeiro) e "Velocidade nos cantos" (jerk 10 / J0,100 do Orca, ou jerk 20 / J0,250), os dois com o padrão do Orca. Teste 6 refeito: em vez de velocidade e posição da costura (que não mudaram nada), quatro cubos de 20 × 20 × 12 mm que mudam uma coisa cada. O G-code padrão não mudou: as paredes do cubo continuam coincidindo com as do Orca.
 - **GitHub Pages (15/11/2026):** bibliotecas locais, download direto de `.gcode`, exportar/importar ajustes, perfil calibrado inicial, funciona sem internet.
 
 ## Modelos com defeito (15/11/2026)

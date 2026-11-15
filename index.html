@@ -308,7 +308,7 @@ var STORE = 'fatiador-v3se-cfg-v1';
 
 /* ================= Perfil ================= */
 var DEFAULTS = {
-  layerH: 0.2, firstH: 0.2, lineW: 0.42, innerW: 0.45, infillW: 0.45, firstW: 0.5,
+  layerH: 0.2, firstH: 0.2, lineW: 0.42, innerW: 0.45, infillW: 0.45, firstW: 0.5, wallOrder: 'inner', corner: 'orca',
   walls: 3, top: 5, bottom: 4, infill: 15, pattern: 'lines', overlap: 0.15,
   supports: 'off', supAngle: 35, supDensity: 20, supXY: 0.6, supIface: true,
   brim: 0, skirt: 1, skirtDist: 3,
@@ -400,6 +400,8 @@ var SECTIONS = [
     { title: 'Resfriamento e costura', fields: [
       { k: 'minLayerTime', label: 'Tempo mínimo por camada', type: 'num', min: 0, max: 30, step: 1, unit: 's' },
       { k: 'minSpeed', label: 'Velocidade mínima', type: 'num', min: 5, max: 50, step: 5, unit: 'mm/s' },
+      { k: 'wallOrder', label: 'Ordem das paredes', hint: 'Externa primeiro deixa as medidas e os cantos mais certos, mas marca mais os balanços', type: 'select', options: [['inner', 'Internas primeiro (padrão do Orca)'], ['outer', 'Externa primeiro']] },
+      { k: 'corner', label: 'Velocidade nos cantos', hint: 'Rápida freia menos em cada canto: menos plástico acumulado, mais vibração', type: 'select', options: [['orca', 'Padrão do Orca (jerk 10)'], ['fast', 'Rápida (jerk 20)']] },
       { k: 'seam', label: 'Posição da costura', type: 'select', options: [['rear', 'Atrás, na quina'], ['face', 'Atrás, no meio da face'], ['nearest', 'Mais próxima']] },
       { k: 'scarf', label: 'Costura em rampa (scarf)', hint: 'Em contornos curvos, dilui a emenda ao longo de 15 mm', type: 'toggle' }
     ]}
@@ -945,14 +947,14 @@ function invalidate() {
 function getWorker() {
   if (!workerOK) return null;
   if (worker) return worker;
-  try { worker = new Worker('worker.v12.js'); } catch (e) { workerOK = false; return null; }
+  try { worker = new Worker('worker.v13.js'); } catch (e) { workerOK = false; return null; }
   return worker;
 }
 function loadScript(src) {
   return new Promise(function (res, rej) { var s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = function () { rej(new Error('não consegui carregar ' + src + '. Verifique a conexão')); }; document.head.appendChild(s); });
 }
 async function sliceMain(job) {
-  if (!window.SlicerCore) { await loadScript('vendor/clipper.js'); await loadScript('core.v12.js'); }
+  if (!window.SlicerCore) { await loadScript('vendor/clipper.js'); await loadScript('core.v13.js'); }
   await new Promise(function (r) { setTimeout(r, 30); });
   return window.SlicerCore.slice(job, function () {});
 }
@@ -968,7 +970,7 @@ $('go').addEventListener('click', async function () {
     if (M.cal.retSchedule) jc.retSchedule = M.cal.retSchedule;
     if (M.cal.speedSchedule) jc.speedSchedule = M.cal.speedSchedule;
     if (M.cal.accSchedule) jc.accSchedule = M.cal.accSchedule;
-    if (M.cal.loopZones) jc.loopZones = M.cal.loopZones.map(function (z) { return { x0: z.x0 + M.off[0], x1: z.x1 + M.off[0], y0: z.y0 + M.off[1], y1: z.y1 + M.off[1], outer: z.outer, seam: z.seam }; });
+    if (M.cal.loopZones) jc.loopZones = M.cal.loopZones.map(function (z) { return { x0: z.x0 + M.off[0], x1: z.x1 + M.off[0], y0: z.y0 + M.off[1], y1: z.y1 + M.off[1], outer: z.outer, seam: z.seam, order: z.order, corner: z.corner }; });
     if (M.cal.zones) jc.flowZones = M.cal.zones.map(function (z) { return { x0: z.x0 + M.off[0], x1: z.x1 + M.off[0], y0: z.y0 + M.off[1], y1: z.y1 + M.off[1], f: z.f }; });
   }
   var job = { cfg: jc, tris: M.tris.slice() };
@@ -1238,21 +1240,24 @@ function genGhost() {
   });
   return { tris: cat(parts), cal: { label: 'aceleração 500 → 2500', over: { walls: 2, infill: 0, top: 0, bottom: 0, minLayerTime: 0, supports: 'off', brim: 0, sp: { outer: 100, inner: 100 } }, accSchedule: sch } };
 }
+// teste dos cantos: cada cubo muda uma coisa só em relação ao perfil
 var CORNERS = [
-  { outer: 40, seam: 'rear', pos: 'frente esquerda' },
-  { outer: 25, seam: 'rear', pos: 'frente direita' },
-  { outer: 40, seam: 'face', pos: 'fundo esquerda' },
-  { outer: 25, seam: 'face', pos: 'fundo direita' }
+  { t: 'igual ao perfil (referência)' },
+  { t: 'parede externa primeiro', order: 'outer' },
+  { t: 'cantos mais rápidos (jerk 20)', corner: 'fast' },
+  { t: 'fluxo 6% menor', flow: 0.94 }
 ];
 function genCorner() {
-  var parts = [], zones = [], S = 20, G = 12;
+  var parts = [], zones = [], fz = [], S = 20, H = 12, G = 12;
   CORNERS.forEach(function (c, i) {
     var x = (i % 2) * (S + G), y = Math.floor(i / 2) * (S + G);
-    parts.push(prism(rect(x, y, x + S, y + S), 0, S));
-    for (var k = 0; k <= i; k++) parts.push(prism(circ(x + 4 + k * 4, y + 4, 1.2, 24), S - 0.01, S + 1));
-    zones.push({ x0: x - 1, y0: y - 1, x1: x + S + 1, y1: y + S + 1, outer: c.outer, seam: c.seam });
+    parts.push(prism(rect(x, y, x + S, y + S), 0, H));
+    for (var k = 0; k <= i; k++) parts.push(prism(circ(x + 4 + k * 4, y + 4, 1.2, 24), H - 0.01, H + 1));
+    var z = { x0: x - 1, y0: y - 1, x1: x + S + 1, y1: y + S + 1 };
+    zones.push({ x0: z.x0, y0: z.y0, x1: z.x1, y1: z.y1, order: c.order || 'inner', corner: c.corner || 'orca' });
+    if (c.flow) fz.push({ x0: z.x0, y0: z.y0, x1: z.x1, y1: z.y1, f: c.flow });
   });
-  return { tris: cat(parts), cal: { label: 'cantos e costura', over: { supports: 'off', brim: 0 }, loopZones: zones } };
+  return { tris: cat(parts), cal: { label: 'cantos', over: { supports: 'off', brim: 0, wallOrder: 'inner', corner: 'orca' }, loopZones: zones, zones: fz } };
 }
 function genFit() {
   var parts = [prism(rect(0, 0, 80, 18), 0, 4), prism(rect(-4, 6, 0.5, 12), 0, 2), prism(circ(40, -12, 5, 96), 0, 10)];
@@ -1298,13 +1303,19 @@ var CAL_STEPS = [
     pickLabel: 'Primeira faixa com falhas',
     options: function () { return VOLS.map(function (v, i) { return { v: v, t: 'Faixa ' + (i + 1) + (i === 0 ? ' (de baixo)' : '') + ' · ' + v + ' mm³/s' }; }).concat([{ v: 0, t: 'Nenhuma falhou' }]); },
     apply: function (v) { var good = v === 0 ? 20 : v - 2; cfg.maxVol = Math.max(4, Math.round(good * 0.9)); return 'Vazão máx. ' + cfg.maxVol + ' mm³/s'; } },
-  { id: 'corner', num: '6', title: 'Cantos e costura', tag: '≈ 1h20 · 17 g',
-    fixes: 'Cantos estufados e costura marcada nas paredes.',
-    how: 'Quatro cubos de 20 mm. O topo de cada um tem de 1 a 4 marquinhas. <b>1 marquinha:</b> parede externa a 40 mm/s, costura na quina. <b>2:</b> 25 mm/s, costura na quina. <b>3:</b> 40 mm/s, costura no meio da face de trás. <b>4:</b> 25 mm/s, costura no meio da face. Compare os cantos e a costura com os dedos e contra a luz e escolha o cubo que ficou melhor. Com paquímetro, meça também X e Y de um deles: isso serve para a compensação XY no teste seguinte.',
-    gen: genCorner, name: 'cal_6_cantos_costura',
-    pickLabel: 'Cubo que ficou melhor',
-    options: function () { return CORNERS.map(function (c, i) { return { v: i, t: (i + 1) + (i ? ' marquinhas' : ' marquinha') + ' · ' + c.outer + ' mm/s, costura ' + (c.seam === 'face' ? 'no meio da face' : 'na quina') }; }); },
-    apply: function (v) { var c = CORNERS[v]; cfg.sp.outer = c.outer; cfg.seam = c.seam; return 'Parede externa ' + c.outer + ' mm/s, costura ' + (c.seam === 'face' ? 'no meio da face' : 'na quina'); } },
+  { id: 'corner', num: '6', title: 'Cantos', tag: '≈ 45 min · 11 g',
+    fixes: 'Cantos estufados (uma “orelhinha” para fora em cada quina).',
+    how: 'Quatro cubos de 20 × 20 × 12 mm, cada um mudando <b>uma coisa só</b>. O topo de cada um tem de 1 a 4 marquinhas. <b>1 marquinha:</b> igual ao perfil, serve de referência. <b>2:</b> parede externa impressa antes das internas. <b>3:</b> cantos mais rápidos (o bico freia menos em cada quina). <b>4:</b> fluxo 6% menor. Passe o dedo nas quinas e olhe de cima contra a luz: escolha o cubo com os cantos mais retos. Se todos ficaram iguais ao de 1 marquinha, a causa não é nenhuma dessas três.',
+    gen: function () { calState.corner = Object.assign(calState.corner || {}, { base: cfg.flow }); return genCorner(); }, name: 'cal_6_cantos',
+    pickLabel: 'Cubo com os cantos mais retos',
+    options: function () { return CORNERS.map(function (c, i) { return { v: i, t: (i + 1) + (i ? ' marquinhas' : ' marquinha') + ' · ' + c.t }; }).concat([{ v: 9, t: 'Todos iguais' }]); },
+    apply: function (v) {
+      var c = CORNERS[v];
+      if (!c || v === 0) return v === 0 ? 'Perfil mantido (a referência foi a melhor)' : 'Nenhuma das três mudanças ajudou';
+      if (c.order) { cfg.wallOrder = c.order; return 'Parede externa primeiro'; }
+      if (c.corner) { cfg.corner = c.corner; return 'Cantos mais rápidos (jerk 20)'; }
+      var b = (calState.corner && calState.corner.base) || cfg.flow; cfg.flow = r3(b * c.flow); return 'Fluxo ' + br(cfg.flow, 3) + ' (−6%)';
+    } },
   { id: 'fit', num: '7', title: 'Encaixe e medidas', tag: '≈ 25 min · 4 g',
     fixes: 'Peças que não encaixam.',
     how: 'Uma placa com 6 furos para um pino de 10 mm, que é impresso junto. As folgas vão de <b>0,0 mm (lado da orelha)</b> a <b>0,5 mm</b>, de 0,1 em 0,1. Teste o pino em cada furo e escolha o menor em que ele entra com a mão, sem forçar. Assim, furos desenhados com a medida exata passam a encaixar.',

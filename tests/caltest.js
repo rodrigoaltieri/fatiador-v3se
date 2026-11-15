@@ -11,7 +11,7 @@ for (const name of Object.keys(gens)) {
   if (g.cal.retSchedule) cfg.retSchedule = g.cal.retSchedule;
   if (g.cal.speedSchedule) cfg.speedSchedule = g.cal.speedSchedule;
   if (g.cal.accSchedule) cfg.accSchedule = g.cal.accSchedule;
-  if (g.cal.loopZones) cfg.loopZones = g.cal.loopZones.map(z => ({ x0: z.x0 + P.off[0], x1: z.x1 + P.off[0], y0: z.y0 + P.off[1], y1: z.y1 + P.off[1], outer: z.outer, seam: z.seam }));
+  if (g.cal.loopZones) cfg.loopZones = g.cal.loopZones.map(z => ({ x0: z.x0 + P.off[0], x1: z.x1 + P.off[0], y0: z.y0 + P.off[1], y1: z.y1 + P.off[1], outer: z.outer, seam: z.seam, order: z.order, corner: z.corner }));
   if (g.cal.zones) cfg.flowZones = g.cal.zones.map(z => ({ x0: z.x0 + P.off[0], x1: z.x1 + P.off[0], y0: z.y0 + P.off[1], y1: z.y1 + P.off[1], f: z.f }));
   const t0 = Date.now(), r = S.slice({ cfg, tris: P.tris }, () => {});
   const c = T.check(r.gcode, cfg, { noVolLimit: name === 'vol' });
