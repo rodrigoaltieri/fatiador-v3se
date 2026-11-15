@@ -1,0 +1,12 @@
+{
+  "type": "machine",
+  "name": "Rodrigo V3SE 0.4",
+  "inherits": "Creality Ender-3 V3 SE 0.4 nozzle",
+  "from": "User",
+  "version": "2.5.1.0",
+  "printer_settings_id": "Rodrigo V3SE 0.4",
+  "retraction_length": ["1.2"],
+  "retraction_speed": ["40"],
+  "deretraction_speed": ["30"],
+  "z_hop": ["0.2"]
+}
