@@ -10,6 +10,7 @@
 | 4. Retração | 14/11 | **1,2 mm** |
 | 5. Vazão máxima | 14/11 | Falha a partir de 16 mm³/s → **13 mm³/s** |
 | 6. Cantos e costura | 14–15/11 | Inconclusivo: todos os cubos com cantos estufados, a velocidade não mudou nada. Lados de 19,9 a 20,1 mm. Costura na quina ficou melhor no cubo |
+| Cubo v12 × cubo do Orca | 15/11 | **Os dois com as mesmas protuberâncias nos cantos.** O G-code do próprio OrcaSlicer 2.5.1, com o perfil calibrado, dá o mesmo defeito: a causa não é a trajetória do fatiador |
 | 7. Encaixe | — | Falta |
 | 8. Aceleração (ghosting) | — | Falta |
 
@@ -20,7 +21,7 @@
 - **Ponta da rampa enrolada na torre de temperatura:** as três paredes começavam no canto em balanço → costura evita balanço e paredes internas começam junto da externa (v5).
 - **Material pendurado no bico e marca onde a impressão acabava:** fim do G-code desligava tudo com o bico parado em cima da peça → fim igual ao oficial do Orca (v8).
 - **Costura ruim no teste de vazão (parede única):** recuo "para dentro" sobre o ar → só recua quando há plástico por dentro; teste passou a usar modo vaso como o Orca (v9).
-- **Cantos estufados:** G-code não escrevia limites de máquina (desvio de junção) → limites iguais aos do Orca (v11). A comparação com o Orca real mostrou que a parede externa já era idêntica; o que diferia era a parede interna 0,037 mm mais perto da externa, o salto brusco até a externa e pontinhos de sólido nas quinas do preenchimento → igualados ao Orca (v12). A confirmar imprimindo o cubo do v12 e o do Orca.
+- **Cantos estufados:** G-code não escrevia limites de máquina (desvio de junção) → limites iguais aos do Orca (v11). A comparação com o Orca real mostrou que a parede externa já era idêntica; o que diferia era a parede interna 0,037 mm mais perto da externa, o salto brusco até a externa e pontinhos de sólido nas quinas do preenchimento → igualados ao Orca (v12). Impressos os dois cubos (v12 e o do próprio Orca) em 15/11: **mesmas protuberâncias nos dois**. O defeito vem de algo que os dois arquivos têm em comum (valores do perfil calibrado: fluxo, temperatura, velocidade e aceleração da parede externa, ordem das paredes) ou da máquina (firmware sem linear advance, correias, filamento). Em aberto.
 - **Costura em zigue-zague em peças redondas** (visto na comparação, não em impressão): a costura andava até 2 mm de lado entre camadas do cilindro, porque emendas de trechos curtos contavam como quina → quina medida numa janela de 0,6 mm e costura presa à da camada de baixo (v12).
 
 ## Versões do motor

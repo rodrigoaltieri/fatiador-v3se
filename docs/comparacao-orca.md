@@ -178,3 +178,7 @@ Como ler:
 | Os dois com cantos bons | Resolvido: eram os limites de máquina (v11) e as paredes internas (v12) |
 | O do Orca bom, o do v12 estufado | A causa está no que ainda é diferente: limpeza, z-hop vertical ou tempo mínimo de camada. Próximo passo: copiar esses três |
 | Os dois estufados | Não é o fatiador. Olhar temperatura, fluxo e o firmware (`M503` mostra o desvio de junção e o jerk em uso; sem linear advance o canto sempre recebe um pouco mais de plástico) |
+
+### Resultado (15/11/2026)
+
+Os dois cubos saíram com as mesmas protuberâncias nos cantos. É a terceira linha da tabela: a trajetória do fatiador está descartada como causa. O que os dois arquivos têm em comum são os valores do perfil calibrado e a máquina.
