@@ -17,7 +17,7 @@ Responda e escreva textos de interface em português do Brasil.
 - `sw.js`: service worker, rede primeiro e cache como reserva.
 - `perfil-inicial.json`: ajustes e resultados de calibração do Rodrigo, carregados quando o aparelho não tem nada salvo.
 - `ref/orca/`: perfis oficiais da V3 SE no OrcaSlicer 2.5.1 (máquina, processo, filamento e os perfis de que herdam). Vêm do OrcaSlicer (AGPL-3.0).
-- `ref/orca/gcode/`: G-code gerado pelo OrcaSlicer 2.5.1 de verdade com o perfil calibrado (cubo de 20 mm e cilindro Ø20). É a referência do teste `tests/orca.js`; o do cubo pode ser impresso direto para comparar com o nosso.
+- `ref/orca/gcode/`: G-code gerado pelo OrcaSlicer 2.5.1 de verdade com o perfil calibrado (cubo de 20 mm e cilindro Ø20). É a referência do teste `tests/orca.js`; o do cubo pode ser impresso direto para comparar com o nosso. No site, o botão "Baixar cubo fatiado pelo Orca" no fim da aba Calibração baixa esse arquivo com o nome certo (pelo github.com o iPad salva como `.txt`).
 - `tests/`: verificador de G-code e modelos de teste (Node) e teste de navegador (Playwright).
 - `tests/orca/`: como rodar o OrcaSlicer e o three-slicer e comparar os G-codes por tipo de trecho.
 - `docs/historico.md`: resultados das impressões e o que cada versão mudou.

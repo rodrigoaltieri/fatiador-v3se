@@ -1377,6 +1377,24 @@ function renderCal() {
     list.appendChild(card);
   });
   root.appendChild(list);
+  if (STANDALONE) {
+    // cubo de 20 mm fatiado pelo OrcaSlicer de verdade, para imprimir e comparar com o nosso
+    var orca = document.createElement('section'); orca.className = 'sec';
+    orca.innerHTML = '<p class="note"><b>Comparar com o OrcaSlicer:</b> o mesmo cubo de 20 mm, fatiado pelo OrcaSlicer 2.5.1 com o seu perfil calibrado. Imprima este e o cubo do fatiador (botão “Cubo 20 mm”) e compare os cantos.</p>';
+    var ob = document.createElement('button'); ob.className = 'btn small'; ob.id = 'dl-orca'; ob.textContent = 'Baixar cubo fatiado pelo Orca (.gcode)';
+    ob.addEventListener('click', async function () {
+      ob.disabled = true; ob.textContent = 'Baixando…';
+      try {
+        var r = await fetch('ref/orca/gcode/cubo20_orca-2.5.1.gcode', { cache: 'no-store' });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        blobDownload(new Blob([await r.arrayBuffer()], { type: 'application/octet-stream' }), 'cubo20_orca.gcode');
+        ob.textContent = 'Salvo em Downloads: cubo20_orca.gcode';
+      } catch (e) { ob.textContent = 'Não consegui baixar (precisa de internet). Toque para tentar de novo'; }
+      ob.disabled = false;
+    });
+    orca.appendChild(ob);
+    root.appendChild(orca);
+  }
   var foot = document.createElement('section'); foot.className = 'sec';
   foot.innerHTML = '<p class="note">Ghosting (ondulações depois de cantos) não se resolve aqui: depende de correias, acelerações e, no limite, de firmware com input shaping.</p>';
   var rz = document.createElement('button'); rz.className = 'btn small'; rz.textContent = 'Zerar progresso da calibração';
