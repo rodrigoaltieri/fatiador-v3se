@@ -15,6 +15,7 @@ Responda e escreva textos de interface em português do Brasil.
 - `worker.v13.js`: roda o motor num Web Worker.
 - `vendor/`: three.min.js r128 e clipper.js 6.4.2 (locais, para funcionar sem internet).
 - `sw.js`: service worker, rede primeiro e cache como reserva.
+- `modelos/3DBenchy.stl`: 3DBenchy original (CC0, sem alterações; origem em `modelos/LEIA-ME.md`). O botão "3DBenchy" da tela inicial baixa o arquivo só quando tocado (11 MB, fora da lista `FILES` do `sw.js`); depois o service worker guarda a cópia.
 - `perfil-inicial.json`: ajustes e resultados de calibração do Rodrigo, carregados quando o aparelho não tem nada salvo.
 - `ref/orca/`: perfis oficiais da V3 SE no OrcaSlicer 2.5.1 (máquina, processo, filamento e os perfis de que herdam). Vêm do OrcaSlicer (AGPL-3.0).
 - `ref/orca/gcode/`: G-code gerado pelo OrcaSlicer 2.5.1 de verdade com o perfil calibrado (cubo de 20 mm e cilindro Ø20). É a referência do teste `tests/orca.js`; o do cubo pode ser impresso direto para comparar com o nosso. No site, o botão "Baixar cubo fatiado pelo Orca" no fim da aba Calibração baixa esse arquivo com o nome certo (pelo github.com o iPad salva como `.txt`).
@@ -46,7 +47,7 @@ Bico 205 °C (1ª camada 210), mesa 55 (1ª camada 60), fluxo 0,98, retração 1
 ```bash
 npm install                      # clipper-lib para os testes em Node
 npm test                         # modelos sintéticos + as 9 peças de calibração + paredes iguais às do Orca; deve dar "OK sem erros" em todos
-node tests/benchy.js caminho/benchy.stl
+node tests/benchy.js             # usa modelos/3DBenchy.stl; aceita outro STL como argumento
 python3 -m http.server 8765 &    # depois:
 python3 tests/pages.py /opt/pw-browsers/chromium   # navegador: perfil inicial, fatiar sem CDN, baixar .gcode, exportar ajustes (antes: pip install playwright)
 ```
@@ -67,7 +68,7 @@ python3 -I tests/orca/analyze.py tests/out/orca_cubo/plate_1.gcode            # 
 python3 -I tests/orca/comparar_paredes.py referencia.gcode nosso.gcode        # paredes, ponto a ponto
 ```
 
-`flatpak run` não funciona no contêiner (sem D-Bus); o script chama o programa direto com as bibliotecas do runtime. A linha de comando do Orca só resolve `inherits` de perfis que estejam dentro da pasta de dados (`user/default/...`) e exige o campo `version`; o script monta essa pasta. Os perfis usados estão em `tests/orca/perfis/` (herdam os oficiais e trocam só os valores calibrados). O código-fonte do Orca clona com `GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 --branch v2.5.1 https://github.com/OrcaSlicer/orcaslicer`. O Benchy oficial vem de `https://github.com/CreativeTools/3dbenchy` (`Single-part/3DBenchy.stl`).
+`flatpak run` não funciona no contêiner (sem D-Bus); o script chama o programa direto com as bibliotecas do runtime. A linha de comando do Orca só resolve `inherits` de perfis que estejam dentro da pasta de dados (`user/default/...`) e exige o campo `version`; o script monta essa pasta. Os perfis usados estão em `tests/orca/perfis/` (herdam os oficiais e trocam só os valores calibrados). O código-fonte do Orca clona com `GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 --branch v2.5.1 https://github.com/OrcaSlicer/orcaslicer`. O Benchy oficial já está em `modelos/3DBenchy.stl`.
 
 ## Pendências
 
