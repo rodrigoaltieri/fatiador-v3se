@@ -11,7 +11,7 @@
 | 5. Vazão máxima | 14/11 | Falha a partir de 16 mm³/s → **13 mm³/s** |
 | 6. Cantos e costura | 14–15/11 | Inconclusivo: todos os cubos com cantos estufados, a velocidade não mudou nada. Lados de 19,9 a 20,1 mm. Costura na quina ficou melhor no cubo |
 | Cubo v12 × cubo do Orca | 15/11 | **Os dois com as mesmas protuberâncias nos cantos.** O G-code do próprio OrcaSlicer 2.5.1, com o perfil calibrado, dá o mesmo defeito: a causa não é a trajetória do fatiador |
-| 6. Cantos (teste novo) | — | Falta. Quatro cubos, uma mudança em cada: referência, parede externa primeiro, cantos mais rápidos, fluxo 6% menor |
+| 6. Cantos (teste novo) | 15/11 | **Os quatro cubos iguais**, todos com os cantos um pouco inchados. Parede externa primeiro, cantos mais rápidos (jerk 20, J0,250) e fluxo 6% menor não mudaram nada perceptível |
 | 7. Encaixe | — | Falta |
 | 8. Aceleração (ghosting) | — | Falta |
 
