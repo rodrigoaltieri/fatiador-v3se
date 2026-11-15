@@ -11,4 +11,4 @@ No iPad: Safari → Compartilhar → **Adicionar à Tela de Início** para abrir
 - Ajustes ficam no aparelho; **Exportar/Importar ajustes** leva de um aparelho para outro
 - Início e fim do G-code iguais aos do perfil oficial da V3 SE no OrcaSlicer
 
-Detalhes técnicos e pendências em [CLAUDE.md](CLAUDE.md); resultados das impressões em [docs/historico.md](docs/historico.md).
+Detalhes técnicos e pendências em [CLAUDE.md](CLAUDE.md); resultados das impressões em [docs/historico.md](docs/historico.md); comparação com o OrcaSlicer em [docs/comparacao-orca.md](docs/comparacao-orca.md).

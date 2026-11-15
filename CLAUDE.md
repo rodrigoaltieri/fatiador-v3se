@@ -6,25 +6,32 @@ Responda e escreva textos de interface em português do Brasil.
 
 ## Princípio de trabalho
 
-**Copiar o comportamento do OrcaSlicer de propósito, não reinventar.** Em quase todos os problemas vistos nas impressões, a solução estava no que o Orca já faz para a V3 SE (fim do G-code, limites de máquina, costura, modo vaso no teste de vazão). Antes de criar um método, olhe o perfil oficial em `ref/orca/` e o código-fonte do Orca (github.com/OrcaSlicer/OrcaSlicer, `src/libslic3r/GCode.cpp`, `PrintConfig.cpp`, `GCodeWriter.cpp`). Se der para rodar o OrcaSlicer de verdade (AppImage Linux, linha de comando) no ambiente, gere o G-code de referência e compare.
+**Copiar o comportamento do OrcaSlicer de propósito, não reinventar.** Em quase todos os problemas vistos nas impressões, a solução estava no que o Orca já faz para a V3 SE (fim do G-code, limites de máquina, costura, modo vaso no teste de vazão). Antes de criar um método, olhe o perfil oficial em `ref/orca/` e o código-fonte do Orca (github.com/OrcaSlicer/OrcaSlicer, `src/libslic3r/GCode.cpp`, `PrintConfig.cpp`, `GCodeWriter.cpp`). Dá para rodar o OrcaSlicer de verdade pela linha de comando (seção "Comparar com o Orca"): gere o G-code de referência e compare. O que já foi comparado e o que ficou de fora está em `docs/comparacao-orca.md`.
 
 ## Arquivos
 
 - `index.html`: interface inteira (ajustes, aba Calibração com 9 testes, prévia 3D com three.js r128, downloads, exportar/importar ajustes). `var STANDALONE` liga o modo GitHub Pages (sem as APIs `window.claude` do artefato: baixa `.gcode` direto, ajustes só no aparelho).
-- `core.v11.js`: motor de fatiamento. `SlicerCore.slice(job, onProgress)` → `{ gcode, preview, stats }`. Usa ClipperLib (escala inteira SC=1000).
-- `worker.v11.js`: roda o motor num Web Worker.
+- `core.v12.js`: motor de fatiamento. `SlicerCore.slice(job, onProgress)` → `{ gcode, preview, stats }`. Usa ClipperLib (escala inteira SC=1000).
+- `worker.v12.js`: roda o motor num Web Worker.
 - `vendor/`: three.min.js r128 e clipper.js 6.4.2 (locais, para funcionar sem internet).
 - `sw.js`: service worker, rede primeiro e cache como reserva.
 - `perfil-inicial.json`: ajustes e resultados de calibração do Rodrigo, carregados quando o aparelho não tem nada salvo.
-- `ref/orca/`: perfis oficiais da V3 SE no OrcaSlicer (máquina, processo, filamento). Vêm do OrcaSlicer (AGPL-3.0).
+- `ref/orca/`: perfis oficiais da V3 SE no OrcaSlicer 2.5.1 (máquina, processo, filamento e os perfis de que herdam). Vêm do OrcaSlicer (AGPL-3.0).
+- `ref/orca/gcode/`: G-code gerado pelo OrcaSlicer 2.5.1 de verdade com o perfil calibrado (cubo de 20 mm e cilindro Ø20). É a referência do teste `tests/orca.js`; o do cubo pode ser impresso direto para comparar com o nosso.
 - `tests/`: verificador de G-code e modelos de teste (Node) e teste de navegador (Playwright).
+- `tests/orca/`: como rodar o OrcaSlicer e o three-slicer e comparar os G-codes por tipo de trecho.
 - `docs/historico.md`: resultados das impressões e o que cada versão mudou.
+- `docs/comparacao-orca.md`: comparação com o OrcaSlicer 2.5.1 e com o three-slicer, diferença por diferença.
 
-**Ao mudar o motor:** suba a versão no nome do arquivo (`core.v12.js`, `worker.v12.js`), atualize as referências em `index.html`, `worker`, `sw.js` (lista `FILES` e nome do `CACHE`) e `tests/lib.js` (padrão de `CORE`). O nome versionado evita o iPad usar um motor velho em cache.
+**Ao mudar o motor:** suba a versão no nome do arquivo (`core.v13.js`, `worker.v13.js`), atualize as referências em `index.html`, `worker`, `sw.js` (lista `FILES` e nome do `CACHE`) e `tests/lib.js` (padrão de `CORE`). O nome versionado evita o iPad usar um motor velho em cache.
 
 ## G-code
 
 Marlin, extrusão relativa (M83). Início e fim seguem o perfil oficial do Orca para a V3 SE (`ref/orca/v3se.json`): espera a mesa antes do G28, M420 S1, purga em X−2,1/X−2,4 a Z0,28; no fim recolhe, afasta, sobe, apresenta a peça em X0 Y220 e só então desliga. Desde a v11 escreve os mesmos limites de máquina que o Orca: `M201 X2500 Y2500 Z500 E5000`, `M203 X250 Y250 Z5 E40`, `M204 P2500 R500 T2500`, `M205 X10 Y10 Z0.4 E5`, `M205 J0.100`.
+
+Desde a v12 as paredes saem como as do Orca: externa 0,42 mm, internas e preenchimento 0,45 mm (`innerW`, `infillW`), 1ª interna a 0,414 mm da externa ("parede externa precisa"), folga de 0,04 mm no fecho de todo laço, internas primeiro e externa por último. Retrai e limpa sempre que sai da parede externa ou vai para uma parede; só não retrai dentro da região interna da camada. O salto curto até a parede externa usa a aceleração dela (`M204 T`). O G-code leva os marcadores do Orca (`;TYPE:`, `;LAYER_CHANGE`, `;Z:`), além do nosso `;LAYER:n`.
+
+Diferenças mantidas de propósito em relação ao Orca: pré-aquecimento do bico a 140 °C e `M420 S1` no início, 1ª camada de 0,50 mm com compensação de pé de elefante de 0,1 mm, limpeza deslocada para dentro da peça, z-hop vertical, pontes a 30 mm/s, contornos pequenos a 60%.
 
 Firmware de fábrica sem linear advance (drivers TMC2208). Firmwares da comunidade (navaismo, queeup) têm M900, e o do navaismo tem M593. Trocar firmware é decisão do Rodrigo.
 
@@ -36,18 +43,34 @@ Bico 205 °C (1ª camada 210), mesa 55 (1ª camada 60), fluxo 0,98, retração 1
 
 ```bash
 npm install                      # clipper-lib para os testes em Node
-npm test                         # modelos sintéticos + as 9 peças de calibração; deve dar "OK sem erros" em todos
+npm test                         # modelos sintéticos + as 9 peças de calibração + paredes iguais às do Orca; deve dar "OK sem erros" em todos
 node tests/benchy.js caminho/benchy.stl
 python3 -m http.server 8765 &    # depois:
-python3 tests/pages.py           # navegador: perfil inicial, fatiar sem CDN, baixar .gcode, exportar ajustes
+python3 tests/pages.py /opt/pw-browsers/chromium   # navegador: perfil inicial, fatiar sem CDN, baixar .gcode, exportar ajustes (antes: pip install playwright)
 ```
 
 Saídas vão para `tests/out/` (ignorada pelo git). `tests/plot.py` desenha camadas de um `.json` de prévia.
 
+## Comparar com o Orca
+
+O ambiente da nuvem só lê o GitHub por `git clone` (repositórios públicos); páginas de release e a API de outros repositórios respondem 403. Por isso o Orca vem do Flathub, que é o canal Linux oficial dele:
+
+```bash
+apt-get update && apt-get install -y flatpak
+flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+flatpak install --user -y flathub com.orcaslicer.OrcaSlicer      # ~3 GB com o runtime
+node tests/orca/modelos.js tests/out                              # cube20.stl e cyl20.stl
+tests/orca/rodar_orca.sh tests/out/cube20.stl tests/out/orca_cubo # gera plate_1.gcode
+python3 -I tests/orca/analyze.py tests/out/orca_cubo/plate_1.gcode            # resumo por tipo de trecho
+python3 -I tests/orca/comparar_paredes.py referencia.gcode nosso.gcode        # paredes, ponto a ponto
+```
+
+`flatpak run` não funciona no contêiner (sem D-Bus); o script chama o programa direto com as bibliotecas do runtime. A linha de comando do Orca só resolve `inherits` de perfis que estejam dentro da pasta de dados (`user/default/...`) e exige o campo `version`; o script monta essa pasta. Os perfis usados estão em `tests/orca/perfis/` (herdam os oficiais e trocam só os valores calibrados). O código-fonte do Orca clona com `GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 --branch v2.5.1 https://github.com/OrcaSlicer/orcaslicer`. O Benchy oficial vem de `https://github.com/CreativeTools/3dbenchy` (`Single-part/3DBenchy.stl`).
+
 ## Pendências
 
-1. **Cantos estufados** (todos os cubos do teste 6, a 25 e a 40 mm/s; não acontecia no Orca/Cura). Hipótese: faltavam os limites de máquina, sobretudo `M205 J0.100`. Corrigido na v11, **falta confirmar imprimindo um cubo de 20 mm**.
-2. Comparar com o OrcaSlicer real (cubo 20 mm e Benchy) e fechar as diferenças relevantes.
-3. Avaliar o pacote `three-slicer` (npm, AGPL-3.0, motor WASM derivado do Orca, já traz o perfil da V3 SE) como substituto do motor próprio, mantendo a interface e a calibração. Se for adotado, o repositório passa a ser AGPL.
+1. **Cantos estufados** (todos os cubos do teste 6, a 25 e a 40 mm/s; não acontecia no Orca/Cura). A parede externa do cubo já era idêntica à do Orca na v11; a v11 acrescentou os limites de máquina e a v12 igualou as paredes internas, o salto até a externa e a retração. **Falta imprimir** o cubo de 20 mm do v12 e, para comparar, o do próprio Orca (`ref/orca/gcode/cubo20_orca-2.5.1.gcode`). Como ler o resultado: fim de `docs/comparacao-orca.md`.
+2. Diferenças do Orca ainda não copiadas: z-hop em espiral, sobreposição de 25% entre topo e parede, ponte interna grossa sobre o preenchimento, limpeza depois do preenchimento, paredes de largura variável (Arachne).
+3. `three-slicer` avaliado e descartado como substituto: não é o libslic3r do Orca (o G-code dele diz "NOT full libslic3r"), difere do Orca em ordem e largura das paredes e não respeita o perfil oficial inteiro. Detalhes em `docs/comparacao-orca.md`.
 4. Calibração restante: passo 7 (encaixe) e passo 8 (aceleração/ghosting).
 5. Ainda não tem: suporte em árvore, desvio de paredes nos deslocamentos, input shaping.

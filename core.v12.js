@@ -1,4 +1,4 @@
-/* Fatiador V3 SE — núcleo de fatiamento (v11).
+/* Fatiador V3 SE — núcleo de fatiamento (v12).
    Gera G-code para Creality Ender-3 V3 SE (bico 0.4, Marlin, extrusão relativa).
    Depende de ClipperLib (clipper-lib 6.4.2). Funciona em Worker, página ou Node. */
 (function (G) {
@@ -14,6 +14,8 @@
   var MIN_GAP = 0.15;     // vãos menores que isso ficam sem preencher
 
   var TYPE = { OUTER: 0, INNER: 1, SPARSE: 2, SOLID: 3, TOP: 4, SUPPORT: 5, IFACE: 6, SKIRT: 7, GAP: 8, BRIDGE: 9, IRON: 10 };
+  // nomes dos tipos de trecho como o OrcaSlicer escreve em ;TYPE:
+  var TYPE_NAME = ['Outer wall', 'Inner wall', 'Sparse infill', 'Internal solid infill', 'Top surface', 'Support', 'Support interface', 'Skirt', 'Gap infill', 'Bridge', 'Ironing'];
   var COLORS = [
     [255, 138, 61],  // parede externa
     [255, 214, 92],  // parede interna
@@ -520,8 +522,16 @@
     var LY = new Array(N);
     for (l = 0; l < N; l++) {
       var w = l === 0 ? cfg.firstW : cfg.lineW, h = layers[l].h;
-      var sp = w - h * (1 - Math.PI / 4);
-      var ovl = cfg.overlap * w, gLast = 2 * (sp / 2 - ovl) + sp;
+      // larguras do perfil oficial do Orca: parede externa, sólido e topo 0,42; paredes internas e preenchimento 0,45
+      // (na 1ª camada, uma largura só)
+      var wi = l === 0 ? cfg.firstW : (cfg.innerW || w), wf = l === 0 ? cfg.firstW : (cfg.infillW || w);
+      var lap = h * (1 - Math.PI / 4);
+      var sp = w - lap, spI = wi - lap, spF = wf - lap;
+      // "parede externa precisa" do Orca (precise_outer_wall): a 1ª parede interna fica com metade da sobreposição
+      // normal em relação à externa, para não empurrar a parede externa para fora
+      var d01 = (w + wi) / 2 - lap / 2;
+      var offK = function (k) { return k === 0 ? w / 2 : w / 2 + d01 + (k - 1) * spI; };
+      var spMax = Math.max(sp, spI), maxR = spMax + 2 * (spMax / 2 - cfg.overlap * Math.min(w, wi)) + spMax + 0.05;
       var isls = islands(region[l]), out = [], fillAll = [];
       var ovA = null, ovB = null, hasOvh = false;
       if (l > 0 && cfg.overhangs !== false && dropSmall(D(region[l], OFF(regionRaw[l - 1], 0.25 * w * SC)), 0.05).length) {
@@ -530,25 +540,27 @@
       for (s = 0; s < isls.length; s++) {
         var isl = isls[s], walls = [], gaps = [], thin = [], m = 0, wl0 = null;
         for (k = 0; k < cfg.walls; k++) {
-          var wl = dropSmall(OFF(isl, -(w / 2 + k * sp) * SC), k === 0 ? 0.002 : 0.01);
+          var wl = dropSmall(OFF(isl, -offK(k) * SC), k === 0 ? 0.002 : 0.01);
           if (!wl.length) break;
           if (k === 0) wl0 = wl;
-          walls.push(analyze(wl, sp + gLast + 0.05)); m++;
+          walls.push(analyze(wl, maxR)); m++;
         }
+        var spLast = m > 1 ? spI : sp, ovl = cfg.overlap * (m > 1 ? wi : w), gLast = 2 * (spLast / 2 - ovl) + spLast;
         for (k = 0; k < m; k++) {
-          var lim = (k === m - 1 ? sp + gLast : 2 * sp), needGap = false;
+          var spk = k === 0 ? sp : spI, dk = offK(k + 1) - offK(k);
+          var lim = (k === m - 1 ? spk + gLast : 2 * dk), needGap = false;
           for (i = 0; i < walls[k].length; i++) {
             var Lw = walls[k][i], fw = new Float32Array(Lw.t.length);
             for (var q = 0; q < fw.length; q++) {
               var tq = Lw.t[q];
-              if (tq < sp) fw[q] = q50((tq + sp) / (2 * sp)); else { fw[q] = 1; if (tq < lim) needGap = true; }
+              if (tq < spk) fw[q] = q50((tq + spk) / (2 * spk)); else { fw[q] = 1; if (tq < lim) needGap = true; }
             }
             Lw.f = fw;
             if (ovA && markOverhang(Lw, ovA, ovB)) hasOvh = true;
           }
           if (needGap && cfg.gapFill !== false) {
-            var glim = (k === m - 1 ? gLast : sp);
-            var gl = dropSmall(OFF(isl, -(w / 2 + k * sp + sp / 2 + EPS_GAP) * SC), 0.002);
+            var glim = (k === m - 1 ? gLast : 2 * dk - spk);
+            var gl = dropSmall(OFF(isl, -(offK(k) + spk / 2 + EPS_GAP) * SC), 0.002);
             var ga = gl.length ? analyze(gl, glim + 0.05) : [];
             for (i = 0; i < ga.length; i++) {
               var Lg = ga[i], fg = new Float32Array(Lg.t.length), any = false;
@@ -576,18 +588,24 @@
             if (anyT) thin.push(Lt);
           }
         }
-        var fill = m ? OFF(isl, -(w / 2 + (m - 1) * sp + sp - ovl) * SC) : [];
+        var fill = m ? OFF(isl, -(offK(m - 1) + spLast - ovl) * SC) : [];
         fill = dropSmall(OPENM(fill, sp / 2 * SC), 0.05);
         out.push({ walls: walls, gaps: gaps, thin: thin, fill: fill, outline: isl });
         if (fill.length) fillAll = fillAll.concat(fill);
       }
-      LY[l] = { isl: out, fillAll: fillAll, w: w, h: h, spacing: sp, bridge: [], ovh: hasOvh };
+      LY[l] = { isl: out, fillAll: fillAll, w: w, h: h, spacing: sp, wi: wi, wf: wf, spF: spF, bridge: [], ovh: hasOvh };
       if ((l & 7) === 0) progress(0.22 + 0.18 * l / N, 'Gerando paredes');
     }
 
     // topo, fundo, pontes e preenchimento
     for (l = 0; l < N; l++) {
       var L = LY[l], fa = L.fillAll;
+      // região "interna" da camada: sem topo nem fundo expostos (o Orca só deixa de retrair dentro dela)
+      if (l === 0 || l === N - 1) L.internal = [];
+      else {
+        var expT = OPEN(D(region[l], regionRaw[l + 1]), 0.042 * SC), expB = OPEN(D(region[l], regionRaw[l - 1]), 0.042 * SC);
+        L.internal = (expT.length || expB.length) ? D(region[l], U(expT, expB)) : region[l];
+      }
       if (!fa.length) { L.top = []; L.solid = []; L.sparse = []; continue; }
       var solid;
       if (allSolid || l < botN || (topN > 0 && l >= N - topN)) solid = fa;
@@ -629,7 +647,14 @@
         var spIsl = islands(sp2);
         for (i = 0; i < spIsl.length; i++) if (areaMM(spIsl[i]) >= 10) keep = keep.concat(spIsl[i]);
         var sliver = D(sparse, keep);
-        if (sliver.length) solid = U(solid, sliver);
+        if (sliver.length) {
+          // restos minúsculos (as quinas arredondadas pelo teste acima) voltam para o preenchimento; o Orca não
+          // imprime pontinhos de sólido nas quinas
+          var slIsl = islands(sliver), big = [], tiny = [];
+          for (i = 0; i < slIsl.length; i++) { if (areaMM(slIsl[i]) < 0.25) tiny = tiny.concat(slIsl[i]); else big = big.concat(slIsl[i]); }
+          if (big.length) solid = U(solid, big);
+          if (tiny.length && keep.length) keep = U(keep, tiny);
+        }
         sparse = keep;
       }
       L.top = top; L.solid = D(solid, top); L.sparse = sparse;
@@ -670,7 +695,7 @@
     /* ---------- trajetórias e G-code ---------- */
     var gc = [], layerTimes = [];
     var pos = new F32(), col = new U8(), layerEnds = new Int32Array(N);
-    var st = { x: 0, y: 0, z: 0, retracted: false, hopped: false, lastRet: cfg.retLen };
+    var st = { x: 0, y: 0, z: 0, retracted: false, hopped: false, lastRet: cfg.retLen, tAcc: cfg.acc.travel, seams: [] };
     var totalE = 0, totalT = 0;
     var spd = cfg.sp, acc = cfg.acc;
 
@@ -720,6 +745,7 @@
       var Lr = LY[l], z = layers[l].z, h0 = layers[l].h, first = l === 0;
       var ops = [];
       var cx = st.x, cy = st.y, retracted = st.retracted, wipe = null, curAcc = -1, insideOK = true;
+      var lastRole = -1, curTAcc = st.tAcc, seamsNow = [];
       // modo vaso: acima do fundo, uma única volta que sobe continuamente (sem costura)
       var spiral = !!cfg.vase && l >= botN && Lr.isl.length === 1 && Lr.isl[0].walls.length === 1 && Lr.isl[0].walls[0].length === 1 && !support[l].length;
       var firstSpiral = spiral && !st.spiral, zBase = spiral ? z - h0 : z;
@@ -738,7 +764,9 @@
         }
       };
       addEdges(region[l]); addEdges(support[l]);
-      var crosses = function (x1, y1, x2, y2) {
+      var edgesAll = edges, edgesInt = [];
+      if (Lr.internal && Lr.internal.length) { edges = edgesInt; addEdges(Lr.internal); edges = edgesAll; }
+      var crossesE = function (edges, x1, y1, x2, y2) {
         var minx = Math.min(x1, x2), maxx = Math.max(x1, x2), miny = Math.min(y1, y2), maxy = Math.max(y1, y2);
         for (var q = 0; q < edges.length; q += 4) {
           var ax = edges[q], ay = edges[q + 1], bx = edges[q + 2], by = edges[q + 3];
@@ -751,6 +779,11 @@
           if ((d3 > 0) !== (d4 > 0)) return true;
         }
         return false;
+      };
+      var crosses = function (x1, y1, x2, y2) { return crossesE(edgesAll, x1, y1, x2, y2); };
+      // deslocamento inteiro dentro da região interna da camada
+      var insideInternal = function (x1, y1, x2, y2) {
+        return edgesInt.length > 0 && inside(x1, y1, Lr.internal) && inside(x2, y2, Lr.internal) && !crossesE(edgesInt, x1, y1, x2, y2);
       };
 
       var retract = function () {
@@ -766,12 +799,24 @@
         ops.push({ o: 'T', x0: cx, y0: cy, x: x, y: y, d: d });
         cx = x; cy = y;
       };
-      var travel = function (x, y) {
+      // toPerim: o próximo trecho é parede; toOuter: é a parede externa
+      var travel = function (x, y, toPerim, toOuter) {
         var d = Math.hypot(x - cx, y - cy);
         if (d < 0.002) return;
-        // retrai ao cruzar uma parede ou ao passar por fora da peça (onde um fiapo ficaria à mostra)
-        if (!retracted && d > cfg.retMinTravel && (crosses(cx, cy, x, y) || !(inside((cx + x) / 2, (cy + y) / 2, region[l]) || inside((cx + x) / 2, (cy + y) / 2, support[l])))) retract();
+        if (!retracted && d > cfg.retMinTravel) {
+          // regra do OrcaSlicer (GCode::needs_retraction): retrai sempre que sai da parede externa e sempre que vai
+          // para uma parede; só deixa de retrair se o deslocamento inteiro fica dentro da região interna da camada
+          // (e há preenchimento para esconder o fiapo) ou dentro de uma ilha de suporte
+          var need = true, mx = (cx + x) / 2, my = (cy + y) / 2;
+          if (lastRole === TYPE.OUTER) need = true;
+          else if (!toPerim && (lastRole === TYPE.SUPPORT || lastRole === TYPE.IFACE) && inside(mx, my, support[l]) && !crosses(cx, cy, x, y)) need = false;
+          else if (!toPerim && cfg.infill > 0 && insideInternal(cx, cy, x, y)) need = false;
+          if (need) retract();
+        }
         wipe = null;
+        // deslocamento curto até a parede externa usa a aceleração dela (Orca), para ela começar sem tranco
+        var ta = (!first && toOuter && d < Math.max(cfg.retMinTravel, 2)) ? accOf(TYPE.OUTER) : acc.travel;
+        if (ta !== curTAcc) { ops.push({ o: 'B', v: ta }); curTAcc = ta; }
         rawMove(x, y);
       };
       var setAcc = function (a) { if (a !== curAcc) { ops.push({ o: 'A', v: a }); curAcc = a; } };
@@ -779,6 +824,7 @@
         var d = Math.hypot(x - cx, y - cy);
         if (d < 0.002) return;
         unretract();
+        lastRole = type;
         fm = fm || 1;
         var area = extArea(w, h0), mul = cfg.flow * fm * (type === TYPE.BRIDGE ? bridgeFlow : 1);
         var v = (volOverride && type === TYPE.OUTER) ? volOverride / area : Math.min(speed, cfg.maxVol / (area * fm));
@@ -815,17 +861,76 @@
       var ovhV = spd.ovh || 20;
 
       // costura alinhada: mais ao fundo, mas nunca em trecho em balanço; quinas têm preferência
+      // cosseno da mudança de direção num ponto do laço, medido 0,6 mm antes e 0,6 mm depois
+      // (trechos curtinhos de um contorno curvo não contam como quina)
+      var turnCos = function (pts, n, q) {
+        var x = pts[2 * q], y = pts[2 * q + 1], i, a = q, b = q;
+        for (i = 1; i < n; i++) { a = (q - i + n) % n; if (Math.hypot(pts[2 * a] - x, pts[2 * a + 1] - y) >= 0.6) break; }
+        for (i = 1; i < n; i++) { b = (q + i) % n; if (Math.hypot(pts[2 * b] - x, pts[2 * b + 1] - y) >= 0.6) break; }
+        var ax0 = x - pts[2 * a], ay0 = y - pts[2 * a + 1], bx0 = pts[2 * b] - x, by0 = pts[2 * b + 1] - y;
+        var la = Math.hypot(ax0, ay0), lb = Math.hypot(bx0, by0);
+        return (la > 1e-9 && lb > 1e-9) ? (ax0 * bx0 + ay0 * by0) / (la * lb) : 1;
+      };
       var seamIdx = function (L) {
         var pts = L.p, n = pts.length / 2, OVs = first ? null : L.o, best = -Infinity, sIdx = 0;
         for (var q = 0; q < n; q++) {
-          var pq = (q + n - 1) % n, nq = (q + 1) % n, sc = pts[2 * q + 1] - 0.001 * pts[2 * q];
-          var ax0 = pts[2 * q] - pts[2 * pq], ay0 = pts[2 * q + 1] - pts[2 * pq + 1], bx0 = pts[2 * nq] - pts[2 * q], by0 = pts[2 * nq + 1] - pts[2 * q + 1];
-          var la = Math.hypot(ax0, ay0), lb = Math.hypot(bx0, by0);
-          if (la > 1e-9 && lb > 1e-9 && (ax0 * bx0 + ay0 * by0) / (la * lb) < 0.87) sc += 0.3;
+          var pq = (q + n - 1) % n, sc = pts[2 * q + 1] - 0.001 * pts[2 * q];
+          var tc = turnCos(pts, n, q);
+          if (tc < 0.87) sc += 0.25 + 0.1 * Math.min(1, 0.87 - tc);
           if (OVs && (OVs[q] || OVs[pq])) sc -= 1e6;
           if (sc > best) { best = sc; sIdx = q; }
         }
         return sIdx;
+      };
+      // costura alinhada como a do Orca: se a camada de baixo tem uma costura encostada neste laço, fica no mesmo
+      // lugar (numa quina a até 2 mm, ou no ponto mais próximo, criando um vértice ali); senão, vale a escolha normal
+      var alignSeam = function (L, si) {
+        var prev = st.seams, pts = L.p, n = pts.length / 2, q, e;
+        if (first || !prev.length) return si;
+        var bd = Infinity, bq = -1, bt = 0, bx = 0, by = 0;
+        for (q = 0; q < n; q++) {
+          var x0 = pts[2 * q], y0 = pts[2 * q + 1], x1 = pts[2 * ((q + 1) % n)], y1 = pts[2 * ((q + 1) % n) + 1];
+          var dx = x1 - x0, dy = y1 - y0, l2 = dx * dx + dy * dy;
+          for (e = 0; e < prev.length; e += 2) {
+            var t = l2 > 1e-12 ? Math.max(0, Math.min(1, ((prev[e] - x0) * dx + (prev[e + 1] - y0) * dy) / l2)) : 0;
+            var px = x0 + dx * t, py = y0 + dy * t, d = Math.hypot(prev[e] - px, prev[e + 1] - py);
+            if (d < bd) { bd = d; bq = q; bt = t; bx = px; by = py; }
+          }
+        }
+        if (bq < 0 || bd > 1.0) return si;
+        // quina perto da costura de baixo tem preferência
+        var cb = -1, cd = 2.0;
+        for (q = 0; q < n; q++) {
+          var dc = Math.hypot(pts[2 * q] - bx, pts[2 * q + 1] - by);
+          if (dc < cd && turnCos(pts, n, q) < 0.87 && !(L.o && (L.o[q] || L.o[(q + n - 1) % n]))) { cd = dc; cb = q; }
+        }
+        if (cb >= 0) {
+          // entre os pontos de quina vizinhos, o mais agudo
+          var bestC = cb, bc = turnCos(pts, n, cb);
+          for (q = 0; q < n; q++) if (Math.hypot(pts[2 * q] - pts[2 * cb], pts[2 * q + 1] - pts[2 * cb + 1]) < 0.7) { var tq2 = turnCos(pts, n, q); if (tq2 < bc - 1e-9) { bc = tq2; bestC = q; } }
+          return bestC;
+        }
+        if (L.o && L.o[bq]) return si;
+        // se já existe um vértice a menos de 0,02 mm, ele é levado para o ponto exato (senão a costura acompanharia
+        // vértices que mudam de lugar de uma camada para a outra)
+        var nq = (bq + 1) % n, segL = Math.hypot(pts[2 * nq] - pts[2 * bq], pts[2 * nq + 1] - pts[2 * bq + 1]);
+        if (bt * segL < 0.02) { pts[2 * bq] = bx; pts[2 * bq + 1] = by; return bq; }
+        if ((1 - bt) * segL < 0.02) { pts[2 * nq] = bx; pts[2 * nq + 1] = by; return nq; }
+        // cria um vértice no ponto exato (os dados por trecho são repetidos)
+        var ins = bq + 1, dupl = function (arr) {
+          if (!arr) return arr;
+          var o = new arr.constructor(arr.length + 1), i;
+          for (i = 0; i < ins; i++) o[i] = arr[i];
+          o[ins] = arr[bq];
+          for (i = ins; i < arr.length; i++) o[i + 1] = arr[i];
+          return o;
+        };
+        var np = new Array(pts.length + 2), i2;
+        for (i2 = 0; i2 < 2 * ins; i2++) np[i2] = pts[i2];
+        np[2 * ins] = bx; np[2 * ins + 1] = by;
+        for (i2 = 2 * ins; i2 < pts.length; i2++) np[i2 + 2] = pts[i2];
+        L.p = np; L.t = dupl(L.t); L.f = dupl(L.f); L.o = dupl(L.o);
+        return ins;
       };
       // costura no meio da face de trás: entre os pontos mais ao fundo (o laço já vem subdividido), o do meio
       var faceSeam = function (L) {
@@ -870,10 +975,10 @@
         var tx = X(1) - sx, ty = Y(1) - sy, tl = Math.hypot(tx, ty) || 1;
         if (isOuter && cfg.wipe && retracted && inw > 0) {
           // desfaz a retração do lado de dentro, para a gota não ficar na face externa
-          travel(sx - ty / tl * sg * inw, sy + tx / tl * sg * inw);
+          travel(sx - ty / tl * sg * inw, sy + tx / tl * sg * inw, true, true);
           unretract();
           rawMove(sx, sy);
-        } else travel(sx, sy);
+        } else travel(sx, sy, type <= TYPE.INNER, isOuter);
         var sp0 = speedOf(type); setAcc(accOf(type));
         if (type === TYPE.OUTER && !first && curZone && curZone.outer) sp0 = curZone.outer;
         // contornos pequenos (furos, pinos) mais devagar, para sair na medida
@@ -919,7 +1024,8 @@
           }
           wipeFrom = scarf;
         } else {
-          var gapLen = isOuter ? 0.04 : 0, stopAt = Ltot - gapLen, run = 0;
+          // folga de 0,04 mm no fecho de todas as paredes (seam_gap de 10% do bico, como o Orca)
+          var gapLen = (type <= TYPE.INNER && Ltot > 1) ? 0.04 : 0, stopAt = Ltot - gapLen, run = 0;
           for (q = 0; q < n; q++) {
             var sl = Math.hypot(X(q + 1) - X(q), Y(q + 1) - Y(q));
             if (gapLen > 0 && run + sl >= stopAt) { seg(q, 0, sl > 0 ? Math.max(0, (stopAt - run) / sl) : 0); break; }
@@ -956,7 +1062,7 @@
         var v = speedOf(TYPE.OUTER), run = 0;
         // emenda com a volta anterior extrudando, sem deslocamento em vazio
         if (!firstSpiral && !retracted && Math.hypot(X(0) - cx, Y(0) - cy) < 2) extrude(X(0), Y(0), w, v, TYPE.OUTER, 1, z - h0);
-        else travel(X(0), Y(0));
+        else travel(X(0), Y(0), true, true);
         for (q = 0; q < n; q++) {
           var sl = Math.hypot(X(q + 1) - X(q), Y(q + 1) - Y(q));
           if (sl < 1e-6) continue;
@@ -1002,24 +1108,24 @@
           var R = runs.splice(bi, 1)[0], cnt = R[2], c;
           setAcc(accOf(type));
           if (!rev) {
-            travel(PX(R[0]), PY(R[0]));
+            travel(PX(R[0]), PY(R[0]), type <= TYPE.INNER);
             for (c = 0; c < cnt; c++) extrude(PX(R[0] + c + 1), PY(R[0] + c + 1), w, v0, type, f[(R[0] + c) % n]);
           } else {
-            travel(PX(R[0] + cnt), PY(R[0] + cnt));
+            travel(PX(R[0] + cnt), PY(R[0] + cnt), type <= TYPE.INNER);
             for (c = cnt - 1; c >= 0; c--) extrude(PX(R[0] + c), PY(R[0] + c), w, v0, type, f[(R[0] + c) % n]);
           }
         }
       };
 
       // conn: área (inteira) por onde a ligação entre linhas vizinhas pode passar, extrudando
-      var printSegs = function (sg, type, w, fm, conn, maxD) {
+      var printSegs = function (sg, type, w, fm, conn, maxD, linkFm) {
         if (!sg.length) return;
         setAcc(accOf(type));
         var v = speedOf(type);
         for (var q = 0; q < sg.length; q++) {
           var ax = sg[q].a[0], ay = sg[q].a[1], dd = Math.hypot(ax - cx, ay - cy);
           if (conn && q > 0 && dd > 0.002 && dd <= maxD && inside((ax + cx) / 2, (ay + cy) / 2, conn) && inside(cx + (ax - cx) * 0.25, cy + (ay - cy) * 0.25, conn) && inside(cx + (ax - cx) * 0.75, cy + (ay - cy) * 0.75, conn))
-            extrude(ax, ay, w, v, type, (fm || 1) * 0.6);
+            extrude(ax, ay, w, v, type, (fm || 1) * (linkFm || 0.6));
           else travel(ax, ay);
           extrude(sg[q].b[0], sg[q].b[1], w, v, type, fm);
         }
@@ -1113,7 +1219,7 @@
 
       // ilhas do modelo (ordem por proximidade)
       var rem = Lr.isl.slice();
-      var angSolid = (l % 2) ? 135 : 45, dens = cfg.infill / 100, spc = Lr.spacing;
+      var angSolid = (l % 2) ? 135 : 45, dens = cfg.infill / 100, spc = Lr.spacing, spF_ = Lr.spF;
       while (rem.length) {
         var bi = 0, bd = Infinity;
         for (var q = 0; q < rem.length; q++) {
@@ -1127,12 +1233,12 @@
         curZone = zoneOf(IS);
         var seamMode = (curZone && curZone.seam) || cfg.seam;
         if (seamMode === 'face' && IS.walls.length) IS.walls[0] = IS.walls[0].map(faceSeam);
-        else if (seamMode === 'rear' && IS.walls.length) IS.walls[0].forEach(function (L0) { L0.si = seamIdx(L0); });
-        if (seamMode !== 'nearest' && IS.walls.length) IS.walls[0].forEach(function (L0) { seams.push(L0.p[2 * L0.si], L0.p[2 * L0.si + 1]); });
+        else if (seamMode === 'rear' && IS.walls.length) IS.walls[0].forEach(function (L0) { L0.si = alignSeam(L0, seamIdx(L0)); });
+        if (seamMode !== 'nearest' && IS.walls.length) IS.walls[0].forEach(function (L0) { seams.push(L0.p[2 * L0.si], L0.p[2 * L0.si + 1]); seamsNow.push(L0.p[2 * L0.si], L0.p[2 * L0.si + 1]); });
         // só limpa/desfaz retração por dentro se houver plástico por dentro da parede externa
         insideOK = IS.walls.length > 1 || (IS.fill.length > 0 && (cfg.infill > 0 || I(IS.fill, U(Lr.solid, Lr.top)).length > 0));
         if (spiral) printSpiral(IS.walls[0][0], Lr.w);
-        else for (k = IS.walls.length - 1; k >= 0; k--) printLoops(IS.walls[k], k === 0 ? TYPE.OUTER : TYPE.INNER, Lr.w, k === 0, k > 0 ? seams : null);
+        else for (k = IS.walls.length - 1; k >= 0; k--) printLoops(IS.walls[k], k === 0 ? TYPE.OUTER : TYPE.INNER, k === 0 ? Lr.w : Lr.wi, k === 0, k > 0 ? seams : null);
         insideOK = true;
         for (k = 0; k < IS.thin.length; k++) printRuns(IS.thin[k], TYPE.OUTER, Lr.w, 0.6);
         for (k = 0; k < IS.gaps.length; k++) printRuns(IS.gaps[k], TYPE.GAP, Lr.w, 2.0);
@@ -1144,13 +1250,16 @@
           var sp_ = I(IS.fill, Lr.sparse), so_ = I(IS.fill, Lr.solid), to_ = I(IS.fill, Lr.top);
           if (sp_.length && dens > 0) {
             if (cfg.pattern === 'gyroid') {
-              printPaths(clipOpen(gyroidLines(boundsMM(sp_), z, 2.575 * spc / dens), sp_), TYPE.SPARSE, Lr.w);
+              printPaths(clipOpen(gyroidLines(boundsMM(sp_), z, 2.575 * spF_ / dens), sp_), TYPE.SPARSE, Lr.wf);
             } else {
               var sg = [];
-              if (cfg.pattern === 'grid') sg = scanFill(sp_, 45, 2 * spc / dens, 0).concat(scanFill(sp_, 135, 2 * spc / dens, 0));
-              else if (cfg.pattern === 'triangles') sg = scanFill(sp_, 0, 3 * spc / dens, 0).concat(scanFill(sp_, 60, 3 * spc / dens, 0), scanFill(sp_, 120, 3 * spc / dens, 0));
-              else sg = scanFill(sp_, angSolid, spc / dens, 0);
-              printSegs(orderGreedy(sg, cx, cy), TYPE.SPARSE, Lr.w);
+              if (cfg.pattern === 'grid') sg = scanFill(sp_, 45, 2 * spF_ / dens, 0).concat(scanFill(sp_, 135, 2 * spF_ / dens, 0));
+              else if (cfg.pattern === 'triangles') sg = scanFill(sp_, 0, 3 * spF_ / dens, 0).concat(scanFill(sp_, 60, 3 * spF_ / dens, 0), scanFill(sp_, 120, 3 * spF_ / dens, 0));
+              else sg = scanFill(sp_, angSolid, spF_ / dens, 0);
+              // linhas alternadas: cada linha é ligada à vizinha por um trecho junto da parede (rectilinear do Orca),
+              // em vez de um deslocamento em vazio entre elas
+              if (cfg.pattern === 'lines' || !cfg.pattern) printSegs(orderGreedy(sg, cx, cy), TYPE.SPARSE, Lr.wf, 1, OFF(sp_, 0.05 * SC), 2.2 * spF_ / dens, 1);
+              else printSegs(orderGreedy(sg, cx, cy), TYPE.SPARSE, Lr.wf);
             }
           }
           if (so_.length) solidFill(so_, angSolid, TYPE.SOLID, false);
@@ -1172,6 +1281,7 @@
       for (q = 0; q < ops.length; q++) {
         O = ops[q];
         if (O.o === 'A') aNow = O.v;
+        else if (O.o === 'B') { /* aceleração de deslocamento: não conta tempo */ }
         else if (O.o === 'E') { O.a = aNow; O.v = O.f; mv.push(O); }
         else if (O.o === 'T') { O.a = acc.travel; O.v = travelV; mv.push(O); }
         else if (O.o === 'Z') { mv.push(null); travT += 0.05; }
@@ -1198,11 +1308,22 @@
         mv[q].tm = moveTime(mv[q].d, mv[q].v, mv[q].a, vE[q], vX[q]);
         if (mv[q].o === 'E') extT += mv[q].tm; else travT += mv[q].tm;
       }
-      var factor = 1;
-      if (!first && extT > 0 && extT + travT < cfg.minLayerTime) factor = extT / Math.max(0.1, cfg.minLayerTime - travT);
+      // tempo mínimo por camada, como o Orca: abaixa primeiro os trechos mais rápidos, até um teto comum de velocidade.
+      // A parede externa só desacelera se o teto chegar à velocidade dela; pontes não desaceleram.
+      var vCap = Infinity;
+      if (!first && extT > 0 && extT + travT < cfg.minLayerTime) {
+        var slowOf = function (m2, V) { return m2.t === TYPE.BRIDGE ? 1 : Math.max(1, m2.f / Math.max(V, Math.min(m2.f, cfg.minSpeed))); };
+        var timeAt = function (V) { var t = travT; for (var q2 = 0; q2 < M; q2++) if (mv[q2] && mv[q2].o === 'E') t += mv[q2].tm * slowOf(mv[q2], V); return t; };
+        var vLo = cfg.minSpeed, vHi = vLo;
+        for (q = 0; q < M; q++) if (mv[q] && mv[q].o === 'E' && mv[q].f > vHi) vHi = mv[q].f;
+        if (timeAt(vLo) > cfg.minLayerTime) { for (var it = 0; it < 30; it++) { var vMid = (vLo + vHi) / 2; if (timeAt(vMid) < cfg.minLayerTime) vHi = vMid; else vLo = vMid; } }
+        vCap = vLo;
+      }
 
       /* --- emissão --- */
       gc.push(';LAYER:' + l);
+      gc.push(';LAYER_CHANGE'); gc.push(';Z:' + f3(z)); gc.push(';HEIGHT:' + f3(h0));
+      st.lastT = -1;
       var fan = l === 0 ? 0 : (l < cfg.fanFullLayer - 1 ? Math.round(255 * l / (cfg.fanFullLayer - 1)) : 255);
       if (l > 0 && (Lr.bridge.length || Lr.ovh)) fan = 255;
       if (fan !== fanState) { gc.push(fan === 0 ? 'M107' : 'M106 S' + fan); fanState = fan; }
@@ -1218,14 +1339,15 @@
       for (q = 0; q < ops.length; q++) {
         O = ops[q];
         if (O.o === 'A') gc.push('M204 P' + O.v);
+        else if (O.o === 'B') gc.push('M204 T' + O.v);
         else if (O.o === 'Z') { gc.push('G1 Z' + f3(O.z) + ' F300'); lastF = 300; layerT += 0.05; }
         else if (O.o === 'T') {
-          gc.push('G0 X' + f3(O.x) + ' Y' + f3(O.y) + (lastF !== travelF ? ' F' + travelF : ''));
+          gc.push('G1 X' + f3(O.x) + ' Y' + f3(O.y) + (lastF !== travelF ? ' F' + travelF : ''));
           lastF = travelF; layerT += O.tm;
           px0 = O.x; py0 = O.y;
         } else if (O.o === 'E') {
-          var v2 = O.f * factor;
-          if (v2 < cfg.minSpeed) v2 = Math.min(O.f, cfg.minSpeed);
+          if (O.t !== st.lastT) { gc.push(';TYPE:' + TYPE_NAME[O.t]); st.lastT = O.t; }
+          var v2 = O.t === TYPE.BRIDGE ? O.f : Math.min(O.f, Math.max(vCap, Math.min(O.f, cfg.minSpeed)));
           var F = Math.round(v2 * 60);
           gc.push('G1 X' + f3(O.x) + ' Y' + f3(O.y) + (O.z1 !== undefined ? ' Z' + f3(O.z1) : '') + ' E' + f5(O.e) + (F !== lastF ? ' F' + F : ''));
           lastF = F; totalE += O.e; layerT += O.tm * (O.f / v2);
@@ -1242,6 +1364,7 @@
             if (pre > 0) gc.push('G1 E-' + f5(pre) + ' F' + RF);
             var WF = Math.round(spd.travel * 0.8 * 60);
             wx = px0; wy = py0;
+            gc.push(';WIPE_START');
             for (wi = 0; wi < O.wipe.length; wi += 2) {
               var dlw = Math.hypot(O.wipe[wi] - wx, O.wipe[wi + 1] - wy);
               if (dlw < 0.002) continue;
@@ -1250,14 +1373,16 @@
               gc.push('G1 X' + f3(O.wipe[wi]) + ' Y' + f3(O.wipe[wi + 1]) + (ew > 0 ? ' E-' + f5(ew) : '') + ' F' + WF);
               sent = r5(sent + ew); wx = O.wipe[wi]; wy = O.wipe[wi + 1];
             }
+            gc.push(';WIPE_END');
             lastF = WF; px0 = wx; py0 = wy;
-            if (retL - sent > 1e-5) { gc.push('G1 E-' + f5(retL - sent) + ' F' + RF); lastF = RF; }
+            // sobra de arredondamento menor que 0,0005 mm não vira comando: desfaz-se exatamente o que foi recolhido
+            if (retL - sent > 5e-4) { gc.push('G1 E-' + f5(retL - sent) + ' F' + RF); lastF = RF; sent = retL; }
             layerT += wl3 / (spd.travel * 0.8) + pre / cfg.retSpeed;
-          } else if (retL > 0) {
-            gc.push('G1 E-' + f5(retL) + ' F' + RF); lastF = RF;
-            layerT += retL / cfg.retSpeed;
+            st.lastRet = sent;
+          } else {
+            if (retL > 0) { gc.push('G1 E-' + f5(retL) + ' F' + RF); lastF = RF; layerT += retL / cfg.retSpeed; }
+            st.lastRet = retL;
           }
-          st.lastRet = retL;
           if (cfg.zhop > 0) { gc.push('G1 Z' + f3(z + cfg.zhop) + ' F300'); st.hopped = true; lastF = 300; layerT += cfg.zhop / Z_SPEED; }
         } else if (O.o === 'U') {
           if (st.hopped) { gc.push('G1 Z' + f3(zBase) + ' F300'); st.hopped = false; lastF = 300; layerT += cfg.zhop / Z_SPEED; }
@@ -1265,7 +1390,7 @@
           if (UL > 0) { gc.push('G1 E' + f5(UL) + ' F' + DF); lastF = DF; layerT += UL / unretSpeed; }
         }
       }
-      st.x = cx; st.y = cy; st.retracted = retracted; st.spiral = spiral;
+      st.x = cx; st.y = cy; st.retracted = retracted; st.spiral = spiral; st.tAcc = curTAcc; st.seams = seamsNow;
       layerEnds[l] = pos.n / 6;
       layerTimes.push(layerT); totalT += layerT + h0 / Z_SPEED;
       if ((l & 3) === 0) progress(0.60 + 0.38 * l / N, 'Escrevendo G-code (' + (l + 1) + '/' + N + ')');
@@ -1306,7 +1431,7 @@
     };
   }
 
-  var API = { slice: slice, BED: [BED_X, BED_Y, BED_Z], COLORS: COLORS, version: 11 };
+  var API = { slice: slice, BED: [BED_X, BED_Y, BED_Z], COLORS: COLORS, version: 12 };
   API._int = { sliceMesh: sliceMesh, chain: chain, U: U, D: D, I: I, OFF: OFF, clean: clean, islands: islands, analyze: analyze, gyroidLines: gyroidLines, scanFill: scanFill, orderMonotonic: orderMonotonic, bridgeAngle: bridgeAngle, SC: SC };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   else G.SlicerCore = API;

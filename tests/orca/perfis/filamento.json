@@ -1,0 +1,14 @@
+{
+  "type": "filament",
+  "name": "Rodrigo PLA calibrado",
+  "inherits": "Generic PLA @Creality Ender-3V3-all",
+  "from": "User",
+  "version": "2.5.1.0",
+  "filament_settings_id": ["Rodrigo PLA calibrado"],
+  "nozzle_temperature": ["205"],
+  "nozzle_temperature_initial_layer": ["210"],
+  "filament_flow_ratio": ["0.98"],
+  "filament_max_volumetric_speed": ["13"],
+  "cool_plate_temp": ["55"], "eng_plate_temp": ["55"], "hot_plate_temp": ["55"], "textured_plate_temp": ["55"],
+  "cool_plate_temp_initial_layer": ["60"], "eng_plate_temp_initial_layer": ["60"], "hot_plate_temp_initial_layer": ["60"], "textured_plate_temp_initial_layer": ["60"]
+}
