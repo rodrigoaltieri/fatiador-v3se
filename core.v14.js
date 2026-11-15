@@ -1,4 +1,4 @@
-/* Fatiador V3 SE — núcleo de fatiamento (v13).
+/* Fatiador V3 SE — núcleo de fatiamento (v14).
    Gera G-code para Creality Ender-3 V3 SE (bico 0.4, Marlin, extrusão relativa).
    Depende de ClipperLib (clipper-lib 6.4.2). Funciona em Worker, página ou Node. */
 (function (G) {
@@ -89,6 +89,41 @@
     var pt = { X: Math.round(x * SC), Y: Math.round(y * SC) }, c = 0;
     for (var i = 0; i < paths.length; i++) if (CL.Clipper.PointInPolygon(pt, paths[i]) !== 0) c++;
     return (c & 1) === 1;
+  }
+  // Suporte em grade, como o estilo "grid" do OrcaSlicer: a área que precisa de apoio é alargada para as
+  // células inteiras de uma grade fixa (g mm) que ela toca. Assim cada torre tem pelo menos uma célula de
+  // largura e não muda de forma de uma camada para a outra.
+  function snapGrid(paths, g) {
+    if (!paths.length) return [];
+    var G = g * SC, cells = new Set(), i, j, x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    var mark = function (X, Y) { cells.add(Math.floor(X / G) * 65536 + Math.floor(Y / G)); };
+    for (i = 0; i < paths.length; i++) {
+      var p = paths[i], n = p.length;
+      for (j = 0; j < n; j++) {
+        var A = p[j], B = p[(j + 1) % n], len = Math.hypot(B.X - A.X, B.Y - A.Y), st = Math.max(1, Math.ceil(len / (G / 3)));
+        for (var t = 0; t <= st; t++) mark(A.X + (B.X - A.X) * t / st, A.Y + (B.Y - A.Y) * t / st);
+        if (A.X < x0) x0 = A.X; if (A.X > x1) x1 = A.X; if (A.Y < y0) y0 = A.Y; if (A.Y > y1) y1 = A.Y;
+      }
+    }
+    // células inteiras dentro da área (o centro está dentro)
+    for (var cx = Math.floor(x0 / G); cx <= Math.floor(x1 / G); cx++) for (var cy = Math.floor(y0 / G); cy <= Math.floor(y1 / G); cy++) {
+      if (!cells.has(cx * 65536 + cy) && inside((cx + 0.5) * g, (cy + 0.5) * g, paths)) cells.add(cx * 65536 + cy);
+    }
+    // junta as células de cada linha em retângulos e une tudo
+    var rows = new Map();
+    cells.forEach(function (k) { var ix = Math.floor(k / 65536), iy = k - ix * 65536, r = rows.get(iy); if (r) r.push(ix); else rows.set(iy, [ix]); });
+    var rects = [];
+    rows.forEach(function (xs, iy) {
+      xs.sort(function (a, b) { return a - b; });
+      var a = xs[0], b = xs[0];
+      for (var q = 1; q <= xs.length; q++) {
+        if (q < xs.length && xs[q] === b + 1) { b = xs[q]; continue; }
+        var X0 = Math.round(a * G), X1 = Math.round((b + 1) * G), Y0 = Math.round(iy * G), Y1 = Math.round((iy + 1) * G);
+        rects.push([{ X: X0, Y: Y0 }, { X: X1, Y: Y0 }, { X: X1, Y: Y1 }, { X: X0, Y: Y1 }]);
+        if (q < xs.length) { a = xs[q]; b = xs[q]; }
+      }
+    });
+    return U(rects);
   }
   function toMM(path) {
     var a = new Array(path.length * 2);
@@ -680,9 +715,13 @@
       needs[0] = [];
       for (l = 1; l < N; l++) {
         var nd = D(regionRaw[l], OFF(regionRaw[l - 1], dOver * SC, true));
-        nd = OPEN(nd, 0.3 * SC);
+        // tira só o serrilhado (0,1 × a largura da linha, como o Orca). Com os 0,3 mm de antes, balanços entre
+        // uns 13° e o ângulo pedido ficavam sem suporte, inclusive a base arredondada de uma peça
+        nd = OPEN(nd, 0.1 * cfg.lineW * SC);
         needs[l] = dropSmall(nd, 0.5);
       }
+      // passo da grade do Orca: espaçamento do padrão de suporte (2,5 mm) + espaçamento da linha
+      var supGrid = 2.5 + (cfg.lineW - cfg.layerH * (1 - Math.PI / 4));
       var shadow = null;
       if (cfg.supports === 'buildplate') {
         shadow = new Array(N); var accS = [];
@@ -690,14 +729,15 @@
       }
       var carry = [], gapXY = cfg.supXY * SC;
       for (l = N - 1; l >= 0; l--) {
-        if (l + 2 < N && needs[l + 2].length) carry = U(carry, needs[l + 2]);
+        if (l + 2 < N && needs[l + 2].length) carry = U(carry, snapGrid(needs[l + 2], supGrid));
         if (!carry.length) continue;
         carry = clean(D(carry, regionRaw[l]), 0.02 * SC);
         var sup = D(carry, OFF(regionRaw[l], gapXY, true));
         if (l >= 1) sup = D(sup, regionRaw[l - 1]);
         if (shadow) sup = D(sup, OFF(shadow[l], gapXY, true));
-        sup = OPEN(sup, 0.25 * SC);
-        support[l] = dropSmall(sup, 1.0);
+        // o que sobra de uma célula cortada pela peça e tem menos de 1,2 mm de largura não fica em pé: sai
+        sup = OPENM(sup, 0.6 * SC);
+        support[l] = dropSmall(sup, 2.0);
         if ((l & 7) === 0) progress(0.52 + 0.08 * (N - l) / N, 'Gerando suportes');
       }
     }
@@ -1450,7 +1490,7 @@
     };
   }
 
-  var API = { slice: slice, BED: [BED_X, BED_Y, BED_Z], COLORS: COLORS, version: 13 };
+  var API = { slice: slice, BED: [BED_X, BED_Y, BED_Z], COLORS: COLORS, version: 14 };
   API._int = { sliceMesh: sliceMesh, chain: chain, U: U, D: D, I: I, OFF: OFF, clean: clean, islands: islands, analyze: analyze, gyroidLines: gyroidLines, scanFill: scanFill, orderMonotonic: orderMonotonic, bridgeAngle: bridgeAngle, SC: SC };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   else G.SlicerCore = API;
