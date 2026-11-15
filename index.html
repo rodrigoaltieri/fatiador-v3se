@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Fatiador V3 SE</title>
+<meta name="theme-color" content="#16181d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Fatiador">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Bancada de oficina: neutros grafite levemente azulados, laranja de sinalização como acento. */
+  --bg: #eef1f4;
+  --panel: #ffffff;
+  --ink: #18202a;
+  --muted: #5d6875;
+  --line: #d8dee5;
+  --accent: #f2601d;
+  --accent-ink: #ffffff;
+  --soft: #f4f6f8;
+  --stage: #dfe4ea;
+  --bed: #c9d0d8;
+  --grid: #b3bcc6;
+  --ok: #1f8a5b;
+  --warn: #b5530a;
+  --font-display: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11151a; --panel: #181d24; --ink: #e8edf2; --muted: #98a3b0; --line: #2a323c;
+    --accent: #ff7a3d; --accent-ink: #1a0d05; --soft: #1f252d; --stage: #0d1014; --bed: #232a33; --grid: #36404c;
+    --ok: #4cc38a; --warn: #f0a057; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11151a; --panel: #181d24; --ink: #e8edf2; --muted: #98a3b0; --line: #2a323c;
+  --accent: #ff7a3d; --accent-ink: #1a0d05; --soft: #1f252d; --stage: #0d1014; --bed: #232a33; --grid: #36404c;
+  --ok: #4cc38a; --warn: #f0a057; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.45 var(--font-body); -webkit-text-size-adjust: 100%; overflow: hidden; }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+.app { height: 100%; display: grid; grid-template-columns: 1fr 380px; grid-template-rows: auto 1fr; }
+.bar { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; padding: 10px 16px; padding-top: max(10px, env(safe-area-inset-top)); border-bottom: 1px solid var(--line); background: var(--panel); }
+.brand { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; min-width: 0; }
+.brand strong { font: 700 17px/1.2 var(--font-display); letter-spacing: -0.01em; }
+.chip { font: 500 12px/1 var(--font-mono); color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 5px 9px; white-space: nowrap; }
+.spacer { flex: 1; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); font-weight: 600; font-size: 14px; white-space: nowrap; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:disabled { opacity: .45; cursor: default; }
+.btn.small { min-height: 34px; padding: 0 10px; font-size: 13px; }
+.btn.on { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+
+.stage { position: relative; background: var(--stage); min-height: 0; overflow: hidden; }
+#view { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; display: block; }
+.empty { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; pointer-events: none; }
+.empty-card { pointer-events: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 22px; max-width: 420px; display: grid; gap: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.08); }
+.empty-card h2 { margin: 0; font: 600 19px/1.25 var(--font-display); text-wrap: balance; }
+.empty-card p { margin: 0; color: var(--muted); font-size: 14px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+.stage.drag::after { content: "Solte o arquivo aqui"; position: absolute; inset: 12px; border: 2px dashed var(--accent); border-radius: 14px; display: grid; place-items: center; font-weight: 600; color: var(--accent); background: color-mix(in srgb, var(--stage) 80%, transparent); }
+
+.hud { position: absolute; left: 12px; top: 12px; display: flex; gap: 6px; flex-wrap: wrap; max-width: calc(100% - 24px); }
+.pill { background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 6px 11px; font-size: 13px; display: inline-flex; gap: 6px; align-items: center; }
+.pill.warn { border-color: var(--warn); color: var(--warn); }
+.pill.ok { border-color: var(--ok); color: var(--ok); }
+.tabs { position: absolute; right: 12px; top: 12px; display: flex; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
+.tabs button { border: 0; background: transparent; padding: 7px 12px; border-radius: 7px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.tabs button[aria-pressed="true"] { background: var(--soft); color: var(--ink); }
+.tabs button:disabled { opacity: .4; cursor: default; }
+.layerbar { position: absolute; left: 12px; right: 12px; bottom: 12px; padding-bottom: env(safe-area-inset-bottom); display: none; gap: 8px; }
+.layerbar.show { display: grid; }
+.lb-inner { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: grid; gap: 8px; }
+.lb-top { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; flex-wrap: wrap; }
+.lb-top .num { color: var(--muted); }
+.lb-ctl { display: flex; align-items: center; gap: 8px; }
+.lb-ctl input { flex: 1; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 5px; }
+.legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.pickhint { position: absolute; left: 50%; top: 56px; transform: translateX(-50%); background: var(--ink); color: var(--panel); border-radius: 999px; padding: 8px 14px; font-size: 13px; font-weight: 500; display: none; white-space: nowrap; }
+.pickhint.show { display: block; }
+
+.panel { background: var(--panel); border-left: 1px solid var(--line); display: grid; grid-template-rows: auto 1fr auto; min-height: 0; }
+.ptabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin: 12px 16px 0; padding: 3px; border-radius: 10px; background: var(--soft); border: 1px solid var(--line); }
+.ptabs button { border: 0; background: transparent; border-radius: 7px; padding: 8px; font-weight: 600; font-size: 14px; color: var(--muted); }
+.ptabs button[aria-pressed="true"] { background: var(--panel); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+[hidden] { display: none !important; }
+.cal { border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: grid; gap: 10px; }
+.cal-h { display: flex; gap: 10px; align-items: center; }
+.cal-h .n { flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--soft); border: 1px solid var(--line); display: grid; place-items: center; font: 600 13px/1 var(--font-mono); }
+.cal.done .cal-h .n { background: var(--ok); border-color: var(--ok); color: var(--panel); }
+.cal-h h4 { margin: 0; flex: 1; font: 600 15px/1.25 var(--font-display); }
+.cal-h .tag { font: 500 12px/1 var(--font-mono); color: var(--muted); white-space: nowrap; }
+.cal p { margin: 0; font-size: 13px; color: var(--muted); }
+.cal p b { color: var(--ink); font-weight: 600; }
+.cal .res { font-size: 13px; color: var(--ok); font-weight: 600; }
+.cal select { max-width: none; width: 100%; }
+.cal .lbl { font-size: 13px; font-weight: 600; }
+.fgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; max-width: 240px; }
+.fgrid button { aspect-ratio: 1.3; border: 1px solid var(--line); border-radius: 8px; background: var(--soft); font: 500 14px/1 var(--font-mono); position: relative; }
+.fgrid button[aria-pressed="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+.fgrid button.tab::before { content: ""; position: absolute; left: -5px; top: 30%; width: 5px; height: 40%; background: var(--muted); border-radius: 2px 0 0 2px; }
+.cal .two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.cal .two input { width: 100%; height: 38px; border: 1px solid var(--line); border-radius: 10px; background: var(--soft); padding: 0 10px; font-family: var(--font-mono); }
+.checklist { margin: 0; padding-left: 18px; font-size: 13px; color: var(--muted); display: grid; gap: 4px; }
+.scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 6px 16px 16px; min-height: 0; }
+.sec { padding: 14px 0; border-bottom: 1px solid var(--line); display: grid; gap: 10px; }
+.sec:last-child { border-bottom: 0; }
+.sec h3 { margin: 0; font: 600 12px/1.2 var(--font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; align-items: center; }
+.sec h4 { margin: 6px 0 0; font: 600 13px/1.2 var(--font-display); color: var(--ink); }
+details.sec > summary { list-style: none; cursor: pointer; }
+details.sec > summary::-webkit-details-marker { display: none; }
+details.sec > summary h3::after { content: "+"; font: 500 16px/1 var(--font-mono); }
+details.sec[open] > summary h3::after { content: "–"; }
+details.sec .inner { display: grid; gap: 10px; }
+.field { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; min-height: 40px; }
+.field > label { font-size: 14px; }
+.field small { display: block; color: var(--muted); font-size: 12px; line-height: 1.3; }
+.stepper { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--soft); }
+.stepper button { width: 36px; height: 36px; border: 0; background: transparent; font-size: 18px; color: var(--muted); }
+.stepper button:active { background: var(--line); }
+.stepper input { width: 62px; height: 36px; border: 0; border-left: 1px solid var(--line); border-right: 1px solid var(--line); background: var(--panel); text-align: center; font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 14px; }
+.stepper .u { padding: 0 8px; font-size: 12px; color: var(--muted); min-width: 30px; text-align: center; }
+select { height: 38px; border: 1px solid var(--line); border-radius: 10px; background: var(--soft); padding: 0 10px; max-width: 200px; }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--soft); }
+.seg button { border: 0; border-right: 1px solid var(--line); background: transparent; padding: 7px 2px; display: grid; gap: 1px; font-size: 14px; }
+.seg button:last-child { border-right: 0; }
+.seg button span { font-family: var(--font-mono); font-weight: 500; }
+.seg button small { font-size: 11px; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--panel); }
+.seg button[aria-pressed="true"] small { color: inherit; opacity: .8; }
+.range { display: grid; gap: 6px; }
+.range .top { display: flex; justify-content: space-between; align-items: baseline; }
+.range output { font-family: var(--font-mono); font-weight: 500; }
+input[type=range] { width: 100%; accent-color: var(--accent); height: 28px; }
+.toggle { position: relative; width: 48px; height: 28px; }
+.toggle input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.toggle span { position: absolute; inset: 0; border-radius: 999px; background: var(--line); transition: background .15s; pointer-events: none; }
+.toggle span::after { content: ""; position: absolute; left: 3px; top: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--panel); box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: transform .15s; }
+.toggle input:checked + span { background: var(--accent); }
+.toggle input:checked + span::after { transform: translateX(20px); }
+.toggle input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.modelinfo { display: grid; gap: 4px; }
+.modelinfo .name { font-weight: 600; overflow-wrap: anywhere; }
+.modelinfo .num { color: var(--muted); font-size: 13px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.note { font-size: 12px; color: var(--muted); margin: 0; }
+
+.actions { border-top: 1px solid var(--line); padding: 12px 16px; padding-bottom: max(12px, env(safe-area-inset-bottom)); display: grid; gap: 10px; background: var(--panel); }
+.actions .btn.primary { min-height: 48px; font-size: 16px; }
+.prog { height: 6px; border-radius: 999px; background: var(--soft); overflow: hidden; display: none; }
+.prog.show { display: block; }
+.prog i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .15s; }
+.status { font-size: 13px; color: var(--muted); min-height: 1.2em; }
+.result { display: none; gap: 10px; }
+.result.show { display: grid; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.stat { background: var(--soft); border-radius: 10px; padding: 8px; display: grid; gap: 2px; }
+.stat b { font: 500 15px/1.2 var(--font-mono); font-variant-numeric: tabular-nums; }
+.stat span { font-size: 11px; color: var(--muted); }
+.result.stale .stats { opacity: .5; }
+
+@media (max-width: 860px), (max-aspect-ratio: 1/1) {
+  body { overflow: auto; }
+  .app { grid-template-columns: 1fr; grid-template-rows: auto 52vh auto; height: auto; min-height: 100%; }
+  .panel { border-left: 0; border-top: 1px solid var(--line); grid-template-rows: auto auto auto; }
+  .scroll { overflow: visible; }
+  .actions { position: sticky; bottom: 0; box-shadow: 0 -6px 20px rgba(0,0,0,.06); }
+}
+@media (max-width: 420px) { .chip { display: none; } .stats { grid-template-columns: repeat(2, 1fr); } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="bar">
+    <div class="brand">
+      <strong>Fatiador V3 SE</strong>
+      <span class="chip">Ender-3 V3 SE · bico 0.4 · 220×220×250</span>
+    </div>
+    <div class="spacer"></div>
+    <label class="btn" for="file">Abrir modelo</label>
+    <input id="file" type="file" hidden>
+  </header>
+
+  <main class="stage" id="stage">
+    <canvas id="view" aria-label="Visualização 3D da mesa"></canvas>
+    <div class="hud" id="hud"></div>
+    <div class="tabs" role="group" aria-label="Modo de visualização">
+      <button id="tab-model" aria-pressed="true">Modelo</button>
+      <button id="tab-layers" aria-pressed="false" disabled>Camadas</button>
+    </div>
+    <div class="pickhint" id="pickhint">Toque na face que deve ficar apoiada na mesa</div>
+    <div class="empty" id="empty">
+      <div class="empty-card">
+        <h2>Abra um STL, 3MF ou OBJ para fatiar</h2>
+        <p>O perfil já está ajustado para a sua Ender-3 V3 SE com PLA. O G-code sai pronto para o cartão microSD.</p>
+        <div class="row">
+          <label class="btn primary" for="file">Escolher arquivo</label>
+          <button class="btn" id="ex-cube">Cubo 20 mm</button>
+          <button class="btn" id="ex-cyl">Cilindro Ø20</button>
+        </div>
+      </div>
+    </div>
+    <div class="layerbar" id="layerbar">
+      <div class="lb-inner">
+        <div class="lb-top"><strong id="lb-label">Camada 1 de 1</strong><span class="num" id="lb-z">z 0,20 mm</span></div>
+        <div class="lb-ctl">
+          <button class="btn small" id="lb-prev" aria-label="Camada anterior">−</button>
+          <input type="range" id="lb-range" min="1" max="1" value="1" aria-label="Camada">
+          <button class="btn small" id="lb-next" aria-label="Próxima camada">+</button>
+        </div>
+        <div class="legend" id="legend"></div>
+      </div>
+    </div>
+  </main>
+
+  <aside class="panel">
+    <div class="ptabs" role="group" aria-label="Painel">
+      <button id="pt-set" aria-pressed="true">Ajustes</button>
+      <button id="pt-cal" aria-pressed="false">Calibração</button>
+    </div>
+    <div class="scroll" id="calib" hidden></div>
+    <div class="scroll" id="settings">
+      <section class="sec" id="sec-model">
+        <h3>Modelo</h3>
+        <div class="modelinfo">
+          <span class="name" id="m-name">Nenhum modelo aberto</span>
+          <span class="num" id="m-size">—</span>
+        </div>
+        <div class="grid3">
+          <button class="btn small" id="rot-x" disabled>Girar X 90°</button>
+          <button class="btn small" id="rot-y" disabled>Girar Y 90°</button>
+          <button class="btn small" id="rot-z" disabled>Girar Z 90°</button>
+        </div>
+        <div class="row">
+          <button class="btn small" id="pick" disabled>Apoiar face na mesa</button>
+          <button class="btn small" id="reset-tf" disabled>Desfazer giros</button>
+        </div>
+        <div class="field">
+          <label for="f-scale">Escala</label>
+          <div class="stepper"><button data-for="f-scale" data-d="-5" aria-label="Diminuir escala">−</button><input id="f-scale" inputmode="decimal" value="100"><button data-for="f-scale" data-d="5" aria-label="Aumentar escala">+</button><span class="u">%</span></div>
+        </div>
+        <div class="field">
+          <label for="f-copies">Cópias</label>
+          <div class="stepper"><button data-for="f-copies" data-d="-1" aria-label="Menos cópias" disabled>−</button><input id="f-copies" inputmode="numeric" value="1" disabled><button data-for="f-copies" data-d="1" aria-label="Mais cópias" disabled>+</button></div>
+        </div>
+      </section>
+      <div id="dyn"></div>
+      <section class="sec">
+        <div class="row">
+          <button class="btn small" id="reset-cfg">Restaurar perfil PLA Rodrigo</button>
+        </div>
+        <div class="row" id="xfer-row">
+          <button class="btn small" id="export-cfg">Exportar ajustes</button>
+          <button class="btn small" id="import-cfg">Importar ajustes</button>
+          <input type="file" id="import-file" accept=".json,application/json" hidden>
+        </div>
+        <p class="note"><span id="sync-note">Ajustes salvos neste aparelho.</span> Base: “0.20 Qualidade Rodrigo – V3 SE” e “PLA Rodrigo – V3 SE”, do seu OrcaSlicer.</p>
+      </section>
+    </div>
+    <div class="actions">
+      <div class="result" id="result">
+        <div class="stats">
+          <div class="stat"><b id="r-time">—</b><span>tempo</span></div>
+          <div class="stat"><b id="r-g">—</b><span>filamento</span></div>
+          <div class="stat"><b id="r-m">—</b><span>comprimento</span></div>
+          <div class="stat"><b id="r-l">—</b><span>camadas</span></div>
+        </div>
+        <div class="row">
+          <button class="btn" id="dl-zip" style="flex:1">Baixar G-code (.zip)</button>
+          <button class="btn" id="dl-txt">Como .gcode.txt</button>
+        </div>
+        <p class="note" id="dl-note">O Claude não permite baixar .gcode direto. No app Arquivos: toque no .zip para extrair o .gcode, ou renomeie o .gcode.txt apagando o “.txt”. Depois copie para o microSD.</p>
+      </div>
+      <div class="prog" id="prog"><i></i></div>
+      <div class="status" id="status" aria-live="polite">Abra um modelo para começar.</div>
+      <button class="btn primary" id="go" disabled>Fatiar</button>
+    </div>
+  </aside>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script>
+// Fora do Claude (GitHub Pages, arquivo local): sem db/downloads do artefato
+var STANDALONE = /\.github\.io$/.test(location.hostname) || location.protocol === 'file:' || /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+(function () {
+'use strict';
+var $ = function (id) { return document.getElementById(id); };
+var BED = [220, 220, 250];
+var STORE = 'fatiador-v3se-cfg-v1';
+
+/* ================= Perfil ================= */
+var DEFAULTS = {
+  layerH: 0.2, firstH: 0.2, lineW: 0.42, firstW: 0.5,
+  walls: 3, top: 5, bottom: 4, infill: 15, pattern: 'lines', overlap: 0.15,
+  supports: 'off', supAngle: 35, supDensity: 20, supXY: 0.6, supIface: true,
+  brim: 0, skirt: 1, skirtDist: 3,
+  tNozzle0: 210, tNozzle: 205, tBed0: 60, tBed: 55, flow: 0.98, maxVol: 13,
+  sp: { first: 25, outer: 40, inner: 70, top: 40, solid: 80, sparse: 120, support: 80, iface: 50, bridge: 30, ovh: 20, iron: 20, gap: 40, travel: 150, travel0: 100 },
+  acc: { outer: 700, inner: 1500, top: 1000, def: 2000, travel: 2500, first: 500 },
+  retLen: 1.2, retSpeed: 40, unretSpeed: 30, zhop: 0.2, retMinTravel: 1, wipe: true, wipeDist: 1.5, bridgeFlow: 0.95,
+  elephant: 0.1, xyComp: 0, holeComp: 0, minLayerTime: 6, minSpeed: 15, fanFullLayer: 3, seam: 'rear', vase: false, scarf: false, scarfLen: 15, ironing: false, v: 2
+};
+function clone(o) { return JSON.parse(JSON.stringify(o)); }
+function getK(o, k) { return k.split('.').reduce(function (a, p) { return a[p]; }, o); }
+function setK(o, k, v) { var ps = k.split('.'), last = ps.pop(); ps.reduce(function (a, p) { return a[p]; }, o)[last] = v; }
+var cfg = clone(DEFAULTS);
+try {
+  var saved = JSON.parse(localStorage.getItem(STORE) || 'null');
+  if (saved) {
+    cfg = Object.assign(clone(DEFAULTS), saved); cfg.sp = Object.assign(clone(DEFAULTS.sp), saved.sp || {}); cfg.acc = Object.assign(clone(DEFAULTS.acc), saved.acc || {});
+    if (!saved.v || saved.v < 2) {
+      // perfil salvo pela primeira versão: atualiza só o que ainda estava no padrão antigo
+      var calOld = JSON.parse(localStorage.getItem('fatiador-v3se-cal-v1') || '{}') || {};
+      if (saved.pattern === 'grid') cfg.pattern = 'lines';
+      if (saved.retLen === 0.8 && !(calOld.ret && calOld.ret.result)) cfg.retLen = 1.2;
+      if (saved.sp && saved.sp.travel === 200) cfg.sp.travel = 150;
+    }
+    cfg.v = 2;
+  }
+} catch (e) { /* sem armazenamento */ }
+function saveCfg() { try { localStorage.setItem(STORE, JSON.stringify(cfg)); } catch (e) {} touchSync(); }
+
+var SECTIONS = [
+  { title: 'Qualidade', fields: [
+    { k: 'layerH', label: 'Altura de camada (mm)', type: 'seg', options: [[0.12, '0,12', 'Fina'], [0.16, '0,16', 'Ótima'], [0.2, '0,20', 'Padrão'], [0.24, '0,24', 'Rascunho'], [0.28, '0,28', 'Rápida']] },
+    { k: 'vase', label: 'Modo vaso (espiral)', hint: 'Uma parede só, subindo sem parar e sem costura. Para vasos e copos; a peça fica aberta em cima', type: 'toggle' },
+    { k: 'ironing', label: 'Alisar o topo (ironing)', hint: 'Topo mais liso, mas a impressão demora mais', type: 'toggle' }
+  ]},
+  { title: 'Resistência', fields: [
+    { k: 'walls', label: 'Paredes', type: 'num', min: 1, max: 8, step: 1 },
+    { k: 'top', label: 'Camadas de topo', hint: 'Nunca menos que 0,8 mm de espessura', type: 'num', min: 0, max: 15, step: 1 },
+    { k: 'bottom', label: 'Camadas de fundo', type: 'num', min: 0, max: 15, step: 1 },
+    { k: 'infill', label: 'Preenchimento', type: 'range', min: 0, max: 100, step: 5, unit: '%' },
+    { k: 'pattern', label: 'Padrão', hint: 'Gyroid é mais resistente, mas demora mais e gera arquivos maiores', type: 'select', options: [['lines', 'Linhas alternadas'], ['grid', 'Grade'], ['triangles', 'Triângulos'], ['gyroid', 'Gyroid']] }
+  ]},
+  { title: 'Suporte e aderência', fields: [
+    { k: 'supports', label: 'Suporte', type: 'select', options: [['off', 'Desligado'], ['buildplate', 'Só sobre a mesa'], ['everywhere', 'Em todo lugar']] },
+    { k: 'supAngle', label: 'Ângulo limite', hint: 'Suporta superfícies mais deitadas que isso', type: 'num', min: 10, max: 80, step: 5, unit: '°' },
+    { k: 'brim', label: 'Borda (brim)', hint: 'Ajuda peças pequenas ou altas a não soltar', type: 'num', min: 0, max: 15, step: 1, unit: 'mm' },
+    { k: 'skirt', label: 'Voltas de saia', type: 'num', min: 0, max: 5, step: 1 }
+  ]},
+  { title: 'Filamento · PLA', fields: [
+    { k: 'tNozzle0', label: 'Bico, 1ª camada', type: 'num', min: 180, max: 260, step: 5, unit: '°C' },
+    { k: 'tNozzle', label: 'Bico, demais', type: 'num', min: 180, max: 260, step: 5, unit: '°C' },
+    { k: 'tBed0', label: 'Mesa, 1ª camada', type: 'num', min: 0, max: 100, step: 5, unit: '°C' },
+    { k: 'tBed', label: 'Mesa, demais', type: 'num', min: 0, max: 100, step: 5, unit: '°C' },
+    { k: 'flow', label: 'Fluxo (flow ratio)', type: 'num', min: 0.8, max: 1.2, step: 0.01 },
+    { k: 'maxVol', label: 'Vel. volumétrica máx.', type: 'num', min: 2, max: 30, step: 1, unit: 'mm³/s' }
+  ]},
+  { title: 'Avançado', collapsed: true, groups: [
+    { title: 'Velocidades', fields: [
+      { k: 'sp.first', label: '1ª camada', type: 'num', min: 10, max: 80, step: 5, unit: 'mm/s' },
+      { k: 'sp.outer', label: 'Parede externa', type: 'num', min: 10, max: 250, step: 5, unit: 'mm/s' },
+      { k: 'sp.inner', label: 'Parede interna', type: 'num', min: 10, max: 250, step: 5, unit: 'mm/s' },
+      { k: 'sp.top', label: 'Topo', type: 'num', min: 10, max: 250, step: 5, unit: 'mm/s' },
+      { k: 'sp.solid', label: 'Sólido interno', type: 'num', min: 10, max: 250, step: 5, unit: 'mm/s' },
+      { k: 'sp.sparse', label: 'Preenchimento', type: 'num', min: 10, max: 250, step: 5, unit: 'mm/s' },
+      { k: 'sp.bridge', label: 'Pontes', type: 'num', min: 10, max: 150, step: 5, unit: 'mm/s' },
+      { k: 'sp.ovh', label: 'Paredes em balanço', type: 'num', min: 5, max: 100, step: 5, unit: 'mm/s' },
+      { k: 'sp.support', label: 'Suporte', type: 'num', min: 10, max: 250, step: 5, unit: 'mm/s' },
+      { k: 'sp.travel', label: 'Deslocamento', type: 'num', min: 50, max: 250, step: 10, unit: 'mm/s' }
+    ]},
+    { title: 'Acelerações', fields: [
+      { k: 'acc.outer', label: 'Parede externa', type: 'num', min: 200, max: 5000, step: 100, unit: 'mm/s²' },
+      { k: 'acc.inner', label: 'Parede interna', type: 'num', min: 200, max: 5000, step: 100, unit: 'mm/s²' },
+      { k: 'acc.top', label: 'Topo', type: 'num', min: 200, max: 5000, step: 100, unit: 'mm/s²' },
+      { k: 'acc.def', label: 'Demais', type: 'num', min: 200, max: 5000, step: 100, unit: 'mm/s²' },
+      { k: 'acc.first', label: '1ª camada', type: 'num', min: 200, max: 5000, step: 100, unit: 'mm/s²' }
+    ]},
+    { title: 'Retração', fields: [
+      { k: 'retLen', label: 'Comprimento', type: 'num', min: 0, max: 3, step: 0.1, unit: 'mm' },
+      { k: 'retSpeed', label: 'Velocidade de recolher', type: 'num', min: 10, max: 40, step: 5, unit: 'mm/s' },
+      { k: 'unretSpeed', label: 'Velocidade de devolver', type: 'num', min: 10, max: 40, step: 5, unit: 'mm/s' },
+      { k: 'zhop', label: 'Elevar Z (z-hop)', type: 'num', min: 0, max: 1, step: 0.1, unit: 'mm' },
+      { k: 'wipe', label: 'Limpar o bico na costura', hint: 'Contra bolinhas em peças redondas', type: 'toggle' }
+    ]},
+    { title: 'Precisão dimensional', fields: [
+      { k: 'elephant', label: 'Pé de elefante', type: 'num', min: 0, max: 0.5, step: 0.05, unit: 'mm' },
+      { k: 'xyComp', label: 'Compensação XY do contorno', hint: 'Negativo encolhe a peça', type: 'num', min: -0.5, max: 0.5, step: 0.02, unit: 'mm' },
+      { k: 'holeComp', label: 'Compensação de furos', hint: 'Positivo alarga furos para encaixes', type: 'num', min: 0, max: 0.5, step: 0.02, unit: 'mm' }
+    ]},
+    { title: 'Resfriamento e costura', fields: [
+      { k: 'minLayerTime', label: 'Tempo mínimo por camada', type: 'num', min: 0, max: 30, step: 1, unit: 's' },
+      { k: 'minSpeed', label: 'Velocidade mínima', type: 'num', min: 5, max: 50, step: 5, unit: 'mm/s' },
+      { k: 'seam', label: 'Posição da costura', type: 'select', options: [['rear', 'Atrás, na quina'], ['face', 'Atrás, no meio da face'], ['nearest', 'Mais próxima']] },
+      { k: 'scarf', label: 'Costura em rampa (scarf)', hint: 'Em contornos curvos, dilui a emenda ao longo de 15 mm', type: 'toggle' }
+    ]}
+  ]}
+];
+
+function fmt(v) { return Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 3 }); }
+function parseNum(s) { var v = parseFloat(String(s).replace(',', '.')); return isFinite(v) ? v : null; }
+var binders = [];
+function fieldEl(f) {
+  var id = 'f-' + f.k.replace('.', '-');
+  var wrap = document.createElement('div');
+  var lab = '<label for="' + id + '">' + f.label + (f.hint ? '<small>' + f.hint + '</small>' : '') + '</label>';
+  if (f.type === 'seg') {
+    wrap.className = 'range';
+    wrap.innerHTML = '<div class="top"><span id="' + id + '-l">' + f.label + '</span></div><div class="seg" role="group" aria-labelledby="' + id + '-l">' +
+      f.options.map(function (o) { return '<button type="button" data-v="' + o[0] + '"><span>' + o[1] + '</span><small>' + o[2] + '</small></button>'; }).join('') + '</div>';
+    var btns = wrap.querySelectorAll('button');
+    var sync = function () { btns.forEach(function (b) { b.setAttribute('aria-pressed', String(Math.abs(parseFloat(b.dataset.v) - getK(cfg, f.k)) < 1e-6)); }); };
+    btns.forEach(function (b) { b.addEventListener('click', function () { setK(cfg, f.k, parseFloat(b.dataset.v)); sync(); changed(); }); });
+    binders.push(sync);
+  } else if (f.type === 'num') {
+    wrap.className = 'field';
+    wrap.innerHTML = lab + '<div class="stepper"><button type="button" data-d="-1" aria-label="Diminuir">−</button><input id="' + id + '" inputmode="decimal" autocomplete="off"><button type="button" data-d="1" aria-label="Aumentar">+</button>' + (f.unit ? '<span class="u">' + f.unit + '</span>' : '') + '</div>';
+    var inp = wrap.querySelector('input');
+    var syncN = function () { inp.value = fmt(getK(cfg, f.k)); };
+    var commit = function (v) {
+      if (v === null) { syncN(); return; }
+      v = Math.min(f.max, Math.max(f.min, v));
+      v = Math.round(v * 1000) / 1000;
+      setK(cfg, f.k, v); syncN(); changed();
+    };
+    inp.addEventListener('change', function () { commit(parseNum(inp.value)); });
+    wrap.querySelectorAll('button').forEach(function (b) {
+      b.addEventListener('click', function () { commit(getK(cfg, f.k) + f.step * parseFloat(b.dataset.d)); });
+    });
+    binders.push(syncN);
+  } else if (f.type === 'range') {
+    wrap.className = 'range';
+    wrap.innerHTML = '<div class="top"><label for="' + id + '">' + f.label + '</label><output id="' + id + '-o" class="num"></output></div><input type="range" id="' + id + '" min="' + f.min + '" max="' + f.max + '" step="' + f.step + '">';
+    var r = wrap.querySelector('input'), out = wrap.querySelector('output');
+    var syncR = function () { r.value = getK(cfg, f.k); out.textContent = getK(cfg, f.k) + (f.unit || ''); };
+    r.addEventListener('input', function () { setK(cfg, f.k, parseFloat(r.value)); out.textContent = r.value + (f.unit || ''); });
+    r.addEventListener('change', changed);
+    binders.push(syncR);
+  } else if (f.type === 'select') {
+    wrap.className = 'field';
+    wrap.innerHTML = lab + '<select id="' + id + '">' + f.options.map(function (o) { return '<option value="' + o[0] + '">' + o[1] + '</option>'; }).join('') + '</select>';
+    var s = wrap.querySelector('select');
+    s.addEventListener('change', function () { setK(cfg, f.k, s.value); changed(); });
+    binders.push(function () { s.value = getK(cfg, f.k); });
+  } else if (f.type === 'toggle') {
+    wrap.className = 'field';
+    wrap.innerHTML = lab + '<span class="toggle"><input type="checkbox" id="' + id + '"><span></span></span>';
+    var c = wrap.querySelector('input');
+    c.addEventListener('change', function () { setK(cfg, f.k, c.checked); changed(); });
+    binders.push(function () { c.checked = !!getK(cfg, f.k); });
+  }
+  return wrap;
+}
+(function buildSettings() {
+  var dyn = $('dyn');
+  SECTIONS.forEach(function (S) {
+    var sec;
+    if (S.collapsed) {
+      sec = document.createElement('details'); sec.className = 'sec';
+      sec.innerHTML = '<summary><h3>' + S.title + '</h3></summary><div class="inner"></div>';
+      var inner = sec.querySelector('.inner');
+      S.groups.forEach(function (g) {
+        var h = document.createElement('h4'); h.textContent = g.title; inner.appendChild(h);
+        g.fields.forEach(function (f) { inner.appendChild(fieldEl(f)); });
+      });
+    } else {
+      sec = document.createElement('section'); sec.className = 'sec';
+      sec.innerHTML = '<h3>' + S.title + '</h3>';
+      S.fields.forEach(function (f) { sec.appendChild(fieldEl(f)); });
+    }
+    dyn.appendChild(sec);
+  });
+  binders.forEach(function (b) { b(); });
+})();
+$('reset-cfg').addEventListener('click', function () { cfg = clone(DEFAULTS); binders.forEach(function (b) { b(); }); changed(); });
+
+/* ================= Visualização 3D ================= */
+var canvas = $('view'), stage = $('stage');
+var hasGL = typeof THREE !== 'undefined';
+var renderer, scene, camera, modelMesh = null, bedGroup, previewPast = null, previewCur = null;
+var raf = 0;
+function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+function requestRender() { if (!hasGL || raf) return; raf = requestAnimationFrame(function () { raf = 0; renderer.render(scene, camera); }); }
+var ctl = { theta: -Math.PI / 2 + 0.35, phi: 1.05, dist: 430, target: null };
+
+function buildBed() {
+  if (bedGroup) scene.remove(bedGroup);
+  bedGroup = new THREE.Group();
+  var plate = new THREE.Mesh(new THREE.PlaneGeometry(BED[0], BED[1]), new THREE.MeshBasicMaterial({ color: new THREE.Color(css('--bed')) }));
+  plate.position.set(BED[0] / 2, BED[1] / 2, -0.05);
+  bedGroup.add(plate);
+  var g = [], g2 = [];
+  for (var i = 0; i <= 220; i += 10) {
+    var arr = (i % 50 === 0) ? g2 : g;
+    arr.push(i, 0, 0, i, 220, 0, 0, i, 0, 220, i, 0);
+  }
+  [[g, 0.55], [g2, 1]].forEach(function (p) {
+    var geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(p[0], 3));
+    bedGroup.add(new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: new THREE.Color(css('--grid')), transparent: true, opacity: p[1] })));
+  });
+  // volume de impressão
+  var box = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(BED[0], BED[1], BED[2])), new THREE.LineBasicMaterial({ color: new THREE.Color(css('--grid')), transparent: true, opacity: 0.45 }));
+  box.position.set(BED[0] / 2, BED[1] / 2, BED[2] / 2);
+  bedGroup.add(box);
+  // marca da frente
+  var fr = new THREE.Mesh(new THREE.PlaneGeometry(30, 3), new THREE.MeshBasicMaterial({ color: new THREE.Color(css('--accent')) }));
+  fr.position.set(110, -4, 0);
+  bedGroup.add(fr);
+  scene.add(bedGroup);
+}
+function applyTheme() {
+  if (!hasGL) return;
+  scene.background = new THREE.Color(css('--stage'));
+  buildBed();
+  if (modelMesh) modelMesh.material.color = new THREE.Color(css('--accent'));
+  requestRender();
+}
+function initGL() {
+  if (!hasGL) { setStatus('Não foi possível carregar a visualização 3D. O fatiamento continua funcionando.'); return; }
+  renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(38, 1, 1, 6000);
+  camera.up.set(0, 0, 1);
+  ctl.target = new THREE.Vector3(110, 110, 10);
+  var hemi = new THREE.HemisphereLight(0xffffff, 0x445566, 0.75); hemi.position.set(0, 0, 1); scene.add(hemi);
+  var dir = new THREE.DirectionalLight(0xffffff, 0.75); dir.position.set(260, -160, 380); scene.add(dir);
+  var dir2 = new THREE.DirectionalLight(0xffffff, 0.25); dir2.position.set(-200, 300, 150); scene.add(dir2);
+  applyTheme();
+  updateCam();
+  new ResizeObserver(resize).observe(stage);
+  resize();
+  try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme); } catch (e) {}
+  new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+}
+function resize() {
+  if (!hasGL) return;
+  var w = stage.clientWidth, h = stage.clientHeight;
+  if (!w || !h) return;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+  requestRender();
+}
+function updateCam() {
+  if (!hasGL) return;
+  var sp = Math.sin(ctl.phi), t = ctl.target;
+  camera.position.set(t.x + ctl.dist * sp * Math.cos(ctl.theta), t.y + ctl.dist * sp * Math.sin(ctl.theta), t.z + ctl.dist * Math.cos(ctl.phi));
+  camera.lookAt(t);
+  requestRender();
+}
+function frame(size) {
+  if (!hasGL) return;
+  var m = Math.max(size[0], size[1], size[2], 20);
+  ctl.target.set(110, 110, size[2] / 2);
+  ctl.dist = Math.min(900, Math.max(90, m * 2.2 + 50));
+  updateCam();
+}
+
+// gestos: 1 dedo gira, 2 dedos aproximam e arrastam
+var pointers = new Map(), gesture = null, tap = null;
+canvas.addEventListener('pointerdown', function (e) {
+  canvas.setPointerCapture(e.pointerId);
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pointers.size === 1) tap = { x: e.clientX, y: e.clientY, t: Date.now(), moved: false, btn: e.button, shift: e.shiftKey };
+  else tap = null;
+  gesture = null;
+});
+canvas.addEventListener('pointermove', function (e) {
+  if (!pointers.has(e.pointerId)) return;
+  var prev = pointers.get(e.pointerId);
+  var cur = { x: e.clientX, y: e.clientY };
+  if (pointers.size === 1) {
+    var dx = cur.x - prev.x, dy = cur.y - prev.y;
+    if (tap && Math.hypot(cur.x - tap.x, cur.y - tap.y) > 6) tap.moved = true;
+    if (tap && (tap.btn === 2 || tap.shift)) pan(dx, dy);
+    else { ctl.theta -= dx * 0.008; ctl.phi = Math.min(Math.PI - 0.05, Math.max(0.05, ctl.phi - dy * 0.008)); updateCam(); }
+    pointers.set(e.pointerId, cur);
+  } else if (pointers.size === 2) {
+    pointers.set(e.pointerId, cur);
+    var pts = Array.from(pointers.values());
+    var mid = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }, dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+    if (gesture) {
+      if (dist > 0 && gesture.dist > 0) ctl.dist = Math.min(1500, Math.max(30, ctl.dist * gesture.dist / dist));
+      pan(mid.x - gesture.mid.x, mid.y - gesture.mid.y);
+    }
+    gesture = { mid: mid, dist: dist };
+  }
+});
+function endPointer(e) {
+  if (!pointers.has(e.pointerId)) return;
+  pointers.delete(e.pointerId);
+  if (pointers.size < 2) gesture = null;
+  if (tap && !tap.moved && Date.now() - tap.t < 400 && pointers.size === 0) onTap(e);
+  tap = null;
+}
+canvas.addEventListener('pointerup', endPointer);
+canvas.addEventListener('pointercancel', function (e) { pointers.delete(e.pointerId); gesture = null; tap = null; });
+canvas.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+canvas.addEventListener('wheel', function (e) { e.preventDefault(); ctl.dist = Math.min(1500, Math.max(30, ctl.dist * Math.exp(e.deltaY * 0.0012))); updateCam(); }, { passive: false });
+function pan(dx, dy) {
+  if (!hasGL) return;
+  var h = stage.clientHeight || 1, k = 2 * ctl.dist * Math.tan(camera.fov * Math.PI / 360) / h;
+  var right = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 0), up = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 1);
+  ctl.target.addScaledVector(right, -dx * k).addScaledVector(up, dy * k);
+  updateCam();
+}
+
+/* ================= Modelo ================= */
+var M = null; // {name, base, R, scale, tris, size}
+var pickMode = false;
+function matMul(a, b) {
+  var r = new Array(9);
+  for (var i = 0; i < 3; i++) for (var j = 0; j < 3; j++) r[i * 3 + j] = a[i * 3] * b[j] + a[i * 3 + 1] * b[3 + j] + a[i * 3 + 2] * b[6 + j];
+  return r;
+}
+function rotAxis(ax, ay, az, ang) {
+  var c = Math.cos(ang), s = Math.sin(ang), t = 1 - c;
+  return [t * ax * ax + c, t * ax * ay - s * az, t * ax * az + s * ay,
+          t * ax * ay + s * az, t * ay * ay + c, t * ay * az - s * ax,
+          t * ax * az - s * ay, t * ay * az + s * ax, t * az * az + c];
+}
+var COPY_GAP = 8, BED_MARGIN = 1;
+function applyTransform() {
+  var b = M.base, R = M.R, s = M.scale, n = b.length, one = new Float32Array(n);
+  var mnx = Infinity, mny = Infinity, mnz = Infinity, mxx = -Infinity, mxy = -Infinity, mxz = -Infinity, i;
+  for (i = 0; i < n; i += 3) {
+    var x = b[i] * s, y = b[i + 1] * s, z = b[i + 2] * s;
+    var X = R[0] * x + R[1] * y + R[2] * z, Y = R[3] * x + R[4] * y + R[5] * z, Z = R[6] * x + R[7] * y + R[8] * z;
+    one[i] = X; one[i + 1] = Y; one[i + 2] = Z;
+    if (X < mnx) mnx = X; if (X > mxx) mxx = X; if (Y < mny) mny = Y; if (Y > mxy) mxy = Y; if (Z < mnz) mnz = Z; if (Z > mxz) mxz = Z;
+  }
+  var sx = mxx - mnx, sy = mxy - mny, lim = BED[0] - 2 * BED_MARGIN;
+  // cópias em grade: a disposição mais compacta que couber na mesa
+  var copies = Math.max(1, M.copies || 1), cols = 1, rows = copies, best = Infinity;
+  for (var c = 1; c <= copies; c++) {
+    var r = Math.ceil(copies / c), W = c * sx + (c - 1) * COPY_GAP, H = r * sy + (r - 1) * COPY_GAP;
+    var score = Math.max(W, H) + ((W > lim || H > lim) ? 1e6 : 0);
+    if (score < best) { best = score; cols = c; rows = r; }
+  }
+  var totW = cols * sx + (cols - 1) * COPY_GAP, totH = rows * sy + (rows - 1) * COPY_GAP;
+  var out = new Float32Array(n * copies);
+  for (var k = 0; k < copies; k++) {
+    var ox = BED[0] / 2 - totW / 2 + (k % cols) * (sx + COPY_GAP) - mnx, oy = BED[1] / 2 - totH / 2 + Math.floor(k / cols) * (sy + COPY_GAP) - mny, o = k * n;
+    for (i = 0; i < n; i += 3) { out[o + i] = one[i] + ox; out[o + i + 1] = one[i + 1] + oy; out[o + i + 2] = one[i + 2] - mnz; }
+    if (k === 0) M.off = [ox, oy];
+  }
+  M.tris = out;
+  M.one = [sx, sy, mxz - mnz];
+  M.size = [totW, totH, mxz - mnz];
+  if (hasGL) {
+    if (modelMesh) { scene.remove(modelMesh); modelMesh.geometry.dispose(); }
+    var geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(out, 3));
+    geo.computeVertexNormals();
+    modelMesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: new THREE.Color(css('--accent')), roughness: 0.62, metalness: 0.04, side: THREE.DoubleSide }));
+    modelMesh.visible = view === 'model';
+    scene.add(modelMesh);
+  }
+  updateModelInfo();
+  invalidate();
+  requestRender();
+}
+function fits() { return M && M.size[0] <= BED[0] - 2 * BED_MARGIN && M.size[1] <= BED[1] - 2 * BED_MARGIN && M.size[2] <= BED[2]; }
+function updateModelInfo() {
+  var hud = $('hud'); hud.innerHTML = '';
+  if (!M) return;
+  $('m-name').textContent = M.name;
+  $('m-size').textContent = M.one.map(function (v) { return v.toFixed(1).replace('.', ','); }).join(' × ') + ' mm · ' + (M.base.length / 9).toLocaleString('pt-BR') + ' triângulos' + (M.copies > 1 ? ' · ' + M.copies + ' cópias' : '');
+  var p = document.createElement('span'); p.className = 'pill num';
+  p.textContent = M.size.map(function (v) { return v.toFixed(1).replace('.', ','); }).join(' × ') + ' mm';
+  hud.appendChild(p);
+  if (!fits()) { var w = document.createElement('span'); w.className = 'pill warn'; w.textContent = M.copies > 1 ? 'As cópias não cabem na mesa' : 'Não cabe na mesa'; hud.appendChild(w); }
+  else if (Math.max(M.size[0], M.size[1], M.size[2]) < 2) { var w2 = document.createElement('span'); w2.className = 'pill warn'; w2.textContent = 'Muito pequeno: o arquivo está em polegadas? Use escala 2540%'; hud.appendChild(w2); }
+  ['rot-x', 'rot-y', 'rot-z', 'pick', 'reset-tf', 'f-scale', 'f-copies'].forEach(function (id) { $(id).disabled = !!M.cal; });
+  document.querySelectorAll('[data-for="f-scale"], [data-for="f-copies"]').forEach(function (b) { b.disabled = !!M.cal; });
+  if (M.cal) { var c = document.createElement('span'); c.className = 'pill ok'; c.textContent = 'Teste: ' + M.cal.label; hud.appendChild(c); }
+  $('go').disabled = !fits();
+  $('empty').style.display = 'none';
+}
+function loadModel(name, tris, cal) {
+  if (!tris || tris.length < 9) { setStatus('Não encontrei triângulos nesse arquivo.'); return; }
+  M = { name: name, base: tris, R: [1, 0, 0, 0, 1, 0, 0, 0, 1], scale: 1, copies: 1, tris: null, size: [0, 0, 0], one: [0, 0, 0], off: [0, 0], cal: cal || null };
+  $('f-scale').value = '100'; $('f-copies').value = '1';
+  clearPreview(); setView('model');
+  applyTransform();
+  frame(M.size);
+  setStatus(fits() ? 'Pronto para fatiar.' : 'O modelo passa de 218 × 218 × 250 mm. Reduza a escala ou gire.');
+}
+function rotate(ax, ay, az) { if (!M) return; M.R = matMul(rotAxis(ax, ay, az, Math.PI / 2), M.R); applyTransform(); frame(M.size); }
+$('rot-x').addEventListener('click', function () { rotate(1, 0, 0); });
+$('rot-y').addEventListener('click', function () { rotate(0, 1, 0); });
+$('rot-z').addEventListener('click', function () { rotate(0, 0, 1); });
+$('reset-tf').addEventListener('click', function () { if (!M) return; M.R = [1, 0, 0, 0, 1, 0, 0, 0, 1]; applyTransform(); frame(M.size); });
+$('pick').addEventListener('click', function () { setPick(!pickMode); });
+function setPick(on) {
+  pickMode = on && !!M && hasGL;
+  $('pick').classList.toggle('on', pickMode);
+  $('pickhint').classList.toggle('show', pickMode);
+  if (pickMode) setView('model');
+}
+function onTap(e) {
+  if (!pickMode || !modelMesh) return;
+  var rect = canvas.getBoundingClientRect();
+  var ndc = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
+  var rc = new THREE.Raycaster(); rc.setFromCamera(ndc, camera);
+  var hit = rc.intersectObject(modelMesh)[0];
+  if (!hit || !hit.face) return;
+  var n = hit.face.normal.clone().normalize();
+  if (n.dot(rc.ray.direction) > 0) n.negate();
+  // gira para que essa normal aponte para baixo (0,0,-1)
+  var t = new THREE.Vector3(0, 0, -1), d = n.dot(t);
+  var Rn;
+  if (d > 0.99999) Rn = null;
+  else if (d < -0.99999) Rn = rotAxis(1, 0, 0, Math.PI);
+  else { var ax = new THREE.Vector3().crossVectors(n, t).normalize(); Rn = rotAxis(ax.x, ax.y, ax.z, Math.acos(Math.max(-1, Math.min(1, d)))); }
+  if (Rn) { M.R = matMul(Rn, M.R); applyTransform(); frame(M.size); }
+  setPick(false);
+}
+(function copiesCtl() {
+  var inp = $('f-copies');
+  function commit(v) {
+    if (!M || v === null) { inp.value = M ? String(M.copies) : '1'; return; }
+    v = Math.min(40, Math.max(1, Math.round(v)));
+    while (v > 1 && M.base.length / 9 * v > 3e6) v--; // limite de memória no iPad
+    M.copies = v; inp.value = String(v); applyTransform(); frame(M.size);
+    setStatus(fits() ? 'Pronto para fatiar.' : 'As cópias não cabem na mesa. Diminua a quantidade.');
+  }
+  inp.addEventListener('change', function () { commit(parseNum(inp.value)); });
+  document.querySelectorAll('[data-for="f-copies"]').forEach(function (b) {
+    b.addEventListener('click', function () { if (M) commit(M.copies + parseFloat(b.dataset.d)); });
+  });
+})();
+(function scaleCtl() {
+  var inp = $('f-scale');
+  function commit(v) {
+    if (!M || v === null) { inp.value = M ? fmt(M.scale * 100) : '100'; return; }
+    v = Math.min(10000, Math.max(1, v));
+    M.scale = v / 100; inp.value = fmt(v); applyTransform(); frame(M.size);
+  }
+  inp.addEventListener('change', function () { commit(parseNum(inp.value)); });
+  document.querySelectorAll('[data-for="f-scale"]').forEach(function (b) {
+    b.addEventListener('click', function () { if (M) commit(M.scale * 100 + parseFloat(b.dataset.d)); });
+  });
+})();
+
+/* ================= Leitura de arquivos ================= */
+function parseSTL(buf) {
+  var dv = new DataView(buf);
+  if (buf.byteLength >= 84) {
+    var n = dv.getUint32(80, true);
+    if (84 + n * 50 === buf.byteLength) {
+      var out = new Float32Array(n * 9);
+      for (var i = 0; i < n; i++) {
+        var o = 84 + i * 50 + 12;
+        for (var j = 0; j < 9; j++) out[i * 9 + j] = dv.getFloat32(o + j * 4, true);
+      }
+      return out;
+    }
+  }
+  var head = new TextDecoder().decode(new Uint8Array(buf, 0, Math.min(buf.byteLength, 1024)));
+  if (!/^\s*solid/.test(head) || !/facet|vertex/.test(head)) {
+    var nb = Math.min(dv.getUint32(80, true), Math.floor((buf.byteLength - 84) / 50)), ob = new Float32Array(nb * 9);
+    for (var bi = 0; bi < nb; bi++) for (var bj = 0; bj < 9; bj++) ob[bi * 9 + bj] = dv.getFloat32(84 + bi * 50 + 12 + bj * 4, true);
+    return ob;
+  }
+  var txt = new TextDecoder().decode(buf), re = /vertex\s+([-+\d.eE]+)\s+([-+\d.eE]+)\s+([-+\d.eE]+)/g, m, a = [];
+  while ((m = re.exec(txt))) a.push(+m[1], +m[2], +m[3]);
+  a.length -= a.length % 9;
+  return new Float32Array(a);
+}
+function parseOBJ(text) {
+  var v = [], out = [], lines = text.split(/\r?\n/);
+  for (var i = 0; i < lines.length; i++) {
+    var L = lines[i].trim();
+    if (L.charAt(0) === 'v' && L.charAt(1) === ' ') { var p = L.split(/\s+/); v.push([+p[1], +p[2], +p[3]]); }
+    else if (L.charAt(0) === 'f' && L.charAt(1) === ' ') {
+      var idx = L.split(/\s+/).slice(1).map(function (t) { var k = parseInt(t.split('/')[0], 10); return k < 0 ? v.length + k : k - 1; });
+      for (var j = 1; j + 1 < idx.length; j++) { var A = v[idx[0]], B = v[idx[j]], C = v[idx[j + 1]]; if (A && B && C) out.push(A[0], A[1], A[2], B[0], B[1], B[2], C[0], C[1], C[2]); }
+    }
+  }
+  return new Float32Array(out);
+}
+async function unzip(buf) {
+  var u8 = new Uint8Array(buf), dv = new DataView(buf), eocd = -1;
+  for (var i = u8.length - 22; i >= Math.max(0, u8.length - 70000); i--) if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  if (eocd < 0) throw new Error('zip inválido');
+  var count = dv.getUint16(eocd + 10, true), off = dv.getUint32(eocd + 16, true), files = {};
+  for (var k = 0; k < count; k++) {
+    var method = dv.getUint16(off + 10, true), csize = dv.getUint32(off + 20, true);
+    var nlen = dv.getUint16(off + 28, true), xlen = dv.getUint16(off + 30, true), clen = dv.getUint16(off + 32, true), loff = dv.getUint32(off + 42, true);
+    var name = new TextDecoder().decode(u8.subarray(off + 46, off + 46 + nlen));
+    var dstart = loff + 30 + dv.getUint16(loff + 26, true) + dv.getUint16(loff + 28, true);
+    files[name.replace(/^\//, '')] = { method: method, data: u8.subarray(dstart, dstart + csize) };
+    off += 46 + nlen + xlen + clen;
+  }
+  return files;
+}
+async function inflate(entry) {
+  if (entry.method === 0) return entry.data;
+  if (typeof DecompressionStream === 'undefined') throw new Error('Este navegador não abre 3MF compactado');
+  var s = new Blob([entry.data]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  return new Uint8Array(await new Response(s).arrayBuffer());
+}
+async function parse3MF(buf) {
+  var files = await unzip(buf), docs = {}, names = Object.keys(files).filter(function (n) { return /\.model$/i.test(n); });
+  for (var i = 0; i < names.length; i++) {
+    var xml = new TextDecoder().decode(await inflate(files[names[i]]));
+    docs[names[i].toLowerCase()] = new DOMParser().parseFromString(xml, 'application/xml');
+  }
+  var rootName = names.filter(function (n) { return /^3d\/3dmodel\.model$/i.test(n); })[0] || names[0];
+  if (!rootName) throw new Error('3MF sem modelo');
+  var out = [];
+  function T(str) { if (!str) return [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0]; var a = str.trim().split(/\s+/).map(Number); return a.length === 12 ? a : [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0]; }
+  function ap(m, x, y, z) { return [x * m[0] + y * m[3] + z * m[6] + m[9], x * m[1] + y * m[4] + z * m[7] + m[10], x * m[2] + y * m[5] + z * m[8] + m[11]]; }
+  function comp(a, b) { // a depois b
+    var r = new Array(12);
+    for (var c = 0; c < 3; c++) {
+      for (var rr = 0; rr < 3; rr++) r[rr * 3 + c] = a[rr * 3] * b[c] + a[rr * 3 + 1] * b[3 + c] + a[rr * 3 + 2] * b[6 + c];
+      r[9 + c] = a[9] * b[c] + a[10] * b[3 + c] + a[11] * b[6 + c] + b[9 + c];
+    }
+    return r;
+  }
+  function findObj(doc, id) { var os = doc.getElementsByTagName('object'); for (var q = 0; q < os.length; q++) if (os[q].getAttribute('id') === id) return os[q]; return null; }
+  function emit(path, id, m, depth) {
+    var doc = docs[path.toLowerCase()]; if (!doc || depth > 8) return;
+    var obj = findObj(doc, id); if (!obj) return;
+    var mesh = obj.getElementsByTagName('mesh')[0];
+    if (mesh) {
+      var vs = mesh.getElementsByTagName('vertex'), V = new Array(vs.length);
+      for (var a = 0; a < vs.length; a++) V[a] = ap(m, +vs[a].getAttribute('x'), +vs[a].getAttribute('y'), +vs[a].getAttribute('z'));
+      var ts = mesh.getElementsByTagName('triangle');
+      for (var b = 0; b < ts.length; b++) {
+        var A = V[+ts[b].getAttribute('v1')], B = V[+ts[b].getAttribute('v2')], C = V[+ts[b].getAttribute('v3')];
+        if (A && B && C) out.push(A[0], A[1], A[2], B[0], B[1], B[2], C[0], C[1], C[2]);
+      }
+    }
+    var cs = obj.getElementsByTagName('component');
+    for (var c = 0; c < cs.length; c++) {
+      var p = cs[c].getAttribute('p:path'); p = p ? p.replace(/^\//, '') : path;
+      emit(p, cs[c].getAttribute('objectid'), comp(T(cs[c].getAttribute('transform')), m), depth + 1);
+    }
+  }
+  var root = docs[rootName.toLowerCase()], items = root.getElementsByTagName('item');
+  for (var it = 0; it < items.length; it++) emit(rootName, items[it].getAttribute('objectid'), T(items[it].getAttribute('transform')), 0);
+  return new Float32Array(out);
+}
+async function openFile(file) {
+  if (!file) return;
+  setStatus('Lendo ' + file.name + '…');
+  try {
+    var buf = await file.arrayBuffer(), ext = (file.name.split('.').pop() || '').toLowerCase(), tris;
+    if (ext === '3mf') tris = await parse3MF(buf);
+    else if (ext === 'obj') tris = parseOBJ(new TextDecoder().decode(buf));
+    else tris = parseSTL(buf);
+    loadModel(file.name.replace(/\.[^.]+$/, ''), tris);
+  } catch (err) {
+    setStatus('Não consegui ler esse arquivo (' + (err.message || err) + '). Tente exportar como STL.');
+  }
+}
+$('file').addEventListener('change', function (e) { openFile(e.target.files[0]); e.target.value = ''; });
+['dragenter', 'dragover'].forEach(function (t) { stage.addEventListener(t, function (e) { e.preventDefault(); stage.classList.add('drag'); }); });
+['dragleave', 'drop'].forEach(function (t) { stage.addEventListener(t, function (e) { e.preventDefault(); stage.classList.remove('drag'); }); });
+stage.addEventListener('drop', function (e) { var f = e.dataTransfer && e.dataTransfer.files[0]; if (f) openFile(f); });
+
+// exemplos
+function boxTris(s) {
+  var v = [[0, 0, 0], [s, 0, 0], [s, s, 0], [0, s, 0], [0, 0, s], [s, 0, s], [s, s, s], [0, s, s]];
+  var f = [[0, 2, 1], [0, 3, 2], [4, 5, 6], [4, 6, 7], [0, 1, 5], [0, 5, 4], [1, 2, 6], [1, 6, 5], [2, 3, 7], [2, 7, 6], [3, 0, 4], [3, 4, 7]], o = [];
+  f.forEach(function (t) { t.forEach(function (i) { o.push(v[i][0], v[i][1], v[i][2]); }); });
+  return new Float32Array(o);
+}
+function cylTris(r, h, n) {
+  var o = [];
+  for (var i = 0; i < n; i++) {
+    var a0 = 2 * Math.PI * i / n, a1 = 2 * Math.PI * (i + 1) / n;
+    var x0 = r * Math.cos(a0), y0 = r * Math.sin(a0), x1 = r * Math.cos(a1), y1 = r * Math.sin(a1);
+    o.push(0, 0, 0, x1, y1, 0, x0, y0, 0, 0, 0, h, x0, y0, h, x1, y1, h, x0, y0, 0, x1, y1, 0, x1, y1, h, x0, y0, 0, x1, y1, h, x0, y0, h);
+  }
+  return new Float32Array(o);
+}
+$('ex-cube').addEventListener('click', function () { loadModel('cubo_20mm', boxTris(20)); });
+$('ex-cyl').addEventListener('click', function () { loadModel('cilindro_20mm', cylTris(10, 20, 128)); });
+
+/* ================= Fatiamento ================= */
+var worker = null, workerOK = true, result = null, busy = false;
+function setStatus(t) { $('status').textContent = t; }
+function setProg(p) { var el = $('prog'); el.classList.toggle('show', p !== null); el.firstElementChild.style.width = Math.round((p || 0) * 100) + '%'; }
+function changed() {
+  saveCfg();
+  invalidate();
+}
+function invalidate() {
+  if (result) { $('result').classList.add('stale'); setStatus('Os ajustes mudaram. Fatie de novo para atualizar o G-code.'); }
+}
+function getWorker() {
+  if (!workerOK) return null;
+  if (worker) return worker;
+  try { worker = new Worker('worker.v11.js'); } catch (e) { workerOK = false; return null; }
+  return worker;
+}
+function loadScript(src) {
+  return new Promise(function (res, rej) { var s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = function () { rej(new Error('não consegui carregar ' + src + '. Verifique a conexão')); }; document.head.appendChild(s); });
+}
+async function sliceMain(job) {
+  if (!window.SlicerCore) { await loadScript('vendor/clipper.js'); await loadScript('core.v11.js'); }
+  await new Promise(function (r) { setTimeout(r, 30); });
+  return window.SlicerCore.slice(job, function () {});
+}
+$('go').addEventListener('click', async function () {
+  if (!M || busy || !fits()) return;
+  busy = true; $('go').disabled = true; setProg(0); setStatus('Preparando…');
+  var jc = clone(cfg);
+  if (M.cal) {
+    var ov = M.cal.over || {};
+    Object.keys(ov).forEach(function (k) { if (typeof ov[k] === 'object') Object.assign(jc[k], ov[k]); else jc[k] = ov[k]; });
+    jc.ironing = false; // os testes não precisam de alisamento
+    if (M.cal.layerCmds) jc.layerCmds = clone(M.cal.layerCmds);
+    if (M.cal.retSchedule) jc.retSchedule = M.cal.retSchedule;
+    if (M.cal.speedSchedule) jc.speedSchedule = M.cal.speedSchedule;
+    if (M.cal.accSchedule) jc.accSchedule = M.cal.accSchedule;
+    if (M.cal.loopZones) jc.loopZones = M.cal.loopZones.map(function (z) { return { x0: z.x0 + M.off[0], x1: z.x1 + M.off[0], y0: z.y0 + M.off[1], y1: z.y1 + M.off[1], outer: z.outer, seam: z.seam }; });
+    if (M.cal.zones) jc.flowZones = M.cal.zones.map(function (z) { return { x0: z.x0 + M.off[0], x1: z.x1 + M.off[0], y0: z.y0 + M.off[1], y1: z.y1 + M.off[1], f: z.f }; });
+  }
+  var job = { cfg: jc, tris: M.tris.slice() };
+  var t0 = Date.now();
+  var finish = function (r) {
+    busy = false; $('go').disabled = !fits(); setProg(null);
+    result = r; result.name = M.name; result.cfg = job.cfg;
+    showResult(r, (Date.now() - t0) / 1000);
+  };
+  var fail = function (msg) { busy = false; $('go').disabled = !fits(); setProg(null); setStatus('Falhou ao fatiar: ' + msg); };
+  var w = getWorker();
+  if (!w) { try { setStatus('Fatiando…'); finish(await sliceMain(job)); } catch (e) { fail(e.message || String(e)); } return; }
+  var started = false;
+  w.onmessage = function (e) {
+    var d = e.data; started = true;
+    if (d.type === 'progress') { setProg(d.p); setStatus(d.m + '…'); }
+    else if (d.type === 'done') finish(d);
+    else if (d.type === 'error') fail(d.message);
+  };
+  w.onerror = async function (ev) {
+    ev.preventDefault && ev.preventDefault();
+    if (!started) { workerOK = false; worker = null; try { setStatus('Fatiando…'); finish(await sliceMain(job)); } catch (e) { fail(e.message || String(e)); } }
+    else fail(ev.message || 'erro no processamento');
+  };
+  w.postMessage(job, [job.tris.buffer]);
+});
+
+function fmtTime(s) {
+  var m = Math.round(s / 60), h = Math.floor(m / 60);
+  return h ? h + ' h ' + String(m % 60).padStart(2, '0') : m + ' min';
+}
+function showResult(r, took) {
+  var s = r.stats;
+  $('r-time').textContent = fmtTime(s.time);
+  $('r-g').textContent = s.grams.toFixed(1).replace('.', ',') + ' g';
+  $('r-m').textContent = s.meters.toFixed(2).replace('.', ',') + ' m';
+  $('r-l').textContent = String(s.layers);
+  $('result').classList.add('show'); $('result').classList.remove('stale');
+  setStatus('G-code pronto (' + took.toFixed(1).replace('.', ',') + ' s).' + (s.supportUsed ? ' Com suporte.' : '') + (s.warnings && s.warnings.length ? ' ' + s.warnings.join(' ') : ''));
+  buildPreview(r.preview);
+}
+
+/* ================= Pré-visualização de camadas ================= */
+var view = 'model', prev = null;
+function clearPreview() {
+  if (previewPast) { scene.remove(previewPast); scene.remove(previewCur); previewPast.geometry.dispose(); previewCur.geometry.dispose(); }
+  previewPast = previewCur = null; prev = null;
+  $('tab-layers').disabled = true; $('layerbar').classList.remove('show');
+  result = null; $('result').classList.remove('show');
+}
+function buildPreview(p) {
+  if (!hasGL) return;
+  if (previewPast) { scene.remove(previewPast); scene.remove(previewCur); previewPast.geometry.dispose(); previewCur.geometry.dispose(); }
+  var posA = new THREE.BufferAttribute(p.pos, 3), colA = new THREE.BufferAttribute(p.col, 3, true);
+  var g1 = new THREE.BufferGeometry(); g1.setAttribute('position', posA); g1.setAttribute('color', colA);
+  var g2 = new THREE.BufferGeometry(); g2.setAttribute('position', posA); g2.setAttribute('color', colA);
+  previewPast = new THREE.LineSegments(g1, new THREE.LineBasicMaterial({ vertexColors: true, color: 0x8a8a8a }));
+  previewCur = new THREE.LineSegments(g2, new THREE.LineBasicMaterial({ vertexColors: true }));
+  previewPast.frustumCulled = previewCur.frustumCulled = false;
+  scene.add(previewPast); scene.add(previewCur);
+  prev = p;
+  var rng = $('lb-range'); rng.max = p.layerEnds.length; rng.value = p.layerEnds.length;
+  $('tab-layers').disabled = false;
+  setView('layers');
+  showLayer(p.layerEnds.length);
+}
+function showLayer(n) {
+  if (!prev) return;
+  var N = prev.layerEnds.length; n = Math.max(1, Math.min(N, n));
+  $('lb-range').value = n;
+  var start = n > 1 ? prev.layerEnds[n - 2] : 0, end = prev.layerEnds[n - 1];
+  previewPast.geometry.setDrawRange(0, start * 2);
+  previewCur.geometry.setDrawRange(start * 2, (end - start) * 2);
+  $('lb-label').textContent = 'Camada ' + n + ' de ' + N;
+  $('lb-z').textContent = 'z ' + prev.layerZ[n - 1].toFixed(2).replace('.', ',') + ' mm';
+  requestRender();
+}
+$('lb-range').addEventListener('input', function (e) { showLayer(parseInt(e.target.value, 10)); });
+$('lb-prev').addEventListener('click', function () { showLayer(parseInt($('lb-range').value, 10) - 1); });
+$('lb-next').addEventListener('click', function () { showLayer(parseInt($('lb-range').value, 10) + 1); });
+function setView(v) {
+  view = v;
+  $('tab-model').setAttribute('aria-pressed', String(v === 'model'));
+  $('tab-layers').setAttribute('aria-pressed', String(v === 'layers'));
+  if (modelMesh) modelMesh.visible = v === 'model';
+  if (previewPast) { previewPast.visible = previewCur.visible = v === 'layers'; }
+  $('layerbar').classList.toggle('show', v === 'layers' && !!prev);
+  requestRender();
+}
+$('tab-model').addEventListener('click', function () { setView('model'); });
+$('tab-layers').addEventListener('click', function () { if (prev) setView('layers'); });
+(function legend() {
+  var names = ['Parede externa', 'Parede interna', 'Preenchimento', 'Sólido', 'Topo', 'Alisamento', 'Ponte', 'Vão entre paredes', 'Suporte', 'Interface', 'Saia/borda'];
+  var cols = [[255, 138, 61], [255, 214, 92], [176, 70, 90], [140, 110, 230], [235, 70, 70], [255, 190, 190], [40, 100, 235], [255, 120, 200], [70, 190, 140], [120, 225, 180], [90, 180, 230]];
+  $('legend').innerHTML = names.map(function (n, i) { return '<span><i style="background:rgb(' + cols[i].join(',') + ')"></i>' + n + '</span>'; }).join('');
+})();
+
+/* ================= Download ================= */
+var downloads = null;
+(async function initDownloads() {
+  if (STANDALONE) {
+    $('dl-zip').textContent = 'Baixar G-code'; $('dl-txt').style.display = 'none';
+    $('dl-note').textContent = 'O arquivo .gcode vai para Arquivos › Downloads. Depois é só copiar para o microSD.';
+    return;
+  }
+  for (var i = 0; i < 50 && !(window.claude && window.claude.use); i++) await new Promise(function (r) { setTimeout(r, 100); });
+  try { if (window.claude && window.claude.use) downloads = await window.claude.use('downloads'); } catch (e) { downloads = null; }
+})();
+var CRC = (function () { var t = new Uint32Array(256); for (var n = 0; n < 256; n++) { var c = n; for (var k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(u8) { var c = 0xFFFFFFFF; for (var i = 0; i < u8.length; i++) c = CRC[(c ^ u8[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+async function makeZip(name, data) {
+  var method = 0, comp = data;
+  if (typeof CompressionStream !== 'undefined') {
+    try { comp = new Uint8Array(await new Response(new Blob([data]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer()); method = 8; }
+    catch (e) { comp = data; method = 0; }
+  }
+  var crc = crc32(data), nm = new TextEncoder().encode(name), d = new Date();
+  var dtime = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+  var ddate = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  var lh = new DataView(new ArrayBuffer(30));
+  lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, method, true);
+  lh.setUint16(10, dtime, true); lh.setUint16(12, ddate, true); lh.setUint32(14, crc, true); lh.setUint32(18, comp.length, true); lh.setUint32(22, data.length, true);
+  lh.setUint16(26, nm.length, true); lh.setUint16(28, 0, true);
+  var ch = new DataView(new ArrayBuffer(46));
+  ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, method, true);
+  ch.setUint16(12, dtime, true); ch.setUint16(14, ddate, true); ch.setUint32(16, crc, true); ch.setUint32(20, comp.length, true); ch.setUint32(24, data.length, true);
+  ch.setUint16(28, nm.length, true); ch.setUint32(42, 0, true);
+  var cdOff = 30 + nm.length + comp.length, cdSize = 46 + nm.length;
+  var eo = new DataView(new ArrayBuffer(22));
+  eo.setUint32(0, 0x06054b50, true); eo.setUint16(8, 1, true); eo.setUint16(10, 1, true); eo.setUint32(12, cdSize, true); eo.setUint32(16, cdOff, true);
+  return new Blob([lh.buffer, nm, comp, ch.buffer, nm, eo.buffer]);
+}
+function fileBase() {
+  var r = result, s = r.stats;
+  var base = (r.name || 'modelo').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9_-]+/g, '_').slice(0, 40);
+  var m = Math.round(s.time / 60);
+  return base + '_' + r.cfg.layerH.toFixed(2) + 'mm_PLA_' + (m >= 60 ? Math.floor(m / 60) + 'h' + String(m % 60).padStart(2, '0') : m + 'm');
+}
+function blobDownload(data, filename) {
+  var a = document.createElement('a'); a.href = URL.createObjectURL(data); a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 60000);
+}
+async function save(kind) {
+  if (!result) return;
+  var base = fileBase(), filename, data;
+  if (STANDALONE) {
+    blobDownload(new Blob([result.gcode], { type: 'application/octet-stream' }), base + '.gcode');
+    setStatus('G-code salvo em Downloads: ' + base + '.gcode');
+    return;
+  }
+  if (kind === 'zip') { setStatus('Compactando…'); data = await makeZip(base + '.gcode', new TextEncoder().encode(result.gcode)); filename = base + '.zip'; }
+  else { data = new Blob([result.gcode]); filename = base + '.gcode.txt'; }
+  if (downloads) {
+    try {
+      await downloads.save({ filename: filename, data: data });
+      setStatus(kind === 'zip' ? 'Salvo. Extraia o .zip no app Arquivos e copie o .gcode para o microSD.' : 'Salvo. No app Arquivos, renomeie apagando o “.txt” do fim do nome e confirme “Usar .gcode”.');
+    } catch (e) {
+      var code = e && e.code;
+      setStatus(code === 'declined' ? 'Download cancelado.' : code === 'rate_limited' ? 'Já há um download aberto. Tente de novo em instantes.' : 'Não foi possível salvar aqui (' + (code || 'erro') + '). Abra este artefato no app do Claude ou em claude.ai.');
+    }
+    return;
+  }
+  try {
+    var a = document.createElement('a'); a.href = URL.createObjectURL(data); a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    setStatus('Se o download não começou, abra este artefato direto no app do Claude ou em claude.ai.');
+  } catch (e) { setStatus('Downloads não estão disponíveis nesta visualização. Abra o artefato no app do Claude ou em claude.ai.'); }
+}
+$('dl-zip').addEventListener('click', function () { save('zip'); });
+$('dl-txt').addEventListener('click', function () { save('txt'); });
+
+/* ================= Calibração ================= */
+var CALKEY = 'fatiador-v3se-cal-v1', calState = {};
+try { calState = JSON.parse(localStorage.getItem(CALKEY) || '{}') || {}; } catch (e) { calState = {}; }
+function saveCal() { try { localStorage.setItem(CALKEY, JSON.stringify(calState)); } catch (e) {} touchSync(); }
+function r3(v) { return Math.round(v * 1000) / 1000; }
+function br(v, d) { return Number(v).toLocaleString('pt-BR', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 }); }
+
+// geometria: prismas a partir de polígonos convexos (anti-horário)
+function prism(poly, z0, z1) {
+  var o = [], n = poly.length, i;
+  for (i = 1; i + 1 < n; i++) {
+    o.push(poly[0][0], poly[0][1], z0, poly[i + 1][0], poly[i + 1][1], z0, poly[i][0], poly[i][1], z0);
+    o.push(poly[0][0], poly[0][1], z1, poly[i][0], poly[i][1], z1, poly[i + 1][0], poly[i + 1][1], z1);
+  }
+  for (i = 0; i < n; i++) {
+    var a = poly[i], b = poly[(i + 1) % n];
+    o.push(a[0], a[1], z0, b[0], b[1], z0, b[0], b[1], z1, a[0], a[1], z0, b[0], b[1], z1, a[0], a[1], z1);
+  }
+  return o;
+}
+function rect(x0, y0, x1, y1) { return [[x0, y0], [x1, y0], [x1, y1], [x0, y1]]; }
+function circ(cx, cy, r, n) { var p = []; for (var i = 0; i < n; i++) { var a = 2 * Math.PI * i / n; p.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]); } return p; }
+function flip(o) { for (var i = 0; i < o.length; i += 9) for (var k = 0; k < 3; k++) { var t = o[i + 3 + k]; o[i + 3 + k] = o[i + 6 + k]; o[i + 6 + k] = t; } return o; }
+function wedgeXZ(polyXZ, y0, y1) {
+  var o = prism(polyXZ, y0, y1);
+  for (var i = 0; i < o.length; i += 3) { var t = o[i + 1]; o[i + 1] = o[i + 2]; o[i + 2] = t; }
+  return flip(o);
+}
+function cat(list) { var o = []; list.forEach(function (a) { for (var i = 0; i < a.length; i++) o.push(a[i]); }); return new Float32Array(o); }
+
+var TEMPS = [230, 225, 220, 215, 210, 205, 200, 195, 190];
+var FLOW1 = [-20, -15, -10, -5, 0, 5, 10, 15, 20], FLOW2 = [-4, -3, -2, -1, 0, 1, 2, 3, 4];
+var RETS = [0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8];
+var VOLS = [8, 10, 12, 14, 16, 18, 20];
+var FITS = [0, 0.1, 0.2, 0.3, 0.4, 0.5];
+
+function genTemp() {
+  var parts = [prism(rect(-10, -2, 32, 12), 0, 1)], cmds = [];
+  TEMPS.forEach(function (t, s) {
+    var z0 = 1 + 10 * s, z1 = z0 + 10;
+    parts.push(prism(rect(0.4, 0.4, 9.6, 9.6), z0, z0 + 0.4), prism(rect(0, 0, 10, 10), z0 + 0.4, z1));
+    parts.push(wedgeXZ([[0, z0 + 1], [1, z0 + 1], [1, z0 + 9], [-8, z0 + 9]], 0, 10));
+    parts.push(prism(circ(24, 5, 2.1, 48), z0, z0 + 0.4), prism(circ(24, 5, 2.5, 48), z0 + 0.4, z1));
+    if (s > 0) cmds.push({ z: z0, cmd: 'M104 S' + t + ' ; bloco ' + (s + 1) });
+  });
+  return { tris: cat(parts), cal: { label: 'torre 230 → 190 °C', over: { tNozzle0: 230, tNozzle: 230, supports: 'off', brim: 0 }, layerCmds: cmds } };
+}
+function genFlow(mods, label) {
+  var parts = [prism(rect(-4, 5, 0.5, 13), 0, 1)], zones = [];
+  mods.forEach(function (m, i) {
+    var col = i % 3, row = Math.floor(i / 3), x = col * 22, y = row * 22;
+    parts.push(prism(rect(x, y, x + 18, y + 18), 0, 3));
+    zones.push({ x0: x - 1.5, y0: y - 1.5, x1: x + 19.5, y1: y + 19.5, f: 1 + m / 100 });
+  });
+  return { tris: cat(parts), cal: { label: label, over: { top: 5, bottom: 3, supports: 'off', brim: 0 }, zones: zones } };
+}
+function genRet() {
+  var parts = [], sch = [];
+  [0, 40].forEach(function (x) {
+    RETS.forEach(function (r, b) {
+      var z0 = 5 * b, z1 = z0 + 5;
+      if (b > 0) parts.push(prism(rect(x + 0.4, 0.4, x + 5.6, 5.6), z0, z0 + 0.4), prism(rect(x, 0, x + 6, 6), z0 + 0.4, z1));
+      else parts.push(prism(rect(x, 0, x + 6, 6), z0, z1));
+    });
+  });
+  RETS.forEach(function (r, b) { sch.push({ z: 5 * b, len: r }); });
+  return { tris: cat(parts), cal: { label: 'retração 0,2 → 1,8 mm', over: { brim: 3, supports: 'off' }, retSchedule: sch } };
+}
+function stadium(len, r, n) {
+  var p = [], i, a;
+  for (i = 0; i <= n; i++) { a = -Math.PI / 2 + Math.PI * i / n; p.push([len / 2 + r * Math.cos(a), r * Math.sin(a)]); }
+  for (i = 0; i <= n; i++) { a = Math.PI / 2 + Math.PI * i / n; p.push([-len / 2 + r * Math.cos(a), r * Math.sin(a)]); }
+  return p;
+}
+function genVol() {
+  var parts = [prism(stadium(90, 12, 32), 0, 1)], sch = [];
+  VOLS.forEach(function (v, b) {
+    var z0 = 1 + 5 * b;
+    parts.push(prism(stadium(90, 11.8, 32), z0, z0 + 0.4), prism(stadium(90, 12, 32), z0 + 0.4, z0 + 5));
+    sch.push({ z: z0, vol: v });
+  });
+  return { tris: cat(parts), cal: { label: 'vazão 8 → 20 mm³/s', over: { vase: true, walls: 1, top: 0, bottom: 5, infill: 0, lineW: 0.45, maxVol: 50, minLayerTime: 0, acc: { outer: 2500 }, supports: 'off', brim: 0 }, speedSchedule: sch } };
+}
+var ACCS = [500, 700, 1000, 1500, 2000, 2500];
+function genFirst() {
+  var parts = [];
+  [[0, 0], [-70, -70], [70, -70], [-70, 70], [70, 70]].forEach(function (c) { parts.push(prism(rect(c[0] - 15, c[1] - 15, c[0] + 15, c[1] + 15), 0, 0.2)); });
+  return { tris: cat(parts), cal: { label: 'primeira camada', over: { supports: 'off', brim: 0, skirt: 1 } } };
+}
+function genGhost() {
+  var S = 50, parts = [], sch = [];
+  ACCS.forEach(function (a, b) {
+    var z0 = 5 * b, zm = b > 0 ? z0 + 0.4 : z0, z1 = z0 + 5;
+    if (b > 0) parts.push(prism(rect(0.25, 0.25, S - 0.25, S - 0.25), z0, zm), flip(prism(rect(S / 2 - 1, 0.25, S / 2 + 1, 2), z0, zm)), flip(prism(rect(S - 2, S / 2 - 1, S - 0.25, S / 2 + 1), z0, zm)));
+    parts.push(prism(rect(0, 0, S, S), zm, z1), flip(prism(rect(S / 2 - 1, 0, S / 2 + 1, 2), zm, z1)), flip(prism(rect(S - 2, S / 2 - 1, S, S / 2 + 1), zm, z1)));
+    sch.push({ z: z0, acc: a });
+  });
+  return { tris: cat(parts), cal: { label: 'aceleração 500 → 2500', over: { walls: 2, infill: 0, top: 0, bottom: 0, minLayerTime: 0, supports: 'off', brim: 0, sp: { outer: 100, inner: 100 } }, accSchedule: sch } };
+}
+var CORNERS = [
+  { outer: 40, seam: 'rear', pos: 'frente esquerda' },
+  { outer: 25, seam: 'rear', pos: 'frente direita' },
+  { outer: 40, seam: 'face', pos: 'fundo esquerda' },
+  { outer: 25, seam: 'face', pos: 'fundo direita' }
+];
+function genCorner() {
+  var parts = [], zones = [], S = 20, G = 12;
+  CORNERS.forEach(function (c, i) {
+    var x = (i % 2) * (S + G), y = Math.floor(i / 2) * (S + G);
+    parts.push(prism(rect(x, y, x + S, y + S), 0, S));
+    for (var k = 0; k <= i; k++) parts.push(prism(circ(x + 4 + k * 4, y + 4, 1.2, 24), S - 0.01, S + 1));
+    zones.push({ x0: x - 1, y0: y - 1, x1: x + S + 1, y1: y + S + 1, outer: c.outer, seam: c.seam });
+  });
+  return { tris: cat(parts), cal: { label: 'cantos e costura', over: { supports: 'off', brim: 0 }, loopZones: zones } };
+}
+function genFit() {
+  var parts = [prism(rect(0, 0, 80, 18), 0, 4), prism(rect(-4, 6, 0.5, 12), 0, 2), prism(circ(40, -12, 5, 96), 0, 10)];
+  FITS.forEach(function (c, i) { parts.push(flip(prism(circ(7.5 + 13 * i, 9, (10 + c) / 2, 96), 0, 4))); });
+  return { tris: cat(parts), cal: { label: 'encaixe Ø10 + folgas', over: { supports: 'off' } } };
+}
+
+var CAL_STEPS = [
+  { id: 'first', num: '0', title: 'Primeira camada', tag: '≈ 10 min · 1 g',
+    fixes: 'Peça que solta da mesa, fundo áspero ou com frestas.',
+    how: 'Cinco quadrados de uma camada só, no centro e nos cantos. As linhas devem ficar <b>encostadas umas nas outras</b>, formando uma superfície lisa. <b>Frestas entre as linhas:</b> o bico está alto, diminua o Z-offset na impressora em passos de 0,02 mm. <b>Superfície enrugada, quase transparente ou bico raspando:</b> está baixo, aumente. Se alguns quadrados saem bons e outros com frestas, o problema é o nivelamento: refaça o nivelamento automático pelo menu da impressora e imprima o teste de novo.',
+    gen: genFirst, name: 'cal_0_primeira_camada', noPick: true },
+  { id: 'temp', num: '1', title: 'Temperatura', tag: '≈ 1 h · 10 g',
+    fixes: 'Fiapos, pontes caídas e superfície áspera.',
+    how: 'São 9 blocos de 10 mm, de <b>230 °C embaixo</b> a <b>190 °C em cima</b>, separados por uma ranhura. Escolha o bloco com menos fiapos entre a coluna e o pino e a rampa de 45° mais lisa. Teste as camadas forçando com a mão: se o bloco racha fácil, está frio demais.',
+    gen: genTemp, name: 'cal_1_temperatura',
+    pickLabel: 'Melhor bloco',
+    options: function () { return TEMPS.map(function (t, i) { return { v: t, t: 'Bloco ' + (i + 1) + (i === 0 ? ' (de baixo)' : i === 8 ? ' (do topo)' : '') + ' · ' + t + ' °C' }; }); },
+    apply: function (v) { cfg.tNozzle = v; cfg.tNozzle0 = Math.min(260, v + 5); return 'Bico ' + v + ' °C (1ª camada ' + (v + 5) + ' °C)'; } },
+  { id: 'flow1', num: '2', title: 'Fluxo · passada grossa', tag: '≈ 30 min · 7 g',
+    fixes: 'Medidas e encaixes, frestas ou excesso no topo.',
+    how: 'Nove quadrados, cada um com um fluxo diferente. A <b>orelha</b> fica no quadrado da frente à esquerda. Passe o dedo no topo: escolha o mais liso, sem linhas abertas e sem sobra de material. Na dúvida entre dois, fique com o de menor fluxo.',
+    gen: function () { calState.flow1 = Object.assign(calState.flow1 || {}, { base: cfg.flow }); return genFlow(FLOW1, 'fluxo −20% → +20%'); }, name: 'cal_2_fluxo_grosso',
+    grid: FLOW1,
+    apply: function (v) { var b = (calState.flow1 && calState.flow1.base) || cfg.flow; cfg.flow = r3(b * (1 + v / 100)); return 'Fluxo ' + br(cfg.flow, 3) + ' (' + (v > 0 ? '+' : '') + v + '%)'; } },
+  { id: 'flow2', num: '3', title: 'Fluxo · passada fina', tag: '≈ 30 min · 7 g',
+    fixes: 'Refina o resultado anterior em passos de 1%.',
+    how: 'Mesma leitura da passada grossa, agora com diferenças de 1% em torno do valor escolhido. Faça depois de aplicar a passada grossa.',
+    gen: function () { calState.flow2 = Object.assign(calState.flow2 || {}, { base: cfg.flow }); return genFlow(FLOW2, 'fluxo −4% → +4%'); }, name: 'cal_3_fluxo_fino',
+    grid: FLOW2,
+    apply: function (v) { var b = (calState.flow2 && calState.flow2.base) || cfg.flow; cfg.flow = r3(b * (1 + v / 100)); return 'Fluxo ' + br(cfg.flow, 3) + ' (' + (v > 0 ? '+' : '') + v + '%)'; } },
+  { id: 'ret', num: '4', title: 'Retração', tag: '≈ 25 min · 3 g',
+    fixes: 'Fiapos entre partes e bolinhas no começo das paredes.',
+    how: 'Duas torres de 45 mm. A cada 5 mm (marcado pela ranhura) a retração aumenta 0,2 mm, de <b>0,2 mm embaixo</b> a <b>1,8 mm em cima</b>. Escolha a faixa mais baixa sem fiapos entre as torres. Retração demais pode causar falhas no início das paredes.',
+    gen: genRet, name: 'cal_4_retracao',
+    pickLabel: 'Faixa mais baixa sem fiapos',
+    options: function () { return RETS.map(function (r, i) { return { v: r, t: 'Faixa ' + (i + 1) + (i === 0 ? ' (de baixo)' : '') + ' · ' + br(r, 1) + ' mm' }; }); },
+    apply: function (v) { cfg.retLen = v; return 'Retração ' + br(v, 1) + ' mm'; } },
+  { id: 'vol', num: '5', title: 'Vazão máxima', tag: '≈ 20 min · 8 g',
+    fixes: 'Falhas de extrusão quando a impressão acelera.',
+    how: 'Uma peça oval de parede única, impressa em espiral contínua (sem costura), com dois lados retos de 90 mm, que fica mais rápida a cada faixa de 5 mm: de <b>8 mm³/s embaixo</b> a <b>20 mm³/s em cima</b>. Olhe o meio dos lados retos e procure onde a parede começa a ficar fosca, falhada ou com buracos. O perfil fica 10% abaixo da última faixa boa.',
+    gen: genVol, name: 'cal_5_vazao',
+    pickLabel: 'Primeira faixa com falhas',
+    options: function () { return VOLS.map(function (v, i) { return { v: v, t: 'Faixa ' + (i + 1) + (i === 0 ? ' (de baixo)' : '') + ' · ' + v + ' mm³/s' }; }).concat([{ v: 0, t: 'Nenhuma falhou' }]); },
+    apply: function (v) { var good = v === 0 ? 20 : v - 2; cfg.maxVol = Math.max(4, Math.round(good * 0.9)); return 'Vazão máx. ' + cfg.maxVol + ' mm³/s'; } },
+  { id: 'corner', num: '6', title: 'Cantos e costura', tag: '≈ 1h20 · 17 g',
+    fixes: 'Cantos estufados e costura marcada nas paredes.',
+    how: 'Quatro cubos de 20 mm. O topo de cada um tem de 1 a 4 marquinhas. <b>1 marquinha:</b> parede externa a 40 mm/s, costura na quina. <b>2:</b> 25 mm/s, costura na quina. <b>3:</b> 40 mm/s, costura no meio da face de trás. <b>4:</b> 25 mm/s, costura no meio da face. Compare os cantos e a costura com os dedos e contra a luz e escolha o cubo que ficou melhor. Com paquímetro, meça também X e Y de um deles: isso serve para a compensação XY no teste seguinte.',
+    gen: genCorner, name: 'cal_6_cantos_costura',
+    pickLabel: 'Cubo que ficou melhor',
+    options: function () { return CORNERS.map(function (c, i) { return { v: i, t: (i + 1) + (i ? ' marquinhas' : ' marquinha') + ' · ' + c.outer + ' mm/s, costura ' + (c.seam === 'face' ? 'no meio da face' : 'na quina') }; }); },
+    apply: function (v) { var c = CORNERS[v]; cfg.sp.outer = c.outer; cfg.seam = c.seam; return 'Parede externa ' + c.outer + ' mm/s, costura ' + (c.seam === 'face' ? 'no meio da face' : 'na quina'); } },
+  { id: 'fit', num: '7', title: 'Encaixe e medidas', tag: '≈ 25 min · 4 g',
+    fixes: 'Peças que não encaixam.',
+    how: 'Uma placa com 6 furos para um pino de 10 mm, que é impresso junto. As folgas vão de <b>0,0 mm (lado da orelha)</b> a <b>0,5 mm</b>, de 0,1 em 0,1. Teste o pino em cada furo e escolha o menor em que ele entra com a mão, sem forçar. Assim, furos desenhados com a medida exata passam a encaixar.',
+    gen: function () { calState.fit = Object.assign(calState.fit || {}, { base: cfg.holeComp }); return genFit(); }, name: 'cal_6_encaixe',
+    pickLabel: 'Menor furo em que o pino entra',
+    options: function () { return FITS.map(function (c, i) { return { v: c, t: 'Furo ' + (i + 1) + (i === 0 ? ' (orelha)' : '') + ' · folga ' + br(c, 1) + ' mm' }; }).concat([{ v: 0.6, t: 'Não entrou em nenhum' }]); },
+    apply: function (v) {
+      var b = (calState.fit && calState.fit.base != null) ? calState.fit.base : cfg.holeComp;
+      cfg.holeComp = Math.min(0.5, r3(b + v / 2));
+      return 'Compensação de furos ' + br(cfg.holeComp, 2) + ' mm' + (v >= 0.6 ? ' · repita o teste' : '');
+    },
+    cube: true },
+  { id: 'ghost', num: '8', title: 'Aceleração (ghosting)', tag: '≈ 20 min · 6 g',
+    fixes: 'Ondulações na parede depois de quinas e detalhes.',
+    how: 'Um tubo quadrado de 50 mm com dois entalhes, impresso a 100 mm/s. A cada 5 mm a aceleração das paredes aumenta: <b>500 embaixo</b>, depois 700, 1000, 1500, 2000 e <b>2500 mm/s² em cima</b>. Olhe as faces contra a luz, logo depois das quinas e dos entalhes, e escolha a faixa mais alta ainda sem ondulações. Se todas ondulam, a causa é mecânica (correias ou rodinhas) e não ajuste.',
+    gen: genGhost, name: 'cal_7_aceleracao',
+    pickLabel: 'Faixa mais alta sem ondulações',
+    options: function () { return ACCS.map(function (a, i) { return { v: a, t: 'Faixa ' + (i + 1) + (i === 0 ? ' (de baixo)' : '') + ' · ' + a + ' mm/s²' }; }); },
+    apply: function (v) { cfg.acc.outer = v; cfg.acc.top = Math.min(cfg.acc.top, Math.max(v, 500)); return 'Aceleração da parede externa ' + v + ' mm/s²'; } }
+];
+
+function applyCfgUI() { binders.forEach(function (b) { b(); }); saveCfg(); invalidate(); }
+function calGenerate(st) {
+  var g = st.gen();
+  saveCal();
+  loadModel(st.name, g.tris, g.cal);
+  setStatus('Teste gerado. Fatiando…');
+  setTimeout(function () { if (!$('go').disabled) $('go').click(); }, 60);
+}
+function calApply(st, v) {
+  var txt = st.apply(v);
+  calState[st.id] = Object.assign(calState[st.id] || {}, { result: txt });
+  saveCal(); applyCfgUI(); renderCal();
+  setStatus('Aplicado ao perfil: ' + txt + '.');
+}
+function renderCal() {
+  var root = $('calib');
+  root.innerHTML = '';
+  var intro = document.createElement('section'); intro.className = 'sec';
+  intro.innerHTML = '<h3>Antes de começar</h3>' +
+    '<ul class="checklist"><li>PLA seco (filamento úmido gera fiapos em qualquer ajuste)</li><li>Mesa limpa com álcool isopropílico</li><li>Correias firmes e rodinhas sem folga</li><li>Nivelamento automático feito pelo menu da impressora</li></ul>' +
+    '<p class="note">Siga a ordem: cada teste já sai com os resultados dos anteriores. Toque em Gerar, baixe o G-code e, depois de imprimir, registre o resultado aqui.</p>';
+  root.appendChild(intro);
+  var list = document.createElement('section'); list.className = 'sec';
+  CAL_STEPS.forEach(function (st, idx) {
+    var done = calState[st.id] && calState[st.id].result;
+    var card = document.createElement('div'); card.className = 'cal' + (done ? ' done' : '');
+    card.innerHTML = '<div class="cal-h"><span class="n">' + (done ? '✓' : st.num) + '</span><h4>' + st.title + '</h4><span class="tag">' + st.tag + '</span></div>' +
+      '<p><b>Corrige:</b> ' + st.fixes + '</p>' + (done && !st.noPick ? '<span class="res">Aplicado: ' + done + '</span>' : '');
+    var gen = document.createElement('button'); gen.className = 'btn small'; gen.textContent = 'Gerar e fatiar o teste';
+    gen.addEventListener('click', function () { calGenerate(st); });
+    card.appendChild(gen);
+    var how = document.createElement('p'); how.innerHTML = st.how; card.appendChild(how);
+    var sel = null, apply = document.createElement('button');
+    apply.className = 'btn small primary'; apply.textContent = 'Aplicar ao perfil'; apply.disabled = true;
+    if (st.noPick) {
+      var ok = document.createElement('button'); ok.className = 'btn small'; ok.textContent = done ? 'Conferido' : 'Marcar como conferido'; ok.disabled = !!done;
+      ok.addEventListener('click', function () { calState[st.id] = { result: 'conferido' }; saveCal(); renderCal(); });
+      card.appendChild(ok); list.appendChild(card);
+      return;
+    }
+    if (st.grid) {
+      var lab = document.createElement('span'); lab.className = 'lbl'; lab.textContent = 'Quadrado mais liso (visto de cima, frente embaixo)'; card.appendChild(lab);
+      var g = document.createElement('div'); g.className = 'fgrid';
+      [2, 1, 0].forEach(function (row) {
+        [0, 1, 2].forEach(function (col) {
+          var i = row * 3 + col, m = st.grid[i], b = document.createElement('button');
+          b.type = 'button'; b.textContent = (m > 0 ? '+' : m < 0 ? '−' : '') + Math.abs(m) + '%';
+          if (i === 0) { b.classList.add('tab'); b.title = 'Quadrado com a orelha'; }
+          b.setAttribute('aria-pressed', 'false');
+          b.addEventListener('click', function () { g.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); }); b.setAttribute('aria-pressed', 'true'); sel = m; apply.disabled = false; });
+          g.appendChild(b);
+        });
+      });
+      card.appendChild(g);
+    } else {
+      var id = 'cal-' + st.id, l2 = document.createElement('label'); l2.className = 'lbl'; l2.htmlFor = id; l2.textContent = st.pickLabel; card.appendChild(l2);
+      var s = document.createElement('select'); s.id = id;
+      s.innerHTML = '<option value="">Escolha depois de imprimir…</option>' + st.options().map(function (o) { return '<option value="' + o.v + '">' + o.t + '</option>'; }).join('');
+      s.addEventListener('change', function () { sel = s.value === '' ? null : parseFloat(s.value); apply.disabled = sel === null; });
+      card.appendChild(s);
+    }
+    apply.addEventListener('click', function () { if (sel !== null) calApply(st, sel); });
+    card.appendChild(apply);
+    if (st.cube) {
+      var cp = document.createElement('p');
+      cp.innerHTML = '<b>Com paquímetro:</b> imprima o cubo de 20 mm, meça X e Y e informe as medidas. Isso ajusta a compensação XY do contorno.';
+      card.appendChild(cp);
+      var cb = document.createElement('button'); cb.className = 'btn small'; cb.textContent = 'Gerar e fatiar cubo 20 mm';
+      cb.addEventListener('click', function () {
+        calState.cube = Object.assign(calState.cube || {}, { base: cfg.xyComp }); saveCal();
+        loadModel('cal_cubo_20mm', boxTris(20), { label: 'cubo 20 mm', over: {} });
+        setTimeout(function () { if (!$('go').disabled) $('go').click(); }, 60);
+      });
+      card.appendChild(cb);
+      var two = document.createElement('div'); two.className = 'two';
+      two.innerHTML = '<input id="cube-x" inputmode="decimal" placeholder="X medido (mm)" aria-label="X medido em mm"><input id="cube-y" inputmode="decimal" placeholder="Y medido (mm)" aria-label="Y medido em mm">';
+      card.appendChild(two);
+      var ca = document.createElement('button'); ca.className = 'btn small'; ca.textContent = 'Aplicar medidas do cubo';
+      ca.addEventListener('click', function () {
+        var x = parseNum(two.querySelector('#cube-x').value), y = parseNum(two.querySelector('#cube-y').value);
+        if (x === null || y === null || x < 18 || x > 22 || y < 18 || y > 22) { setStatus('Informe X e Y entre 18 e 22 mm.'); return; }
+        var b = (calState.cube && calState.cube.base != null) ? calState.cube.base : cfg.xyComp;
+        cfg.xyComp = Math.max(-0.5, Math.min(0.5, r3(b + (20 - (x + y) / 2) / 2)));
+        calState.cube = Object.assign(calState.cube || {}, { result: 'XY ' + br(cfg.xyComp, 3) + ' mm' });
+        saveCal(); applyCfgUI();
+        setStatus('Compensação XY ajustada para ' + br(cfg.xyComp, 3) + ' mm.');
+      });
+      card.appendChild(ca);
+    }
+    list.appendChild(card);
+  });
+  root.appendChild(list);
+  var foot = document.createElement('section'); foot.className = 'sec';
+  foot.innerHTML = '<p class="note">Ghosting (ondulações depois de cantos) não se resolve aqui: depende de correias, acelerações e, no limite, de firmware com input shaping.</p>';
+  var rz = document.createElement('button'); rz.className = 'btn small'; rz.textContent = 'Zerar progresso da calibração';
+  rz.addEventListener('click', function () { calState = {}; saveCal(); renderCal(); });
+  foot.appendChild(rz);
+  root.appendChild(foot);
+}
+function setPanel(which) {
+  $('pt-set').setAttribute('aria-pressed', String(which === 'set'));
+  $('pt-cal').setAttribute('aria-pressed', String(which === 'cal'));
+  $('settings').hidden = which !== 'set';
+  $('calib').hidden = which !== 'cal';
+}
+$('pt-set').addEventListener('click', function () { setPanel('set'); });
+$('pt-cal').addEventListener('click', function () { setPanel('cal'); });
+renderCal();
+
+/* ================= Sincronização entre aparelhos ================= */
+// Ajustes e calibração ficam na conta (db do artefato, área privada de cada pessoa).
+// O aparelho com a alteração mais recente vence; dados antigos sem data contam pela calibração feita.
+var STAMP = 'fatiador-v3se-stamp-v1';
+var SYNC = { ref: null, timer: 0, writing: false, dirty: false };
+function localStamp() { try { return +(localStorage.getItem(STAMP) || 0); } catch (e) { return 0; } }
+function setStamp(v) { try { localStorage.setItem(STAMP, String(v)); } catch (e) {} }
+function touchSync() {
+  if (!STAMP || !SYNC) return;
+  setStamp(Date.now());
+  if (!SYNC.ref) return;
+  clearTimeout(SYNC.timer);
+  SYNC.timer = setTimeout(pushSync, 800);
+}
+function syncNote(t) { var el = $('sync-note'); if (el) el.textContent = t; }
+async function pushSync() {
+  if (!SYNC.ref) return;
+  if (SYNC.writing) { SYNC.dirty = true; return; }
+  SYNC.writing = true;
+  try {
+    await SYNC.ref.set({ cfg: clone(cfg), cal: clone(calState || {}), updated: localStamp() });
+    syncNote('Ajustes salvos na sua conta (iPad e celular veem os mesmos).');
+  } catch (e) {
+    syncNote('Não consegui salvar na sua conta agora; os ajustes ficaram neste aparelho.');
+  }
+  SYNC.writing = false;
+  if (SYNC.dirty) { SYNC.dirty = false; pushSync(); }
+}
+(function legacyStamp() {
+  // dados das versões anteriores (sem data): vale 1 + nº de calibrações registradas
+  try {
+    if (!localStorage.getItem(STAMP) && (localStorage.getItem(STORE) || localStorage.getItem(CALKEY))) {
+      var n = Object.keys(calState || {}).filter(function (k) { return calState[k] && calState[k].result; }).length;
+      setStamp(1 + n);
+    }
+  } catch (e) {}
+})();
+function applyProfile(p, stamp) {
+  var rc = p.cfg || {};
+  cfg = Object.assign(clone(DEFAULTS), rc);
+  cfg.sp = Object.assign(clone(DEFAULTS.sp), rc.sp || {});
+  cfg.acc = Object.assign(clone(DEFAULTS.acc), rc.acc || {});
+  calState = clone(p.cal || {});
+  try { localStorage.setItem(STORE, JSON.stringify(cfg)); localStorage.setItem(CALKEY, JSON.stringify(calState)); } catch (e) {}
+  setStamp(stamp || Date.now());
+  binders.forEach(function (b) { b(); });
+  renderCal(); invalidate();
+}
+$('export-cfg').addEventListener('click', function () {
+  var d = new Date(), tag = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+  var json = JSON.stringify({ cfg: cfg, cal: calState || {}, updated: localStamp() || Date.now() }, null, 1);
+  if (STANDALONE || !downloads) { blobDownload(new Blob([json], { type: 'application/json' }), 'fatiador-ajustes-' + tag + '.json'); syncNote('Ajustes exportados.'); return; }
+  downloads.save({ filename: 'fatiador-ajustes-' + tag + '.json', data: new Blob([json]) }).then(function () { syncNote('Ajustes exportados.'); }, function () { syncNote('Não consegui exportar aqui.'); });
+});
+$('import-cfg').addEventListener('click', function () { $('import-file').value = ''; $('import-file').click(); });
+$('import-file').addEventListener('change', async function () {
+  var f = this.files && this.files[0]; if (!f) return;
+  try {
+    var p = JSON.parse(await f.text());
+    if (!p || typeof p.cfg !== 'object') throw new Error('arquivo sem ajustes');
+    applyProfile(p, Date.now()); touchSync();
+    syncNote('Ajustes importados de ' + f.name + '.');
+  } catch (e) { syncNote('Não consegui importar: ' + ((e && e.message) || e)); }
+});
+(async function initSync() {
+  if (STANDALONE) {
+    syncNote('Ajustes salvos neste aparelho. Use Exportar/Importar para levar a outro.');
+    if (!localStamp()) {
+      try {
+        var r0 = await fetch('perfil-inicial.json', { cache: 'no-store' });
+        if (r0.ok) { var p0 = await r0.json(); applyProfile(p0, 1); syncNote('Perfil calibrado carregado. Ajustes salvos neste aparelho.'); }
+      } catch (e) {}
+    }
+    if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(function () {});
+    return;
+  }
+  for (var i = 0; i < 50 && !(window.claude && window.claude.use); i++) await new Promise(function (r) { setTimeout(r, 100); });
+  try {
+    if (!(window.claude && window.claude.use)) return;
+    var user = await window.claude.use('user'), db = await window.claude.use('db');
+    if (!user || !db) return;
+    var id = await user.id();
+    if (!id) return;
+    var ref = db.doc('data/users/' + id + '/fatiador');
+    var snap = await ref.get();
+    var remote = snap.exists ? snap.data() : null, lt = localStamp(), rt = remote ? +(remote.updated || 0) : 0;
+    SYNC.ref = ref;
+    if (remote && rt > lt) {
+      applyProfile(remote, rt);
+      syncNote('Ajustes carregados da sua conta.');
+    } else if (lt > rt) {
+      await pushSync();
+    } else syncNote('Ajustes salvos na sua conta (iPad e celular veem os mesmos).');
+  } catch (e) {
+    syncNote('Ajustes salvos neste aparelho (não consegui acessar a sua conta).');
+  }
+})();
+
+initGL();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+const T = require('./lib.js'), fs = require('fs');
+const buf = fs.readFileSync(process.argv[2] || require('path').join(__dirname, 'models', 'benchy.stl'));
+const n = buf.readUInt32LE(80); if (84 + n * 50 !== buf.length) throw new Error('não é STL binário');
+const tris = new Float32Array(n * 9);
+for (let i = 0; i < n; i++) for (let j = 0; j < 9; j++) tris[i * 9 + j] = buf.readFloatLE(84 + i * 50 + 12 + j * 4);
+T.MODELS.benchy = () => tris;
+const over = Object.assign({ retLen: 1.2, unretSpeed: 30 }, JSON.parse(process.argv[2] || '{}'));
+const o = T.run('benchy', over); T.report(o); T.dump(o, 'benchy.json');
+fs.writeFileSync(require('path').join(T.OUT, 'benchy.gcode'), o.r.gcode);
+console.log('   triângulos', n, '· tamanho', o.P.size.map(v => v.toFixed(1)).join(' x '), '· gcode', (o.r.gcode.length / 1e6).toFixed(1), 'MB · avisos', JSON.stringify(o.r.stats.warnings));
+const g = o.r.gcode; const cnt = (re) => (g.match(re) || []).length;
+console.log('   retrações', cnt(/^G1 E-[0-9.]+ F2400$/gm), '· M106', cnt(/^M106/gm));

@@ -1,0 +1,98 @@
+{
+ "cal": {
+  "first": {
+   "result": "conferido"
+  },
+  "fit": {
+   "base": 0
+  },
+  "flow1": {
+   "base": 0.98,
+   "result": "Fluxo 0,980 (0%)"
+  },
+  "flow2": {
+   "base": 0.98,
+   "result": "Fluxo 0,980 (0%)"
+  },
+  "ret": {
+   "result": "Retração 1,2 mm"
+  },
+  "temp": {
+   "result": "Bico 205 °C (1ª camada 210 °C)"
+  },
+  "vol": {
+   "result": "Vazão máx. 13 mm³/s"
+  }
+ },
+ "cfg": {
+  "acc": {
+   "def": 2000,
+   "first": 500,
+   "inner": 1500,
+   "outer": 700,
+   "top": 1000,
+   "travel": 2500
+  },
+  "bottom": 4,
+  "bridgeFlow": 0.95,
+  "brim": 0,
+  "elephant": 0.1,
+  "fanFullLayer": 3,
+  "firstH": 0.2,
+  "firstW": 0.5,
+  "flow": 0.98,
+  "holeComp": 0,
+  "infill": 15,
+  "ironing": false,
+  "layerH": 0.2,
+  "lineW": 0.42,
+  "maxVol": 13,
+  "minLayerTime": 6,
+  "minSpeed": 15,
+  "overlap": 0.15,
+  "pattern": "lines",
+  "retLen": 1.2,
+  "retMinTravel": 1,
+  "retSpeed": 40,
+  "scarf": false,
+  "scarfLen": 15,
+  "seam": "rear",
+  "skirt": 1,
+  "skirtDist": 3,
+  "sp": {
+   "bridge": 30,
+   "first": 25,
+   "gap": 40,
+   "iface": 50,
+   "inner": 70,
+   "iron": 20,
+   "outer": 40,
+   "ovh": 20,
+   "solid": 80,
+   "sparse": 120,
+   "support": 80,
+   "top": 40,
+   "travel": 150,
+   "travel0": 100
+  },
+  "supAngle": 35,
+  "supDensity": 20,
+  "supIface": true,
+  "supXY": 0.6,
+  "supports": "off",
+  "tBed": 55,
+  "tBed0": 60,
+  "tNozzle": 205,
+  "tNozzle0": 210,
+  "top": 5,
+  "unretSpeed": 30,
+  "v": 2,
+  "vase": false,
+  "walls": 3,
+  "wipe": true,
+  "wipeDist": 1.5,
+  "xyComp": 0,
+  "zhop": 0.2
+ },
+ "updated": 1
+}

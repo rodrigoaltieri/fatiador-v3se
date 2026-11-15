@@ -1,0 +1,13 @@
+{
+  "name": "fatiador-v3se",
+  "private": true,
+  "description": "Fatiador web para a Creality Ender-3 V3 SE (PLA), feito para usar no iPad",
+  "scripts": {
+    "serve": "python3 -m http.server 8765",
+    "test": "node tests/base.js && node tests/caltest.js",
+    "test:ui": "python3 tests/pages.py"
+  },
+  "devDependencies": {
+    "clipper-lib": "6.4.2"
+  }
+}
