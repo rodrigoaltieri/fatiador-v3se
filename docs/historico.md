@@ -12,7 +12,7 @@
 | 6. Cantos e costura | 14–15/11 | Inconclusivo: todos os cubos com cantos estufados, a velocidade não mudou nada. Lados de 19,9 a 20,1 mm. Costura na quina ficou melhor no cubo |
 | Cubo v12 × cubo do Orca | 15/11 | **Os dois com as mesmas protuberâncias nos cantos.** O G-code do próprio OrcaSlicer 2.5.1, com o perfil calibrado, dá o mesmo defeito: a causa não é a trajetória do fatiador |
 | 6. Cantos (teste novo) | 15/11 | **Os quatro cubos iguais**, todos com os cantos um pouco inchados. Parede externa primeiro, cantos mais rápidos (jerk 20, J0,250) e fluxo 6% menor não mudaram nada perceptível |
-| 7. Encaixe | — | Falta |
+| 7. Encaixe | 15/11 | O pino entrou sem forçar a partir do **furo 2 (folga 0,1 mm)** → compensação de furos +0,05 mm. Falta medir o cubo para a compensação XY (medir no meio da face, sem as quinas) |
 | 8. Aceleração (ghosting) | — | Falta |
 
 ## Problemas vistos nas impressões e o que resolveu
