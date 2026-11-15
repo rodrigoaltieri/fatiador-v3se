@@ -39,7 +39,12 @@
 - **v11:** limites de máquina iguais aos do Orca (`M205 J0.100` etc.), aceleração de retração 500.
 - **v12 (15/11/2026):** comparação com o OrcaSlicer 2.5.1 real (`docs/comparacao-orca.md`). Paredes internas de 0,45 mm e distância externa → interna do Orca; retração e limpeza sempre que sai da parede externa; salto até a externa com a aceleração dela; costura alinhada entre camadas; folga de 0,04 mm em todas as paredes; tempo mínimo de camada cortando primeiro os trechos mais rápidos; preenchimento em linhas ligadas de 0,45 mm; marcadores `;TYPE:` do Orca. No cubo de 20 mm as paredes coincidem com as do Orca (desvio 0,0000 mm). Benchy: 69,6 min estimados (v11: 66,4), fatia em ~2,3 s.
 - **v13 (15/11/2026):** ajustes "Ordem das paredes" (internas primeiro ou externa primeiro) e "Velocidade nos cantos" (jerk 10 / J0,100 do Orca, ou jerk 20 / J0,250), os dois com o padrão do Orca. Teste 6 refeito: em vez de velocidade e posição da costura (que não mudaram nada), quatro cubos de 20 × 20 × 12 mm que mudam uma coisa cada. O G-code padrão não mudou: as paredes do cubo continuam coincidindo com as do Orca.
+- **v14 (15/11/2026):** suporte refeito no estilo "grid" do Orca. Na ocarina do Rodrigo o v13 gerava uma lâmina de 2 mm sob o bocal, uma parede curva de uma linha sob a junção e três pilares de 1 mm de lado com 20 a 30 mm de altura, e nenhum calço sob a base arredondada. O OrcaSlicer 2.5.1, na mesma peça, gera blocos de 6 mm ou mais, com interface, e o calço. Causas: a área em balanço era usada crua, sem alargar, e um filtro de 0,3 mm descartava todo balanço entre uns 13° e o ângulo pedido. Agora: 40,9 m de suporte contra 38,1 m do Orca, nos mesmos lugares.
 - **GitHub Pages (15/11/2026):** bibliotecas locais, download direto de `.gcode`, exportar/importar ajustes, perfil calibrado inicial, funciona sem internet.
+
+## Suportes (15/11/2026)
+
+- **Suportes estranhos na ocarina** (visto na prévia, antes de imprimir): torres finas demais para ficar em pé e base arredondada sem calço → suporte em grade como o do Orca (v14). Falta imprimir para conferir.
 
 ## Modelos com defeito (15/11/2026)
 

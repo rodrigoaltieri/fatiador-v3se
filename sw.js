@@ -1,6 +1,6 @@
 /* Fatiador V3 SE: funciona sem internet. Rede primeiro (sempre a versão mais nova), cache como reserva. */
-var CACHE = 'fatiador-v13';
-var FILES = ['./', 'index.html', 'core.v13.js', 'worker.v13.js', 'vendor/three.min.js', 'vendor/clipper.js',
+var CACHE = 'fatiador-v14';
+var FILES = ['./', 'index.html', 'core.v14.js', 'worker.v14.js', 'vendor/three.min.js', 'vendor/clipper.js',
   'perfil-inicial.json', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/apple-touch-icon.png'];
 self.addEventListener('install', function (e) { e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(FILES); }).then(function () { return self.skipWaiting(); })); });
 self.addEventListener('activate', function (e) {
