@@ -10,7 +10,7 @@ Responda e escreva textos de interface em português do Brasil.
 
 ## Arquivos
 
-- `index.html`: interface inteira (ajustes, aba Calibração com 9 testes, prévia 3D com three.js r128, downloads, exportar/importar ajustes). `var STANDALONE` liga o modo GitHub Pages (sem as APIs `window.claude` do artefato: baixa `.gcode` direto, ajustes só no aparelho).
+- `index.html`: interface inteira (ajustes, aba Calibração com 9 testes, prévia 3D com three.js r128, downloads, exportar/importar ajustes). Ao abrir um modelo, `meshWarning` avisa se o STL veio cortado ou se a superfície está aberta (o Orca recusa STL cortado; nós abrimos e avisamos). `var STANDALONE` liga o modo GitHub Pages (sem as APIs `window.claude` do artefato: baixa `.gcode` direto, ajustes só no aparelho).
 - `core.v12.js`: motor de fatiamento. `SlicerCore.slice(job, onProgress)` → `{ gcode, preview, stats }`. Usa ClipperLib (escala inteira SC=1000).
 - `worker.v12.js`: roda o motor num Web Worker.
 - `vendor/`: three.min.js r128 e clipper.js 6.4.2 (locais, para funcionar sem internet).

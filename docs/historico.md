@@ -38,6 +38,10 @@
 - **v12 (15/11/2026):** comparação com o OrcaSlicer 2.5.1 real (`docs/comparacao-orca.md`). Paredes internas de 0,45 mm e distância externa → interna do Orca; retração e limpeza sempre que sai da parede externa; salto até a externa com a aceleração dela; costura alinhada entre camadas; folga de 0,04 mm em todas as paredes; tempo mínimo de camada cortando primeiro os trechos mais rápidos; preenchimento em linhas ligadas de 0,45 mm; marcadores `;TYPE:` do Orca. No cubo de 20 mm as paredes coincidem com as do Orca (desvio 0,0000 mm). Benchy: 69,6 min estimados (v11: 66,4), fatia em ~2,3 s.
 - **GitHub Pages (15/11/2026):** bibliotecas locais, download direto de `.gcode`, exportar/importar ajustes, perfil calibrado inicial, funciona sem internet.
 
+## Modelos com defeito (15/11/2026)
+
+- **Ocarina com "glitch" num furo:** o STL estava cortado (cabeçalho com 176.264 triângulos, arquivo com 175.633; os 631 que faltam são todos de um furo, entre 116 e 124 mm de altura). A página lia o que havia e fatiava calada; em algumas camadas o contorno aberto era fechado em linha reta por cima do furo. O OrcaSlicer 2.5.1 recusa abrir esse arquivo. Agora a página avisa ao abrir e depois de fatiar quando o STL vem incompleto ou a superfície está aberta, e diz em que altura fica o defeito. Os outros furos fatiam limpos; o "V" que aparece dentro deles na tela Modelo é a forma do furo no próprio modelo.
+
 ## Comparação com o OrcaSlicer (15/11/2026)
 
 - OrcaSlicer 2.5.1 rodado pela linha de comando (pacote do Flathub) com os perfis oficiais da V3 SE e os valores calibrados; cubo de 20 mm, cilindro Ø20 e 3DBenchy.
