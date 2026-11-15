@@ -1418,7 +1418,7 @@ function renderCal() {
     card.appendChild(apply);
     if (st.cube) {
       var cp = document.createElement('p');
-      cp.innerHTML = '<b>Com paquímetro:</b> imprima o cubo de 20 mm, meça X e Y e informe as medidas. Isso ajusta a compensação XY do contorno.';
+      cp.innerHTML = '<b>Com paquímetro:</b> imprima o cubo de 20 mm, meça X e Y e informe as medidas. Isso ajusta a compensação XY do contorno. Meça <b>no meio da face</b>, sem pegar as quinas nem a primeira camada: bicos do paquímetro em pé, no centro da face, entrando por cima até meia altura. X é da esquerda para a direita da mesa e Y da frente para o fundo; a conta usa a média dos dois.';
       card.appendChild(cp);
       var cb = document.createElement('button'); cb.className = 'btn small'; cb.textContent = 'Gerar e fatiar cubo 20 mm';
       cb.addEventListener('click', function () {
