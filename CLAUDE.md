@@ -11,8 +11,8 @@ Responda e escreva textos de interface em português do Brasil.
 ## Arquivos
 
 - `index.html`: interface inteira (ajustes, aba Calibração com 9 testes, prévia 3D com three.js r128, downloads, exportar/importar ajustes). Ao abrir um modelo, `meshWarning` avisa se o STL veio cortado ou se a superfície está aberta (o Orca recusa STL cortado; nós abrimos e avisamos). `var STANDALONE` liga o modo GitHub Pages (sem as APIs `window.claude` do artefato: baixa `.gcode` direto, ajustes só no aparelho).
-- `core.v12.js`: motor de fatiamento. `SlicerCore.slice(job, onProgress)` → `{ gcode, preview, stats }`. Usa ClipperLib (escala inteira SC=1000).
-- `worker.v12.js`: roda o motor num Web Worker.
+- `core.v13.js`: motor de fatiamento. `SlicerCore.slice(job, onProgress)` → `{ gcode, preview, stats }`. Usa ClipperLib (escala inteira SC=1000).
+- `worker.v13.js`: roda o motor num Web Worker.
 - `vendor/`: three.min.js r128 e clipper.js 6.4.2 (locais, para funcionar sem internet).
 - `sw.js`: service worker, rede primeiro e cache como reserva.
 - `perfil-inicial.json`: ajustes e resultados de calibração do Rodrigo, carregados quando o aparelho não tem nada salvo.
@@ -23,13 +23,15 @@ Responda e escreva textos de interface em português do Brasil.
 - `docs/historico.md`: resultados das impressões e o que cada versão mudou.
 - `docs/comparacao-orca.md`: comparação com o OrcaSlicer 2.5.1 e com o three-slicer, diferença por diferença.
 
-**Ao mudar o motor:** suba a versão no nome do arquivo (`core.v13.js`, `worker.v13.js`), atualize as referências em `index.html`, `worker`, `sw.js` (lista `FILES` e nome do `CACHE`) e `tests/lib.js` (padrão de `CORE`). O nome versionado evita o iPad usar um motor velho em cache.
+**Ao mudar o motor:** suba a versão no nome do arquivo (`core.v14.js`, `worker.v14.js`), atualize as referências em `index.html`, `worker`, `sw.js` (lista `FILES` e nome do `CACHE`) e `tests/lib.js` (padrão de `CORE`). O nome versionado evita o iPad usar um motor velho em cache.
 
 ## G-code
 
 Marlin, extrusão relativa (M83). Início e fim seguem o perfil oficial do Orca para a V3 SE (`ref/orca/v3se.json`): espera a mesa antes do G28, M420 S1, purga em X−2,1/X−2,4 a Z0,28; no fim recolhe, afasta, sobe, apresenta a peça em X0 Y220 e só então desliga. Desde a v11 escreve os mesmos limites de máquina que o Orca: `M201 X2500 Y2500 Z500 E5000`, `M203 X250 Y250 Z5 E40`, `M204 P2500 R500 T2500`, `M205 X10 Y10 Z0.4 E5`, `M205 J0.100`.
 
 Desde a v12 as paredes saem como as do Orca: externa 0,42 mm, internas e preenchimento 0,45 mm (`innerW`, `infillW`), 1ª interna a 0,414 mm da externa ("parede externa precisa"), folga de 0,04 mm no fecho de todo laço, internas primeiro e externa por último. Retrai e limpa sempre que sai da parede externa ou vai para uma parede; só não retrai dentro da região interna da camada. O salto curto até a parede externa usa a aceleração dela (`M204 T`). O G-code leva os marcadores do Orca (`;TYPE:`, `;LAYER_CHANGE`, `;Z:`), além do nosso `;LAYER:n`.
+
+Desde a v13 há dois ajustes para os cantos, os dois com o padrão do Orca: `wallOrder` (`inner` = internas primeiro; `outer` = externa primeiro, que como no Orca desliga a "parede externa precisa") e `corner` (`orca` = jerk 10 e `M205 J0.100`; `fast` = jerk 20 e `M205 J0.250`). As zonas por peça (`loopZones`) aceitam `order` e `corner`, e é assim que o teste 6 muda uma coisa em cada cubo.
 
 Diferenças mantidas de propósito em relação ao Orca: pré-aquecimento do bico a 140 °C e `M420 S1` no início, 1ª camada de 0,50 mm com compensação de pé de elefante de 0,1 mm, limpeza deslocada para dentro da peça, z-hop vertical, pontes a 30 mm/s, contornos pequenos a 60%.
 
@@ -69,7 +71,7 @@ python3 -I tests/orca/comparar_paredes.py referencia.gcode nosso.gcode        # 
 
 ## Pendências
 
-1. **Cantos estufados** (todos os cubos do teste 6, a 25 e a 40 mm/s). **Não é a trajetória do fatiador:** em 15/11 o Rodrigo imprimiu o cubo de 20 mm do v12 e o do próprio OrcaSlicer 2.5.1 com o perfil calibrado (`ref/orca/gcode/cubo20_orca-2.5.1.gcode`) e os dois saíram com as mesmas protuberâncias. Sobram os valores que os dois arquivos têm em comum (fluxo 0,98, 205 °C, parede externa a 40 mm/s com aceleração 700, paredes internas antes da externa) e a máquina (firmware sem linear advance, correias, filamento). Antes dizia-se que "não acontecia no Orca/Cura": falta saber com que perfil, filamento e firmware eram aquelas impressões. Próximo passo: foto dos cantos e um teste que mude uma coisa de cada vez.
+1. **Cantos estufados** (todos os cubos do teste 6, a 25 e a 40 mm/s). **Não é a trajetória do fatiador:** em 15/11 o Rodrigo imprimiu o cubo de 20 mm do v12 e o do próprio OrcaSlicer 2.5.1 com o perfil calibrado (`ref/orca/gcode/cubo20_orca-2.5.1.gcode`) e os dois saíram com as mesmas protuberâncias. Sobram os valores que os dois arquivos têm em comum (fluxo 0,98, 205 °C, parede externa a 40 mm/s com aceleração 700, paredes internas antes da externa) e a máquina (firmware sem linear advance, correias, filamento). Antes dizia-se que "não acontecia no Orca/Cura": falta saber com que perfil, filamento e firmware eram aquelas impressões. A foto mostra uma "orelhinha" para fora nas quatro quinas, na altura toda, nos dois cubos. O teste 6 da aba Calibração foi refeito para isso (v13): quatro cubos, cada um mudando uma coisa só (referência, parede externa primeiro, cantos mais rápidos, fluxo 6% menor). **Falta imprimir o teste 6 novo.** Se nenhum cubo melhorar, sobram temperatura, filamento, correias e firmware (linear advance).
 2. Diferenças do Orca ainda não copiadas: z-hop em espiral, sobreposição de 25% entre topo e parede, ponte interna grossa sobre o preenchimento, limpeza depois do preenchimento, paredes de largura variável (Arachne).
 3. `three-slicer` avaliado e descartado como substituto: não é o libslic3r do Orca (o G-code dele diz "NOT full libslic3r"), difere do Orca em ordem e largura das paredes e não respeita o perfil oficial inteiro. Detalhes em `docs/comparacao-orca.md`.
 4. Calibração restante: passo 7 (encaixe) e passo 8 (aceleração/ghosting).

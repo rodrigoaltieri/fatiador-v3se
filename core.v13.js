@@ -1,4 +1,4 @@
-/* Fatiador V3 SE — núcleo de fatiamento (v12).
+/* Fatiador V3 SE — núcleo de fatiamento (v13).
    Gera G-code para Creality Ender-3 V3 SE (bico 0.4, Marlin, extrusão relativa).
    Depende de ClipperLib (clipper-lib 6.4.2). Funciona em Worker, página ou Node. */
 (function (G) {
@@ -530,7 +530,12 @@
       // "parede externa precisa" do Orca (precise_outer_wall): a 1ª parede interna fica com metade da sobreposição
       // normal em relação à externa, para não empurrar a parede externa para fora
       var d01 = (w + wi) / 2 - lap / 2;
-      var offK = function (k) { return k === 0 ? w / 2 : w / 2 + d01 + (k - 1) * spI; };
+      var zoneAt = function (paths) {
+        if (!cfg.loopZones || !paths.length) return null;
+        var c = paths[0][0], x = c.X / SC, y = c.Y / SC;
+        for (var zi = 0; zi < cfg.loopZones.length; zi++) { var Z = cfg.loopZones[zi]; if (x >= Z.x0 && x <= Z.x1 && y >= Z.y0 && y <= Z.y1) return Z; }
+        return null;
+      };
       var spMax = Math.max(sp, spI), maxR = spMax + 2 * (spMax / 2 - cfg.overlap * Math.min(w, wi)) + spMax + 0.05;
       var isls = islands(region[l]), out = [], fillAll = [];
       var ovA = null, ovB = null, hasOvh = false;
@@ -539,6 +544,11 @@
       }
       for (s = 0; s < isls.length; s++) {
         var isl = isls[s], walls = [], gaps = [], thin = [], m = 0, wl0 = null;
+        // ordem das paredes: 'inner' = internas primeiro (padrão do Orca), 'outer' = externa primeiro.
+        // Como no Orca, a "parede externa precisa" só vale com as internas primeiro.
+        var zn0 = zoneAt(isl), outerFirst = l > 0 && ((zn0 && zn0.order) || cfg.wallOrder) === 'outer';
+        var d01i = outerFirst ? (sp + spI) / 2 : d01;
+        var offK = function (k) { return k === 0 ? w / 2 : w / 2 + d01i + (k - 1) * spI; };
         for (k = 0; k < cfg.walls; k++) {
           var wl = dropSmall(OFF(isl, -offK(k) * SC), k === 0 ? 0.002 : 0.01);
           if (!wl.length) break;
@@ -590,7 +600,7 @@
         }
         var fill = m ? OFF(isl, -(offK(m - 1) + spLast - ovl) * SC) : [];
         fill = dropSmall(OPENM(fill, sp / 2 * SC), 0.05);
-        out.push({ walls: walls, gaps: gaps, thin: thin, fill: fill, outline: isl });
+        out.push({ walls: walls, gaps: gaps, thin: thin, fill: fill, outline: isl, outerFirst: outerFirst });
         if (fill.length) fillAll = fillAll.concat(fill);
       }
       LY[l] = { isl: out, fillAll: fillAll, w: w, h: h, spacing: sp, wi: wi, wf: wf, spF: spF, bridge: [], ovh: hasOvh };
@@ -713,8 +723,12 @@
     gc.push('M201 X2500 Y2500 Z500 E5000');
     gc.push('M203 X250 Y250 Z5 E40');
     gc.push('M204 P2500 R500 T2500 ; sets acceleration (P, T) and retract acceleration (R), mm/sec^2');
-    gc.push('M205 X10.00 Y10.00 Z0.40 E5.00 ; sets the jerk limits, mm/sec');
-    gc.push('M205 J0.100 ; desvio de junção');
+    // velocidade nos cantos: 'orca' = jerk 10 e desvio de junção 0,100 (perfil oficial); 'fast' = jerk 20 e 0,250
+    var cornerOf = function (c) { return c === 'fast' ? { jerk: 20, jd: 0.25 } : { jerk: 10, jd: 0.1 }; };
+    var cornerCmd = function (c) { var o = cornerOf(c); return ['M205 X' + o.jerk.toFixed(2) + ' Y' + o.jerk.toFixed(2), 'M205 J' + o.jd.toFixed(3)]; };
+    var corner0 = cornerOf(cfg.corner);
+    gc.push('M205 X' + corner0.jerk.toFixed(2) + ' Y' + corner0.jerk.toFixed(2) + ' Z0.40 E5.00 ; sets the jerk limits, mm/sec');
+    gc.push('M205 J' + corner0.jd.toFixed(3) + ' ; desvio de junção');
     gc.push('M220 S100 ; velocidade 100%');
     gc.push('M221 S100 ; fluxo 100%');
     gc.push('M140 S' + cfg.tBed0 + ' ; aquece a mesa');
@@ -1231,6 +1245,8 @@
         // paredes: internas primeiro, externa por último
         var seams = [];
         curZone = zoneOf(IS);
+        var zoneCorner = !first && curZone && curZone.corner && curZone.corner !== (cfg.corner || 'orca');
+        if (zoneCorner) ops.push({ o: 'G', s: cornerCmd(curZone.corner) });
         var seamMode = (curZone && curZone.seam) || cfg.seam;
         if (seamMode === 'face' && IS.walls.length) IS.walls[0] = IS.walls[0].map(faceSeam);
         else if (seamMode === 'rear' && IS.walls.length) IS.walls[0].forEach(function (L0) { L0.si = alignSeam(L0, seamIdx(L0)); });
@@ -1238,6 +1254,7 @@
         // só limpa/desfaz retração por dentro se houver plástico por dentro da parede externa
         insideOK = IS.walls.length > 1 || (IS.fill.length > 0 && (cfg.infill > 0 || I(IS.fill, U(Lr.solid, Lr.top)).length > 0));
         if (spiral) printSpiral(IS.walls[0][0], Lr.w);
+        else if (IS.outerFirst) for (k = 0; k < IS.walls.length; k++) printLoops(IS.walls[k], k === 0 ? TYPE.OUTER : TYPE.INNER, k === 0 ? Lr.w : Lr.wi, k === 0, k > 0 ? seams : null);
         else for (k = IS.walls.length - 1; k >= 0; k--) printLoops(IS.walls[k], k === 0 ? TYPE.OUTER : TYPE.INNER, k === 0 ? Lr.w : Lr.wi, k === 0, k > 0 ? seams : null);
         insideOK = true;
         for (k = 0; k < IS.thin.length; k++) printRuns(IS.thin[k], TYPE.OUTER, Lr.w, 0.6);
@@ -1269,6 +1286,7 @@
             if (cfg.ironing && !first) printSegs(orderMonotonic(scanFill(to_, angSolid, 0.1, 0.05), cx, cy, true), TYPE.IRON, Lr.w, 0.1 * h0 * 0.15 / extArea(Lr.w, h0));
           }
         }
+        if (zoneCorner) ops.push({ o: 'G', s: cornerCmd(cfg.corner) });
       }
       // retração ao fim da camada (no modo vaso a espiral segue sem parar)
       if (!spiral) retract();
@@ -1281,7 +1299,7 @@
       for (q = 0; q < ops.length; q++) {
         O = ops[q];
         if (O.o === 'A') aNow = O.v;
-        else if (O.o === 'B') { /* aceleração de deslocamento: não conta tempo */ }
+        else if (O.o === 'B' || O.o === 'G') { /* aceleração de deslocamento e comandos avulsos: não contam tempo */ }
         else if (O.o === 'E') { O.a = aNow; O.v = O.f; mv.push(O); }
         else if (O.o === 'T') { O.a = acc.travel; O.v = travelV; mv.push(O); }
         else if (O.o === 'Z') { mv.push(null); travT += 0.05; }
@@ -1340,6 +1358,7 @@
         O = ops[q];
         if (O.o === 'A') gc.push('M204 P' + O.v);
         else if (O.o === 'B') gc.push('M204 T' + O.v);
+        else if (O.o === 'G') O.s.forEach(function (ln) { gc.push(ln); });
         else if (O.o === 'Z') { gc.push('G1 Z' + f3(O.z) + ' F300'); lastF = 300; layerT += 0.05; }
         else if (O.o === 'T') {
           gc.push('G1 X' + f3(O.x) + ' Y' + f3(O.y) + (lastF !== travelF ? ' F' + travelF : ''));
@@ -1431,7 +1450,7 @@
     };
   }
 
-  var API = { slice: slice, BED: [BED_X, BED_Y, BED_Z], COLORS: COLORS, version: 12 };
+  var API = { slice: slice, BED: [BED_X, BED_Y, BED_Z], COLORS: COLORS, version: 13 };
   API._int = { sliceMesh: sliceMesh, chain: chain, U: U, D: D, I: I, OFF: OFF, clean: clean, islands: islands, analyze: analyze, gyroidLines: gyroidLines, scanFill: scanFill, orderMonotonic: orderMonotonic, bridgeAngle: bridgeAngle, SC: SC };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   else G.SlicerCore = API;
