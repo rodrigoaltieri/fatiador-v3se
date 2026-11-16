@@ -189,7 +189,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); height: 28px; }
   <header class="bar">
     <div class="brand">
       <strong>Fatiador V3 SE</strong>
-      <span class="chip">Ender-3 V3 SE · bico 0.4 · 220×220×250</span>
+      <span class="chip" id="chip">Ender-3 V3 SE · bico 0.4 · 220×220×250</span>
     </div>
     <div class="spacer"></div>
     <label class="btn" for="file">Abrir modelo</label>
@@ -293,6 +293,8 @@ input[type=range] { width: 100%; accent-color: var(--accent); height: 28px; }
 <script src="vendor/three.min.js"></script>
 <script>
 // Fora do Claude (GitHub Pages, arquivo local): sem db/downloads do artefato
+// arquivos do motor: ao subir a versão, troque só estas duas linhas (o selo do cabeçalho mostra a versão)
+var CORE_FILE = 'core.v15.js', WORKER_FILE = 'worker.v15.js';
 var STANDALONE = /\.github\.io$/.test(location.hostname) || location.protocol === 'file:' || /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 (function () {
 'use strict';
@@ -975,14 +977,14 @@ function invalidate() {
 function getWorker() {
   if (!workerOK) return null;
   if (worker) return worker;
-  try { worker = new Worker('worker.v15.js'); } catch (e) { workerOK = false; return null; }
+  try { worker = new Worker(WORKER_FILE); } catch (e) { workerOK = false; return null; }
   return worker;
 }
 function loadScript(src) {
   return new Promise(function (res, rej) { var s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = function () { rej(new Error('não consegui carregar ' + src + '. Verifique a conexão')); }; document.head.appendChild(s); });
 }
 async function sliceMain(job) {
-  if (!window.SlicerCore) { await loadScript('vendor/clipper.js'); await loadScript('core.v15.js'); }
+  if (!window.SlicerCore) { await loadScript('vendor/clipper.js'); await loadScript(CORE_FILE); }
   await new Promise(function (r) { setTimeout(r, 30); });
   return window.SlicerCore.slice(job, function () {});
 }
@@ -1520,6 +1522,10 @@ async function pushSync() {
   SYNC.writing = false;
   if (SYNC.dirty) { SYNC.dirty = false; pushSync(); }
 }
+(function engineChip() {
+  var m = /v(\d+)/.exec(CORE_FILE), el = $('chip');
+  if (m && el) el.textContent += ' · motor v' + m[1];
+})();
 (function legacyStamp() {
   // dados das versões anteriores (sem data): vale 1 + nº de calibrações registradas
   try {

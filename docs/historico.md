@@ -46,6 +46,7 @@
 ## Primeiro Benchy (16/11/2026)
 
 - **Parede de trás da cabine solta e torta, teto em fiapos:** a parede nascia sobre o preenchimento de 15%, sem sólido por baixo → casca vertical (v15). O teto em fiapos é consequência: foi impresso por cima da parede já fora do lugar. A confirmar reimprimindo.
+- **Prévia de 17/11 ainda com a cabine "flutuando":** o G-code do v15 não tem mais esse defeito (parede sem nada embaixo na camada em que a cabine nasce: 46,6 mm no v14, 0 no v15 e no Orca; no total, 294 mm no v14, 171 no v15, 159 no Orca, todos no teto e nos arcos das janelas, que são ponte de propósito). A suspeita é o iPad ainda rodando o motor antigo. O cabeçalho do site passou a mostrar a versão do motor ("motor v15").
 - **Ainda sem causa confirmada:** tracinhos em relevo no costado perto da popa, aspereza no balanço da proa, fiapos finos.
 
 ## Calibração concluída (16/11/2026)
