@@ -17,6 +17,7 @@ async def main():
         pg.on('console', lambda m: logs.append(m.type + ': ' + m.text) if m.type == 'error' and 'GL Driver' not in m.text else None)
         pg.on('pageerror', lambda e: logs.append('PAGEERR ' + str(e)))
         await pg.goto(URL); await pg.wait_for_timeout(1200)
+        print('selo:', await pg.inner_text('#chip'))
         print('perfil:', await pg.input_value('#f-tNozzle'), await pg.input_value('#f-maxVol'), '|', await pg.inner_text('#sync-note'))
         print('botão:', await pg.inner_text('#dl-zip'), '| txt visível:', await pg.is_visible('#dl-txt'))
         async def wait_slice():

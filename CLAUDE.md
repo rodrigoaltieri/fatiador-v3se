@@ -29,7 +29,7 @@ Definido pelo Rodrigo em 16/11/2026. **A qualidade da impressão vem primeiro.**
 - `docs/plano-wasm.md`: plano (ainda não iniciado) de rodar o motor do Orca no navegador via WebAssembly.
 - `docs/comparacao-orca.md`: comparação com o OrcaSlicer 2.5.1 e com o three-slicer, diferença por diferença.
 
-**Ao mudar o motor:** suba a versão no nome do arquivo (`core.v16.js`, `worker.v16.js`), atualize as referências em `index.html`, `worker`, `sw.js` (lista `FILES` e nome do `CACHE`) e `tests/lib.js` (padrão de `CORE`). O nome versionado evita o iPad usar um motor velho em cache.
+**Ao mudar o motor:** suba a versão no nome do arquivo (`core.v16.js`, `worker.v16.js`), atualize as referências em `index.html` (as constantes `CORE_FILE` e `WORKER_FILE`; o selo do cabeçalho mostra "motor vN" a partir delas), `worker`, `sw.js` (lista `FILES` e nome do `CACHE`) e `tests/lib.js` (padrão de `CORE`). O nome versionado evita o iPad usar um motor velho em cache.
 
 ## G-code
 
