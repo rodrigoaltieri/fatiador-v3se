@@ -1,10 +1,19 @@
 {
  "cal": {
+  "corner": {
+   "base": 0.98,
+   "result": "Nenhuma das três mudanças ajudou"
+  },
+  "cube": {
+   "base": 0,
+   "result": "XY 0,050 mm"
+  },
   "first": {
    "result": "conferido"
   },
   "fit": {
-   "base": 0
+   "base": 0,
+   "result": "Compensação de furos 0,05 mm"
   },
   "flow1": {
    "base": 0.98,
@@ -13,6 +22,9 @@
   "flow2": {
    "base": 0.98,
    "result": "Fluxo 0,980 (0%)"
+  },
+  "ghost": {
+   "result": "Aceleração da parede externa 2500 mm/s²"
   },
   "ret": {
    "result": "Retração 1,2 mm"
@@ -29,20 +41,23 @@
    "def": 2000,
    "first": 500,
    "inner": 1500,
-   "outer": 700,
+   "outer": 2500,
    "top": 1000,
    "travel": 2500
   },
   "bottom": 4,
   "bridgeFlow": 0.95,
   "brim": 0,
+  "corner": "orca",
   "elephant": 0.1,
   "fanFullLayer": 3,
   "firstH": 0.2,
   "firstW": 0.5,
   "flow": 0.98,
-  "holeComp": 0,
+  "holeComp": 0.05,
   "infill": 15,
+  "infillW": 0.45,
+  "innerW": 0.45,
   "ironing": false,
   "layerH": 0.2,
   "lineW": 0.42,
@@ -88,10 +103,11 @@
   "unretSpeed": 30,
   "v": 2,
   "vase": false,
+  "wallOrder": "inner",
   "walls": 3,
   "wipe": true,
   "wipeDist": 1.5,
-  "xyComp": 0,
+  "xyComp": 0.05,
   "zhop": 0.2
  },
  "updated": 1

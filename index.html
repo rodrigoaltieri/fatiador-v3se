@@ -97,9 +97,6 @@ button { cursor: pointer; }
 .pickhint.show { display: block; }
 
 .panel { background: var(--panel); border-left: 1px solid var(--line); display: grid; grid-template-rows: auto 1fr auto; min-height: 0; }
-.ptabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin: 12px 16px 0; padding: 3px; border-radius: 10px; background: var(--soft); border: 1px solid var(--line); }
-.ptabs button { border: 0; background: transparent; border-radius: 7px; padding: 8px; font-weight: 600; font-size: 14px; color: var(--muted); }
-.ptabs button[aria-pressed="true"] { background: var(--panel); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
 [hidden] { display: none !important; }
 .cal { border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: grid; gap: 10px; }
 .cal-h { display: flex; gap: 10px; align-items: center; }
@@ -233,10 +230,6 @@ input[type=range] { width: 100%; accent-color: var(--accent); height: 28px; }
   </main>
 
   <aside class="panel">
-    <div class="ptabs" role="group" aria-label="Painel">
-      <button id="pt-set" aria-pressed="true">Ajustes</button>
-      <button id="pt-cal" aria-pressed="false">Calibração</button>
-    </div>
     <div class="scroll" id="calib" hidden></div>
     <div class="scroll" id="settings">
       <section class="sec" id="sec-model">
@@ -475,6 +468,12 @@ function fieldEl(f) {
         var h = document.createElement('h4'); h.textContent = g.title; inner.appendChild(h);
         g.fields.forEach(function (f) { inner.appendChild(fieldEl(f)); });
       });
+      // a calibração já foi feita; os testes ficam aqui para quando trocar de filamento ou de bico
+      var hc = document.createElement('h4'); hc.textContent = 'Calibração'; inner.appendChild(hc);
+      var pc = document.createElement('p'); pc.className = 'note'; pc.textContent = 'O perfil já está calibrado. Refaça os testes ao trocar de marca de filamento ou de bico.'; inner.appendChild(pc);
+      var bc = document.createElement('button'); bc.className = 'btn small'; bc.id = 'recal'; bc.type = 'button'; bc.textContent = 'Recalibrar';
+      bc.addEventListener('click', function () { setPanel('cal'); $('calib').scrollTop = 0; });
+      inner.appendChild(bc);
     } else {
       sec = document.createElement('section'); sec.className = 'sec';
       sec.innerHTML = '<h3>' + S.title + '</h3>';
@@ -484,7 +483,20 @@ function fieldEl(f) {
   });
   binders.forEach(function (b) { b(); });
 })();
-$('reset-cfg').addEventListener('click', function () { cfg = clone(DEFAULTS); binders.forEach(function (b) { b(); }); changed(); });
+// Restaura o perfil calibrado do Rodrigo (perfil-inicial.json: ajustes e resultados da calibração).
+// Só cai nos valores de fábrica do fatiador (DEFAULTS) se o arquivo não puder ser lido.
+$('reset-cfg').addEventListener('click', async function () {
+  try {
+    var r = await fetch('perfil-inicial.json', { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    applyProfile(await r.json(), Date.now());
+    touchSync();
+    setStatus('Perfil calibrado restaurado.');
+  } catch (e) {
+    cfg = clone(DEFAULTS); binders.forEach(function (b) { b(); }); changed();
+    setStatus('Não consegui ler o perfil calibrado; voltei aos valores de fábrica do fatiador.');
+  }
+});
 
 /* ================= Visualização 3D ================= */
 var canvas = $('view'), stage = $('stage');
@@ -1370,6 +1382,10 @@ function calApply(st, v) {
 function renderCal() {
   var root = $('calib');
   root.innerHTML = '';
+  var back = document.createElement('section'); back.className = 'sec';
+  var bb = document.createElement('button'); bb.className = 'btn small'; bb.id = 'cal-back'; bb.type = 'button'; bb.textContent = '‹ Voltar aos ajustes';
+  bb.addEventListener('click', function () { setPanel('set'); });
+  back.appendChild(bb); root.appendChild(back);
   var intro = document.createElement('section'); intro.className = 'sec';
   intro.innerHTML = '<h3>Antes de começar</h3>' +
     '<ul class="checklist"><li>PLA seco (filamento úmido gera fiapos em qualquer ajuste)</li><li>Mesa limpa com álcool isopropílico</li><li>Correias firmes e rodinhas sem folga</li><li>Nivelamento automático feito pelo menu da impressora</li></ul>' +
@@ -1471,13 +1487,9 @@ function renderCal() {
   root.appendChild(foot);
 }
 function setPanel(which) {
-  $('pt-set').setAttribute('aria-pressed', String(which === 'set'));
-  $('pt-cal').setAttribute('aria-pressed', String(which === 'cal'));
   $('settings').hidden = which !== 'set';
   $('calib').hidden = which !== 'cal';
 }
-$('pt-set').addEventListener('click', function () { setPanel('set'); });
-$('pt-cal').addEventListener('click', function () { setPanel('cal'); });
 renderCal();
 
 /* ================= Sincronização entre aparelhos ================= */

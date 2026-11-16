@@ -12,8 +12,8 @@
 | 6. Cantos e costura | 14–15/11 | Inconclusivo: todos os cubos com cantos estufados, a velocidade não mudou nada. Lados de 19,9 a 20,1 mm. Costura na quina ficou melhor no cubo |
 | Cubo v12 × cubo do Orca | 15/11 | **Os dois com as mesmas protuberâncias nos cantos.** O G-code do próprio OrcaSlicer 2.5.1, com o perfil calibrado, dá o mesmo defeito: a causa não é a trajetória do fatiador |
 | 6. Cantos (teste novo) | 15/11 | **Os quatro cubos iguais**, todos com os cantos um pouco inchados. Parede externa primeiro, cantos mais rápidos (jerk 20, J0,250) e fluxo 6% menor não mudaram nada perceptível |
-| 7. Encaixe | 15/11 | O pino entrou sem forçar a partir do **furo 2 (folga 0,1 mm)** → compensação de furos +0,05 mm. Falta medir o cubo para a compensação XY (medir no meio da face, sem as quinas) |
-| 8. Aceleração (ghosting) | — | Falta |
+| 7. Encaixe | 15–16/11 | O pino entrou sem forçar a partir do **furo 2 (folga 0,1 mm)** → compensação de furos **+0,05 mm**. Cubo medido no meio da face → compensação XY **+0,05 mm** |
+| 8. Aceleração (ghosting) | 16/11 | Nenhuma faixa com ondulações → aceleração da parede externa **2500 mm/s²** (era 700) |
 
 ## Problemas vistos nas impressões e o que resolveu
 
@@ -41,6 +41,11 @@
 - **v13 (15/11/2026):** ajustes "Ordem das paredes" (internas primeiro ou externa primeiro) e "Velocidade nos cantos" (jerk 10 / J0,100 do Orca, ou jerk 20 / J0,250), os dois com o padrão do Orca. Teste 6 refeito: em vez de velocidade e posição da costura (que não mudaram nada), quatro cubos de 20 × 20 × 12 mm que mudam uma coisa cada. O G-code padrão não mudou: as paredes do cubo continuam coincidindo com as do Orca.
 - **v14 (15/11/2026):** suporte refeito no estilo "grid" do Orca. Na ocarina do Rodrigo o v13 gerava uma lâmina de 2 mm sob o bocal, uma parede curva de uma linha sob a junção e três pilares de 1 mm de lado com 20 a 30 mm de altura, e nenhum calço sob a base arredondada. O OrcaSlicer 2.5.1, na mesma peça, gera blocos de 6 mm ou mais, com interface, e o calço. Causas: a área em balanço era usada crua, sem alargar, e um filtro de 0,3 mm descartava todo balanço entre uns 13° e o ângulo pedido. Agora: 40,9 m de suporte contra 38,1 m do Orca, nos mesmos lugares.
 - **GitHub Pages (15/11/2026):** bibliotecas locais, download direto de `.gcode`, exportar/importar ajustes, perfil calibrado inicial, funciona sem internet.
+
+## Calibração concluída (16/11/2026)
+
+- Os 9 testes estão feitos e o resultado foi gravado em `perfil-inicial.json`, a partir do arquivo exportado pelo Rodrigo. A calibração saiu da frente: fica atrás do botão "Recalibrar", no fim de Avançado.
+- **Ajustes que não batiam com a calibração:** no arquivo exportado, os resultados diziam furos 0,05 mm, XY 0,050 mm e aceleração 2500, mas os ajustes estavam em 0, 0 e 700. Aplicar um resultado funciona (conferido no navegador de teste); o que zera esses três e mantém os resultados é o botão "Restaurar perfil PLA Rodrigo", que voltava aos valores de fábrica do fatiador em vez do perfil calibrado. O botão agora carrega o `perfil-inicial.json` (ajustes e resultados juntos).
 
 ## Suportes (15/11/2026)
 
