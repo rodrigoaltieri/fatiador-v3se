@@ -15,8 +15,8 @@ Definido pelo Rodrigo em 16/11/2026. **A qualidade da impressão vem primeiro.**
 ## Arquivos
 
 - `index.html`: interface inteira (ajustes, 9 testes de calibração, prévia 3D com three.js r128, downloads, exportar/importar ajustes). A calibração está concluída e fica escondida: abre pelo botão "Recalibrar", no fim de Avançado. `DEFAULTS` são os valores de fábrica do fatiador (base dos testes e da comparação com o Orca), não o perfil do Rodrigo. Ao abrir um modelo, `meshWarning` avisa se o STL veio cortado ou se a superfície está aberta (o Orca recusa STL cortado; nós abrimos e avisamos). `var STANDALONE` liga o modo GitHub Pages (sem as APIs `window.claude` do artefato: baixa `.gcode` direto, ajustes só no aparelho).
-- `core.v15.js`: motor de fatiamento. `SlicerCore.slice(job, onProgress)` → `{ gcode, preview, stats }`. Usa ClipperLib (escala inteira SC=1000).
-- `worker.v15.js`: roda o motor num Web Worker.
+- `core.v16.js`: motor de fatiamento. `SlicerCore.slice(job, onProgress)` → `{ gcode, preview, stats }`. Usa ClipperLib (escala inteira SC=1000).
+- `worker.v16.js`: roda o motor num Web Worker.
 - `vendor/`: three.min.js r128 e clipper.js 6.4.2 (locais, para funcionar sem internet).
 - `sw.js`: service worker, rede primeiro e cache como reserva.
 - `modelos/3DBenchy.stl`: 3DBenchy original (CC0, sem alterações; origem em `modelos/LEIA-ME.md`). O botão "3DBenchy" da tela inicial baixa o arquivo só quando tocado (11 MB, fora da lista `FILES` do `sw.js`); depois o service worker guarda a cópia.
@@ -29,7 +29,7 @@ Definido pelo Rodrigo em 16/11/2026. **A qualidade da impressão vem primeiro.**
 - `docs/plano-wasm.md`: plano (ainda não iniciado) de rodar o motor do Orca no navegador via WebAssembly.
 - `docs/comparacao-orca.md`: comparação com o OrcaSlicer 2.5.1 e com o three-slicer, diferença por diferença.
 
-**Ao mudar o motor:** suba a versão no nome do arquivo (`core.v16.js`, `worker.v16.js`), atualize as referências em `index.html` (as constantes `CORE_FILE` e `WORKER_FILE`; o selo do cabeçalho mostra "motor vN" a partir delas), `worker`, `sw.js` (lista `FILES` e nome do `CACHE`) e `tests/lib.js` (padrão de `CORE`). O nome versionado evita o iPad usar um motor velho em cache.
+**Ao mudar o motor:** suba a versão no nome do arquivo (`core.v17.js`, `worker.v17.js`), atualize as referências em `index.html` (as constantes `CORE_FILE` e `WORKER_FILE`; o selo do cabeçalho mostra "motor vN" a partir delas), `worker`, `sw.js` (lista `FILES` e nome do `CACHE`) e `tests/lib.js` (padrão de `CORE`). O nome versionado evita o iPad usar um motor velho em cache.
 
 ## G-code
 
@@ -43,6 +43,8 @@ Desde a v14 o suporte segue o estilo "grid" do Orca: a área em balanço é alar
 
 Desde a v15 há casca vertical, como o "ensure vertical shell thickness" do Orca: onde as camadas vizinhas têm parede (as de cima, até o nº de camadas de topo; as de baixo, até o de fundo), a camada leva sólido, desde que a faixa tenha pelo menos duas linhas de largura. É o que põe sólido debaixo de uma parede que nasce de um piso. Custa uns 30% a mais de tempo de fatiamento em peças muito curvas.
 
+Desde a v16 a compensação de furos tira só o anel em volta de cada furo. Antes subtraía o furo alargado inteiro e apagava tudo o que ficava dentro dele (no Benchy com o perfil calibrado, a caixa de carga e a parede de trás da cabine, camadas 42 a 53).
+
 Diferenças mantidas de propósito em relação ao Orca: pré-aquecimento do bico a 140 °C e `M420 S1` no início, 1ª camada de 0,50 mm com compensação de pé de elefante de 0,1 mm, limpeza deslocada para dentro da peça, z-hop vertical, pontes a 30 mm/s, contornos pequenos a 60%.
 
 Firmware de fábrica sem linear advance (drivers TMC2208). Firmwares da comunidade (navaismo, queeup) têm M900, e o do navaismo tem M593. Trocar firmware é decisão do Rodrigo.
@@ -51,13 +53,13 @@ Firmware de fábrica sem linear advance (drivers TMC2208). Firmwares da comunida
 
 Bico 205 °C (1ª camada 210), mesa 55 (1ª camada 60), fluxo 0,98, retração 1,2 mm a 40/30 mm/s, z-hop 0,2, vazão máxima 13 mm³/s, 3 paredes, topo 5, fundo 4, preenchimento 15% em linhas. Velocidades: 1ª camada 25, parede externa 40, interna 70, topo 40, sólido 80, preenchimento 120, deslocamento 150. Acelerações: externa 2500 (resultado do teste 8; era 700), interna 1500, topo 1000, padrão 2000, deslocamento 2500. Compensação XY +0,05 mm e compensação de furos +0,05 mm (teste 7).
 
-A fonte desses valores é o `perfil-inicial.json`. O G-code de referência do Orca em `ref/orca/gcode/` e os perfis em `tests/orca/perfis/` foram gerados antes do teste 8, com aceleração externa 700 e sem compensações; os testes automáticos usam `DEFAULTS`, que continuam assim.
+A fonte desses valores é o `perfil-inicial.json`. **Os testes automáticos rodam com `DEFAULTS`, não com o perfil**: foi assim que o defeito da compensação de furos passou despercebido até a v15. `tests/comp.js` roda com as compensações do perfil; ao acrescentar um ajuste que muda a geometria, teste também com o valor do perfil. O G-code de referência do Orca em `ref/orca/gcode/` e os perfis em `tests/orca/perfis/` foram gerados antes do teste 8, com aceleração externa 700 e sem compensações; os testes automáticos usam `DEFAULTS`, que continuam assim.
 
 ## Testes
 
 ```bash
 npm install                      # clipper-lib para os testes em Node
-npm test                         # modelos sintéticos + as 9 peças de calibração + paredes iguais às do Orca + suporte + casca vertical; deve dar "OK sem erros" em todos
+npm test                         # modelos sintéticos + as 9 peças de calibração + paredes iguais às do Orca + suporte + casca vertical + compensações do perfil; deve dar "OK sem erros" em todos
 node tests/benchy.js             # usa modelos/3DBenchy.stl; aceita outro STL como argumento
 python3 -m http.server 8765 &    # depois:
 python3 tests/pages.py /opt/pw-browsers/chromium   # navegador: perfil inicial, fatiar sem CDN, baixar .gcode, exportar ajustes (antes: pip install playwright)

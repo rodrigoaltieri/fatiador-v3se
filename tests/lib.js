@@ -4,7 +4,7 @@ const OUT = path.join(__dirname, 'out'); fs.mkdirSync(OUT, { recursive: true });
 
 global.ClipperLib = require('clipper-lib');
 const FIL = Math.PI * 0.875 * 0.875;
-function loadCore() { delete require.cache[require.resolve(require('path').join(__dirname, '..') + '/' + (process.env.CORE || 'core.v15.js') + '')]; return require(require('path').join(__dirname, '..') + '/' + (process.env.CORE || 'core.v15.js') + ''); }
+function loadCore() { delete require.cache[require.resolve(require('path').join(__dirname, '..') + '/' + (process.env.CORE || 'core.v16.js') + '')]; return require(require('path').join(__dirname, '..') + '/' + (process.env.CORE || 'core.v16.js') + ''); }
 function defaults() {
   const html = fs.readFileSync(require('path').join(__dirname, '..', 'index.html'), 'utf8');
   return eval('(' + html.match(/var DEFAULTS = (\{[\s\S]*?\n\});/)[1] + ')');

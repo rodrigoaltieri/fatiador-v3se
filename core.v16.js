@@ -1,4 +1,4 @@
-/* Fatiador V3 SE — núcleo de fatiamento (v15).
+/* Fatiador V3 SE — núcleo de fatiamento (v16).
    Gera G-code para Creality Ender-3 V3 SE (bico 0.4, Marlin, extrusão relativa).
    Depende de ClipperLib (clipper-lib 6.4.2). Funciona em Worker, página ou Node. */
 (function (G) {
@@ -546,7 +546,10 @@
       if (cfg.xyComp) r = OFF(r, cfg.xyComp * SC);
       if (cfg.holeComp) {
         var holes = r.filter(function (p) { return !CL.Clipper.Orientation(p); }).map(function (p) { return p.slice().reverse(); });
-        if (holes.length) r = D(r, OFF(holes, cfg.holeComp * SC, true));
+        // tira só o anel em volta de cada furo (furo alargado menos o próprio furo). Subtrair o furo alargado
+        // inteiro apagava também o que fica dentro dele: no Benchy, a caixa de carga e a parede de trás da
+        // cabine estão dentro do "furo" que é o convés aberto, e sumiam das camadas 42 a 53
+        if (holes.length) r = D(r, D(OFF(holes, cfg.holeComp * SC, true), U(holes)));
       }
       if (l === 0 && cfg.elephant) r = OFF(r, -cfg.elephant * SC);
       region[l] = r;
@@ -1507,7 +1510,7 @@
     };
   }
 
-  var API = { slice: slice, BED: [BED_X, BED_Y, BED_Z], COLORS: COLORS, version: 15 };
+  var API = { slice: slice, BED: [BED_X, BED_Y, BED_Z], COLORS: COLORS, version: 16 };
   API._int = { sliceMesh: sliceMesh, chain: chain, U: U, D: D, I: I, OFF: OFF, clean: clean, islands: islands, analyze: analyze, gyroidLines: gyroidLines, scanFill: scanFill, orderMonotonic: orderMonotonic, bridgeAngle: bridgeAngle, SC: SC };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   else G.SlicerCore = API;

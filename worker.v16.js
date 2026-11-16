@@ -1,5 +1,5 @@
-/* Worker do Fatiador V3 SE (v15) */
-importScripts('vendor/clipper.js', 'core.v15.js');
+/* Worker do Fatiador V3 SE (v16) */
+importScripts('vendor/clipper.js', 'core.v16.js');
 self.onmessage = function (e) {
   try {
     var last = 0;
