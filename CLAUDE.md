@@ -26,6 +26,7 @@ Definido pelo Rodrigo em 16/11/2026. **A qualidade da impressão vem primeiro.**
 - `tests/`: verificador de G-code e modelos de teste (Node) e teste de navegador (Playwright).
 - `tests/orca/`: como rodar o OrcaSlicer e o three-slicer e comparar os G-codes por tipo de trecho.
 - `docs/historico.md`: resultados das impressões e o que cada versão mudou.
+- `docs/plano-wasm.md`: plano (ainda não iniciado) de rodar o motor do Orca no navegador via WebAssembly.
 - `docs/comparacao-orca.md`: comparação com o OrcaSlicer 2.5.1 e com o three-slicer, diferença por diferença.
 
 **Ao mudar o motor:** suba a versão no nome do arquivo (`core.v16.js`, `worker.v16.js`), atualize as referências em `index.html`, `worker`, `sw.js` (lista `FILES` e nome do `CACHE`) e `tests/lib.js` (padrão de `CORE`). O nome versionado evita o iPad usar um motor velho em cache.
@@ -89,5 +90,5 @@ python3 -I tests/orca/comparar_paredes.py referencia.gcode nosso.gcode        # 
 5. Suporte: falta imprimir uma peça com o suporte em grade da v14 (a ocarina do Rodrigo) e ver se solta bem. Se grudar demais, aproximar a interface da do Orca.
 6. **Primeiro Benchy (16/11, motor v14):** a parede de trás da cabine soltou do convés e o teto saiu em fiapos. Causa achada e corrigida na v15 (casca vertical). **Falta reimprimir o Benchy.** Outros defeitos das fotos ainda sem causa confirmada: tracinhos em relevo no costado, perto da popa; superfície áspera no balanço da proa; fiapos finos. Hipótese não verificada para os tracinhos: o preenchimento de vãos entre paredes (11 m no Benchy desde a v12; o Orca, com Arachne, não usa preenchimento de vãos).
 7. Desvios do Orca feitos para poupar tempo antes da definição de prioridade, a rever: a casca vertical da v15 descarta faixas com menos de duas linhas de largura (sem o limite o Benchy ia de 70 para 79 min, mas com bem mais sólido que o Orca, sinal de que a nossa conta ainda não é a dele); a máscara da casca usa uma camada sim, outra não.
-8. O motor é uma reescrita de 1.500 linhas e o `libslic3r` do Orca tem 340 mil: toda diferença só aparece quando uma impressão falha. Proposta em aberto, à espera de decisão do Rodrigo: testar se o `libslic3r` de verdade compila para WebAssembly e roda no Safari do iPad, para trocar o motor em vez de continuar copiando trecho por trecho.
+8. **Ideia guardada para depois (decisão do Rodrigo, 16/11):** rodar o motor de verdade do Orca (`libslic3r`) no navegador, compilado para WebAssembly, em vez de continuar copiando trecho por trecho. Plano, riscos e teste proposto em `docs/plano-wasm.md`. Até lá, não investir em recursos grandes no motor próprio.
 9. Ainda não tem: suporte em árvore, desvio de paredes nos deslocamentos, input shaping.
