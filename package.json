@@ -4,7 +4,7 @@
   "description": "Fatiador web para a Creality Ender-3 V3 SE (PLA), feito para usar no iPad",
   "scripts": {
     "serve": "python3 -m http.server 8765",
-    "test": "node tests/base.js && node tests/caltest.js && node tests/orca.js && node tests/support.js",
+    "test": "node tests/base.js && node tests/caltest.js && node tests/orca.js && node tests/support.js && node tests/shell.js",
     "test:ui": "python3 tests/pages.py"
   },
   "devDependencies": {

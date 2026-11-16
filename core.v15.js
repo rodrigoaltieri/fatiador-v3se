@@ -1,4 +1,4 @@
-/* Fatiador V3 SE — núcleo de fatiamento (v14).
+/* Fatiador V3 SE — núcleo de fatiamento (v15).
    Gera G-code para Creality Ender-3 V3 SE (bico 0.4, Marlin, extrusão relativa).
    Depende de ClipperLib (clipper-lib 6.4.2). Funciona em Worker, página ou Node. */
 (function (G) {
@@ -642,6 +642,12 @@
       if ((l & 7) === 0) progress(0.22 + 0.18 * l / N, 'Gerando paredes');
     }
 
+    // faixa ocupada pelas paredes de uma camada (contorno menos a área de preenchimento)
+    // (simplificada a 0,03 mm: só serve de máscara para o sólido, e contornos com milhares de pontos custam caro)
+    var bandOf = function (j) {
+      if (!LY[j].band) LY[j].band = D(region[j], LY[j].fillAll).map(function (p) { return simplify(p, 0.03 * SC); }).filter(function (p) { return p.length >= 3; });
+      return LY[j].band;
+    };
     // topo, fundo, pontes e preenchimento
     for (l = 0; l < N; l++) {
       var L = LY[l], fa = L.fillAll;
@@ -667,7 +673,18 @@
           for (k = 2; k <= botN && below.length; k++) below = I(below, regionRaw[l - k]);
           botPart = D(fa, below);
         }
-        solid = I(U(topPart, botPart), fa);
+        // Casca vertical, como o "ensure vertical shell thickness" do Orca: onde as camadas vizinhas (as de cima,
+        // até o nº de camadas de topo; as de baixo, até o de fundo) têm parede, esta camada leva sólido. Sem isso,
+        // uma parede que nasce de um piso (a cabine do Benchy sobre o convés) fica apoiada só no preenchimento.
+        var shellClip = [];
+        if (cfg.vshell !== false) {
+          // uma camada sim, outra não, e sempre a mais distante: as paredes têm mais de 1 mm de largura, então
+          // as faixas vizinhas se sobrepõem e a do meio não acrescenta nada
+          for (k = 1; k <= topN && l + k < N; k++) if (k % 2 === 1 || k === topN) shellClip = shellClip.concat(bandOf(l + k));
+          for (k = 1; k <= botN && l - k >= 0; k++) if (k % 2 === 1 || k === botN) shellClip = shellClip.concat(bandOf(l - k));
+        }
+        var shell = shellClip.length ? OPENM(I(fa, shellClip), cfg.lineW * SC) : [];
+        solid = I(U(U(topPart, botPart), shell), fa);
       }
       var top = topN === 0 ? [] : (l === N - 1) ? fa : I(D(fa, regionRaw[l + 1]), solid);
       top = OPEN(top, 0.1 * SC);
@@ -1490,7 +1507,7 @@
     };
   }
 
-  var API = { slice: slice, BED: [BED_X, BED_Y, BED_Z], COLORS: COLORS, version: 14 };
+  var API = { slice: slice, BED: [BED_X, BED_Y, BED_Z], COLORS: COLORS, version: 15 };
   API._int = { sliceMesh: sliceMesh, chain: chain, U: U, D: D, I: I, OFF: OFF, clean: clean, islands: islands, analyze: analyze, gyroidLines: gyroidLines, scanFill: scanFill, orderMonotonic: orderMonotonic, bridgeAngle: bridgeAngle, SC: SC };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   else G.SlicerCore = API;

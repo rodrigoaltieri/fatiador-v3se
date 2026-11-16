@@ -11,8 +11,8 @@ Responda e escreva textos de interface em português do Brasil.
 ## Arquivos
 
 - `index.html`: interface inteira (ajustes, 9 testes de calibração, prévia 3D com three.js r128, downloads, exportar/importar ajustes). A calibração está concluída e fica escondida: abre pelo botão "Recalibrar", no fim de Avançado. `DEFAULTS` são os valores de fábrica do fatiador (base dos testes e da comparação com o Orca), não o perfil do Rodrigo. Ao abrir um modelo, `meshWarning` avisa se o STL veio cortado ou se a superfície está aberta (o Orca recusa STL cortado; nós abrimos e avisamos). `var STANDALONE` liga o modo GitHub Pages (sem as APIs `window.claude` do artefato: baixa `.gcode` direto, ajustes só no aparelho).
-- `core.v14.js`: motor de fatiamento. `SlicerCore.slice(job, onProgress)` → `{ gcode, preview, stats }`. Usa ClipperLib (escala inteira SC=1000).
-- `worker.v14.js`: roda o motor num Web Worker.
+- `core.v15.js`: motor de fatiamento. `SlicerCore.slice(job, onProgress)` → `{ gcode, preview, stats }`. Usa ClipperLib (escala inteira SC=1000).
+- `worker.v15.js`: roda o motor num Web Worker.
 - `vendor/`: three.min.js r128 e clipper.js 6.4.2 (locais, para funcionar sem internet).
 - `sw.js`: service worker, rede primeiro e cache como reserva.
 - `modelos/3DBenchy.stl`: 3DBenchy original (CC0, sem alterações; origem em `modelos/LEIA-ME.md`). O botão "3DBenchy" da tela inicial baixa o arquivo só quando tocado (11 MB, fora da lista `FILES` do `sw.js`); depois o service worker guarda a cópia.
@@ -24,7 +24,7 @@ Responda e escreva textos de interface em português do Brasil.
 - `docs/historico.md`: resultados das impressões e o que cada versão mudou.
 - `docs/comparacao-orca.md`: comparação com o OrcaSlicer 2.5.1 e com o three-slicer, diferença por diferença.
 
-**Ao mudar o motor:** suba a versão no nome do arquivo (`core.v15.js`, `worker.v15.js`), atualize as referências em `index.html`, `worker`, `sw.js` (lista `FILES` e nome do `CACHE`) e `tests/lib.js` (padrão de `CORE`). O nome versionado evita o iPad usar um motor velho em cache.
+**Ao mudar o motor:** suba a versão no nome do arquivo (`core.v16.js`, `worker.v16.js`), atualize as referências em `index.html`, `worker`, `sw.js` (lista `FILES` e nome do `CACHE`) e `tests/lib.js` (padrão de `CORE`). O nome versionado evita o iPad usar um motor velho em cache.
 
 ## G-code
 
@@ -35,6 +35,8 @@ Desde a v12 as paredes saem como as do Orca: externa 0,42 mm, internas e preench
 Desde a v13 há dois ajustes para os cantos, os dois com o padrão do Orca: `wallOrder` (`inner` = internas primeiro; `outer` = externa primeiro, que como no Orca desliga a "parede externa precisa") e `corner` (`orca` = jerk 10 e `M205 J0.100`; `fast` = jerk 20 e `M205 J0.250`). As zonas por peça (`loopZones`) aceitam `order` e `corner`, e é assim que o teste 6 muda uma coisa em cada cubo.
 
 Desde a v14 o suporte segue o estilo "grid" do Orca: a área em balanço é alargada para as células inteiras de uma grade fixa de 2,88 mm (`snapGrid`), o que dá torres largas e iguais de uma camada para a outra; o serrilhado é filtrado com 0,1 × a largura da linha (antes 0,3 mm, o que deixava sem suporte tudo entre uns 13° e o ângulo pedido, inclusive a base arredondada das peças); sobras com menos de 1,2 mm de largura são descartadas. Diferenças que ficaram: ângulo 35° (Orca 30°), folga XY 0,6 mm (Orca 0,35), interface menos densa, sem a borda larga na 1ª camada do suporte.
+
+Desde a v15 há casca vertical, como o "ensure vertical shell thickness" do Orca: onde as camadas vizinhas têm parede (as de cima, até o nº de camadas de topo; as de baixo, até o de fundo), a camada leva sólido, desde que a faixa tenha pelo menos duas linhas de largura. É o que põe sólido debaixo de uma parede que nasce de um piso. Custa uns 30% a mais de tempo de fatiamento em peças muito curvas.
 
 Diferenças mantidas de propósito em relação ao Orca: pré-aquecimento do bico a 140 °C e `M420 S1` no início, 1ª camada de 0,50 mm com compensação de pé de elefante de 0,1 mm, limpeza deslocada para dentro da peça, z-hop vertical, pontes a 30 mm/s, contornos pequenos a 60%.
 
@@ -50,7 +52,7 @@ A fonte desses valores é o `perfil-inicial.json`. O G-code de referência do Or
 
 ```bash
 npm install                      # clipper-lib para os testes em Node
-npm test                         # modelos sintéticos + as 9 peças de calibração + paredes iguais às do Orca + suporte; deve dar "OK sem erros" em todos
+npm test                         # modelos sintéticos + as 9 peças de calibração + paredes iguais às do Orca + suporte + casca vertical; deve dar "OK sem erros" em todos
 node tests/benchy.js             # usa modelos/3DBenchy.stl; aceita outro STL como argumento
 python3 -m http.server 8765 &    # depois:
 python3 tests/pages.py /opt/pw-browsers/chromium   # navegador: perfil inicial, fatiar sem CDN, baixar .gcode, exportar ajustes (antes: pip install playwright)
@@ -81,4 +83,5 @@ python3 -I tests/orca/comparar_paredes.py referencia.gcode nosso.gcode        # 
 3. `three-slicer` avaliado e descartado como substituto: não é o libslic3r do Orca (o G-code dele diz "NOT full libslic3r"), difere do Orca em ordem e largura das paredes e não respeita o perfil oficial inteiro. Detalhes em `docs/comparacao-orca.md`.
 4. Calibração concluída em 16/11/2026 (os 9 testes). O único resultado sem solução é o dos cantos (pendência 1).
 5. Suporte: falta imprimir uma peça com o suporte em grade da v14 (a ocarina do Rodrigo) e ver se solta bem. Se grudar demais, aproximar a interface da do Orca.
-6. Ainda não tem: suporte em árvore, desvio de paredes nos deslocamentos, input shaping.
+6. **Primeiro Benchy (16/11, motor v14):** a parede de trás da cabine soltou do convés e o teto saiu em fiapos. Causa achada e corrigida na v15 (casca vertical). **Falta reimprimir o Benchy.** Outros defeitos das fotos ainda sem causa confirmada: tracinhos em relevo no costado, perto da popa; superfície áspera no balanço da proa; fiapos finos. Hipótese não verificada para os tracinhos: o preenchimento de vãos entre paredes (11 m no Benchy desde a v12; o Orca, com Arachne, não usa preenchimento de vãos).
+7. Ainda não tem: suporte em árvore, desvio de paredes nos deslocamentos, input shaping.
