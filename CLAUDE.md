@@ -8,6 +8,10 @@ Responda e escreva textos de interface em português do Brasil.
 
 **Copiar o comportamento do OrcaSlicer de propósito, não reinventar.** Em quase todos os problemas vistos nas impressões, a solução estava no que o Orca já faz para a V3 SE (fim do G-code, limites de máquina, costura, modo vaso no teste de vazão). Antes de criar um método, olhe o perfil oficial em `ref/orca/` e o código-fonte do Orca (github.com/OrcaSlicer/OrcaSlicer, `src/libslic3r/GCode.cpp`, `PrintConfig.cpp`, `GCodeWriter.cpp`). Dá para rodar o OrcaSlicer de verdade pela linha de comando (seção "Comparar com o Orca"): gere o G-code de referência e compare. O que já foi comparado e o que ficou de fora está em `docs/comparacao-orca.md`.
 
+## Prioridade: qualidade antes de tempo
+
+Definido pelo Rodrigo em 16/11/2026. **A qualidade da impressão vem primeiro.** Uma impressão 10 ou 20% mais longa não é problema, e o tempo de fatiamento menos ainda. Não cortar nem simplificar um comportamento do Orca para ganhar tempo de impressão ou de fatiamento. Otimizar tempo fica para depois que tudo estiver funcionando bem por um tempo, e por decisão do Rodrigo.
+
 ## Arquivos
 
 - `index.html`: interface inteira (ajustes, 9 testes de calibração, prévia 3D com three.js r128, downloads, exportar/importar ajustes). A calibração está concluída e fica escondida: abre pelo botão "Recalibrar", no fim de Avançado. `DEFAULTS` são os valores de fábrica do fatiador (base dos testes e da comparação com o Orca), não o perfil do Rodrigo. Ao abrir um modelo, `meshWarning` avisa se o STL veio cortado ou se a superfície está aberta (o Orca recusa STL cortado; nós abrimos e avisamos). `var STANDALONE` liga o modo GitHub Pages (sem as APIs `window.claude` do artefato: baixa `.gcode` direto, ajustes só no aparelho).
@@ -84,4 +88,6 @@ python3 -I tests/orca/comparar_paredes.py referencia.gcode nosso.gcode        # 
 4. Calibração concluída em 16/11/2026 (os 9 testes). O único resultado sem solução é o dos cantos (pendência 1).
 5. Suporte: falta imprimir uma peça com o suporte em grade da v14 (a ocarina do Rodrigo) e ver se solta bem. Se grudar demais, aproximar a interface da do Orca.
 6. **Primeiro Benchy (16/11, motor v14):** a parede de trás da cabine soltou do convés e o teto saiu em fiapos. Causa achada e corrigida na v15 (casca vertical). **Falta reimprimir o Benchy.** Outros defeitos das fotos ainda sem causa confirmada: tracinhos em relevo no costado, perto da popa; superfície áspera no balanço da proa; fiapos finos. Hipótese não verificada para os tracinhos: o preenchimento de vãos entre paredes (11 m no Benchy desde a v12; o Orca, com Arachne, não usa preenchimento de vãos).
-7. Ainda não tem: suporte em árvore, desvio de paredes nos deslocamentos, input shaping.
+7. Desvios do Orca feitos para poupar tempo antes da definição de prioridade, a rever: a casca vertical da v15 descarta faixas com menos de duas linhas de largura (sem o limite o Benchy ia de 70 para 79 min, mas com bem mais sólido que o Orca, sinal de que a nossa conta ainda não é a dele); a máscara da casca usa uma camada sim, outra não.
+8. O motor é uma reescrita de 1.500 linhas e o `libslic3r` do Orca tem 340 mil: toda diferença só aparece quando uma impressão falha. Proposta em aberto, à espera de decisão do Rodrigo: testar se o `libslic3r` de verdade compila para WebAssembly e roda no Safari do iPad, para trocar o motor em vez de continuar copiando trecho por trecho.
+9. Ainda não tem: suporte em árvore, desvio de paredes nos deslocamentos, input shaping.
