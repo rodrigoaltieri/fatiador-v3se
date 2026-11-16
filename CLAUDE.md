@@ -10,13 +10,13 @@ Responda e escreva textos de interface em português do Brasil.
 
 ## Arquivos
 
-- `index.html`: interface inteira (ajustes, aba Calibração com 9 testes, prévia 3D com three.js r128, downloads, exportar/importar ajustes). Ao abrir um modelo, `meshWarning` avisa se o STL veio cortado ou se a superfície está aberta (o Orca recusa STL cortado; nós abrimos e avisamos). `var STANDALONE` liga o modo GitHub Pages (sem as APIs `window.claude` do artefato: baixa `.gcode` direto, ajustes só no aparelho).
+- `index.html`: interface inteira (ajustes, 9 testes de calibração, prévia 3D com three.js r128, downloads, exportar/importar ajustes). A calibração está concluída e fica escondida: abre pelo botão "Recalibrar", no fim de Avançado. `DEFAULTS` são os valores de fábrica do fatiador (base dos testes e da comparação com o Orca), não o perfil do Rodrigo. Ao abrir um modelo, `meshWarning` avisa se o STL veio cortado ou se a superfície está aberta (o Orca recusa STL cortado; nós abrimos e avisamos). `var STANDALONE` liga o modo GitHub Pages (sem as APIs `window.claude` do artefato: baixa `.gcode` direto, ajustes só no aparelho).
 - `core.v14.js`: motor de fatiamento. `SlicerCore.slice(job, onProgress)` → `{ gcode, preview, stats }`. Usa ClipperLib (escala inteira SC=1000).
 - `worker.v14.js`: roda o motor num Web Worker.
 - `vendor/`: three.min.js r128 e clipper.js 6.4.2 (locais, para funcionar sem internet).
 - `sw.js`: service worker, rede primeiro e cache como reserva.
 - `modelos/3DBenchy.stl`: 3DBenchy original (CC0, sem alterações; origem em `modelos/LEIA-ME.md`). O botão "3DBenchy" da tela inicial baixa o arquivo só quando tocado (11 MB, fora da lista `FILES` do `sw.js`); depois o service worker guarda a cópia.
-- `perfil-inicial.json`: ajustes e resultados de calibração do Rodrigo, carregados quando o aparelho não tem nada salvo.
+- `perfil-inicial.json`: ajustes e resultados de calibração do Rodrigo. É carregado quando o aparelho não tem nada salvo e pelo botão "Restaurar perfil PLA Rodrigo". Ao fechar uma calibração nova, atualize este arquivo a partir de um "Exportar ajustes" do Rodrigo.
 - `ref/orca/`: perfis oficiais da V3 SE no OrcaSlicer 2.5.1 (máquina, processo, filamento e os perfis de que herdam). Vêm do OrcaSlicer (AGPL-3.0).
 - `ref/orca/gcode/`: G-code gerado pelo OrcaSlicer 2.5.1 de verdade com o perfil calibrado (cubo de 20 mm e cilindro Ø20). É a referência do teste `tests/orca.js`; o do cubo pode ser impresso direto para comparar com o nosso. No site, o botão "Baixar cubo fatiado pelo Orca" no fim da aba Calibração baixa esse arquivo com o nome certo (pelo github.com o iPad salva como `.txt`).
 - `tests/`: verificador de G-code e modelos de teste (Node) e teste de navegador (Playwright).
@@ -42,7 +42,9 @@ Firmware de fábrica sem linear advance (drivers TMC2208). Firmwares da comunida
 
 ## Perfil calibrado (PLA)
 
-Bico 205 °C (1ª camada 210), mesa 55 (1ª camada 60), fluxo 0,98, retração 1,2 mm a 40/30 mm/s, z-hop 0,2, vazão máxima 13 mm³/s, 3 paredes, topo 5, fundo 4, preenchimento 15% em linhas. Velocidades: 1ª camada 25, parede externa 40, interna 70, topo 40, sólido 80, preenchimento 120, deslocamento 150. Acelerações: externa 700, interna 1500, topo 1000, padrão 2000, deslocamento 2500.
+Bico 205 °C (1ª camada 210), mesa 55 (1ª camada 60), fluxo 0,98, retração 1,2 mm a 40/30 mm/s, z-hop 0,2, vazão máxima 13 mm³/s, 3 paredes, topo 5, fundo 4, preenchimento 15% em linhas. Velocidades: 1ª camada 25, parede externa 40, interna 70, topo 40, sólido 80, preenchimento 120, deslocamento 150. Acelerações: externa 2500 (resultado do teste 8; era 700), interna 1500, topo 1000, padrão 2000, deslocamento 2500. Compensação XY +0,05 mm e compensação de furos +0,05 mm (teste 7).
+
+A fonte desses valores é o `perfil-inicial.json`. O G-code de referência do Orca em `ref/orca/gcode/` e os perfis em `tests/orca/perfis/` foram gerados antes do teste 8, com aceleração externa 700 e sem compensações; os testes automáticos usam `DEFAULTS`, que continuam assim.
 
 ## Testes
 
@@ -77,6 +79,6 @@ python3 -I tests/orca/comparar_paredes.py referencia.gcode nosso.gcode        # 
 1. **Cantos estufados** (todos os cubos do teste 6, a 25 e a 40 mm/s). **Não é a trajetória do fatiador:** em 15/11 o Rodrigo imprimiu o cubo de 20 mm do v12 e o do próprio OrcaSlicer 2.5.1 com o perfil calibrado (`ref/orca/gcode/cubo20_orca-2.5.1.gcode`) e os dois saíram com as mesmas protuberâncias. Sobram os valores que os dois arquivos têm em comum (fluxo 0,98, 205 °C, parede externa a 40 mm/s com aceleração 700, paredes internas antes da externa) e a máquina (firmware sem linear advance, correias, filamento). Antes dizia-se que "não acontecia no Orca/Cura": falta saber com que perfil, filamento e firmware eram aquelas impressões. A foto mostra uma "orelhinha" para fora nas quatro quinas, na altura toda, nos dois cubos. O teste 6 da aba Calibração foi refeito para isso (v13): quatro cubos, cada um mudando uma coisa só (referência, parede externa primeiro, cantos mais rápidos, fluxo 6% menor). **Impresso em 15/11: os quatro saíram iguais**, todos com os cantos um pouco inchados. Com isso estão descartados a trajetória, a ordem das paredes, a velocidade nos cantos e o fluxo. Sobra a pressão no bico ao frear nas quinas, que só o linear advance compensa (o firmware de fábrica não tem), além de temperatura, filamento e correias. Falta medir o tamanho do inchaço com o paquímetro (largura no meio da face contra largura pegando as quinas) e testar um cubo a 195 °C. Não inventar compensação de canto no fatiador: o Orca não tem isso para Marlin sem linear advance.
 2. Diferenças do Orca ainda não copiadas: z-hop em espiral, sobreposição de 25% entre topo e parede, ponte interna grossa sobre o preenchimento, limpeza depois do preenchimento, paredes de largura variável (Arachne).
 3. `three-slicer` avaliado e descartado como substituto: não é o libslic3r do Orca (o G-code dele diz "NOT full libslic3r"), difere do Orca em ordem e largura das paredes e não respeita o perfil oficial inteiro. Detalhes em `docs/comparacao-orca.md`.
-4. Calibração restante: passo 7 (encaixe) e passo 8 (aceleração/ghosting).
+4. Calibração concluída em 16/11/2026 (os 9 testes). O único resultado sem solução é o dos cantos (pendência 1).
 5. Suporte: falta imprimir uma peça com o suporte em grade da v14 (a ocarina do Rodrigo) e ver se solta bem. Se grudar demais, aproximar a interface da do Orca.
 6. Ainda não tem: suporte em árvore, desvio de paredes nos deslocamentos, input shaping.
