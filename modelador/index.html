@@ -82,7 +82,11 @@ button { cursor: pointer; }
 .stage-tools { position: absolute; right: 10px; bottom: 10px; display: flex; gap: 6px; }
 .stage-tools button { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 13px; }
 .stage-tools button[aria-pressed="true"] { border-color: var(--overhang); color: var(--overhang); }
-.stage-msg { position: absolute; inset: 0; display: grid; place-content: center; gap: 10px; text-align: center; padding: 24px; color: var(--muted); font-size: 14px; }
+.stage-msg { position: absolute; inset: 0; display: grid; place-content: center; gap: 8px; text-align: center; padding: 24px; color: var(--muted); font-size: 14px; }
+.stage-msg strong { color: var(--ink); font-size: 16px; }
+.vazio .stage-top, .vazio .stage-tools, .vazio .stage canvas { display: none; }
+@media (max-width: 899px) { .vazio .stage { height: auto; min-height: 150px; } .vazio .stage-msg { position: static; padding: 20px 16px; } }
+.stage-msg span { max-width: 380px; margin: 0 auto; }
 .prog { width: min(260px, 70vw); height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin: 0 auto; }
 .prog i { display: block; height: 100%; width: 35%; background: var(--accent); border-radius: 3px; animation: vai 1.4s ease-in-out infinite; }
 @keyframes vai { from { transform: translateX(-100%); } to { transform: translateX(290%); } }
@@ -147,20 +151,16 @@ textarea:focus, input:focus, select:focus { border-color: var(--accent); outline
 @media (prefers-reduced-motion: reduce) { .run .dot { animation: none; } }
 .stream { font: 12px/1.45 var(--font-mono); color: var(--muted); background: var(--soft); border-radius: 7px; padding: 8px 10px; max-height: 120px; overflow: hidden; white-space: pre-wrap; word-break: break-word; display: flex; flex-direction: column-reverse; }
 
-/* Entendimento */
-.ent-res { margin: 0; }
+/* Esboço para conferir */
+.esboco { background: #ffffff; border: 1px solid var(--line); border-radius: 8px; padding: 6px; }
+.esboco img { width: 100%; height: auto; display: block; }
+.ent-res { margin: 0; font-size: 14px; }
 .ent-res strong { display: block; font-size: 15px; }
-.medidas { display: grid; gap: 6px; }
-.medida { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 120px); gap: 8px; align-items: center; }
-.medida .nm { font-size: 14px; min-width: 0; }
-.medida .og { display: inline-block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-left: 6px; }
-.medida .og.sup { color: var(--warn); }
-.medida input { padding: 6px 8px; font-family: var(--font-mono); font-size: 14px; }
-.ent-sec { display: grid; gap: 6px; }
-.ent-sec h3 { margin: 4px 0 0; font-size: 13px; color: var(--muted); font-weight: 600; }
-.ent-sec ul { margin: 0; padding-left: 18px; font-size: 14px; }
-.pergunta { display: grid; gap: 4px; font-size: 14px; }
-.pergunta input { padding: 7px 9px; }
+.medidas-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.medidas-lista li { font-size: 13px; background: var(--soft); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; }
+.medidas-lista li b { font-weight: 600; }
+.pergunta-ia { margin: 0; font-size: 14px; padding: 10px 12px; border-radius: 8px; background: var(--warn-bg); }
+.linkbtn { border: 0; background: none; padding: 0; color: var(--muted); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; justify-self: start; }
 
 /* Modelo */
 .titulo-in { font-weight: 600; font-size: 15px; }
@@ -212,11 +212,11 @@ details > *:not(summary) { margin-top: 10px; }
 </header>
 
 <main class="layout">
-  <section class="view" aria-label="Prévia do modelo">
+  <section class="view vazio" id="view" aria-label="Prévia do modelo">
     <div class="stage" id="stage">
       <canvas id="cv"></canvas>
-      <div class="stage-top"><span class="dim num" id="dim">—</span><span class="tag" id="tag-origem">Exemplo</span></div>
-      <div class="stage-msg" id="stage-msg"><span id="stage-txt">Baixando o OpenSCAD (14 MB, só na primeira vez)…</span><div class="prog"><i></i></div></div>
+      <div class="stage-top"><span class="dim num" id="dim">—</span><span class="tag" id="tag-origem" hidden></span></div>
+      <div class="stage-msg" id="stage-msg"><strong id="stage-txt">Nenhum modelo ainda</strong><span id="stage-sub"></span><div class="prog" id="stage-prog"><i></i></div></div>
       <div class="stage-tools"><button id="btn-balanco" aria-pressed="true" title="Pinta de laranja as faces com balanço acima de 45°">Balanços</button><button id="btn-centro">Centralizar</button></div>
     </div>
     <div class="checks" id="checks"></div>
@@ -254,8 +254,9 @@ details > *:not(summary) { margin-top: 10px; }
         </div>
         <div class="actions">
           <button class="btn primary" id="btn-entender">Entender o pedido</button>
-          <button class="btn ghost" id="btn-direto">Gerar sem confirmar</button>
+          <button class="btn ghost" id="btn-direto">Gerar direto</button>
         </div>
+        <button class="linkbtn" id="btn-colar">Já tenho o código OpenSCAD</button>
         <p class="note warn" id="ia-off" hidden></p>
         <div class="atividade" id="act-pedido" hidden></div>
       </div>
@@ -279,19 +280,28 @@ details > *:not(summary) { margin-top: 10px; }
     </article>
 
     <article class="card" id="card-ent" hidden>
-      <h2><span class="n">2</span>O que a IA entendeu</h2>
-      <div id="ent-corpo" class="pane"></div>
-      <label class="lbl" for="ent-obs">Correções ou detalhes que faltaram</label>
-      <textarea id="ent-obs" rows="2" placeholder="Ex.: a aba de cima deve ter 15 mm, não 10."></textarea>
-      <div class="actions"><button class="btn primary" id="btn-gerar">Gerar modelo</button></div>
+      <h2><span class="n">2</span>Confere o esboço</h2>
+      <div class="esboco" id="ent-esboco"><img id="ent-img" alt="Esboço da peça com as medidas principais"></div>
+      <p class="hint" id="ent-sem-esboco" hidden>A IA não mandou o esboço desta vez. Confira pelo resumo e pelas medidas, ou peça para corrigir.</p>
+      <p class="ent-res"><strong id="ent-titulo"></strong><span id="ent-resumo"></span></p>
+      <ul class="medidas-lista" id="ent-medidas"></ul>
+      <p class="hint" id="ent-sup" hidden></p>
+      <p class="pergunta-ia" id="ent-perg" hidden></p>
+      <label class="lbl" for="ent-obs">Algo errado ou faltando?</label>
+      <textarea id="ent-obs" rows="2" placeholder="Ex.: a aba de cima tem 15 mm; parafuso M3."></textarea>
+      <div class="actions">
+        <button class="btn primary" id="btn-gerar">Está certo, gerar</button>
+        <button class="btn ghost" id="btn-redesenhar">Corrigir o esboço</button>
+      </div>
     </article>
 
-    <article class="card" id="card-modelo">
-      <h2><span class="n">3</span>Modelo <span class="aside" id="modelo-origem">exemplo</span></h2>
-      <input type="text" id="titulo" class="titulo-in" aria-label="Nome do modelo" value="Suporte de celular">
+    <article class="card" id="card-modelo" hidden>
+      <h2><span class="n">3</span>Modelo <span class="aside" id="modelo-origem"></span></h2>
+      <input type="text" id="titulo" class="titulo-in" aria-label="Nome do modelo" value="">
       <div class="atividade" id="act-modelo" hidden></div>
       <p class="notas" id="notas" hidden></p>
       <p class="note bad" id="erro-comp" hidden></p>
+      <div class="pane" id="modelo-corpo" hidden>
       <div class="params" id="params"></div>
       <div class="pane" id="box-mudanca">
         <label class="lbl" for="mudanca">Pedir mudança à IA</label>
@@ -308,12 +318,13 @@ details > *:not(summary) { margin-top: 10px; }
         <div class="actions"><button class="btn" id="btn-compilar">Compilar este código</button></div>
       </details>
       <details id="det-log"><summary>Registro do OpenSCAD</summary><pre id="log"></pre></details>
+      </div>
     </article>
 
-    <article class="card" id="card-baixar">
+    <article class="card" id="card-baixar" hidden>
       <h2><span class="n">4</span>Baixar STL</h2>
       <label class="lbl" for="nome-arq">Nome do arquivo</label>
-      <input type="text" id="nome-arq" value="suporte_de_celular">
+      <input type="text" id="nome-arq" value="">
       <div class="actions"><button class="btn primary" id="btn-baixar">Baixar .zip com o STL</button></div>
       <p class="hint">Aqui o app só salva .zip. Dentro vão o <b>.stl</b> e o <b>.scad</b> (o código, para editar depois). No Fatiador, abra o .zip direto; ou toque nele no app Arquivos para extrair o .stl.</p>
       <p class="status" id="baixar-status"></p>
@@ -388,58 +399,15 @@ const local = {
   set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* sem armazenamento */ } },
 };
 
-/* ================= Exemplo inicial ================= */
-const EXEMPLO = `// Suporte de celular (exemplo do Modelador V3 SE)
-// Impresso deitado: o perfil fica na mesa e a largura sobe em Z, sem balanços.
-
-/* [Medidas] */
-// Largura do suporte (mm)
-largura = 70; // [40:1:120]
-// Inclinação do encosto (graus)
-angulo = 65; // [50:1:80]
-// Vão para o celular com capa (mm)
-espessura_celular = 12; // [6:0.5:20]
-// Comprimento do encosto (mm)
-altura_encosto = 90; // [50:1:140]
-// Profundidade da base (mm)
-profundidade_base = 85; // [60:1:130]
-
-/* [Paredes] */
-// Espessura das paredes (mm)
-parede = 4; // [2:0.5:8]
-// Altura da aba da frente (mm)
-altura_aba = 10; // [5:1:20]
-
-/* [Hidden] */
-$fa = 2; $fs = 0.4;
-x_encosto = parede + espessura_celular + parede * sin(angulo);
-
-module perfil() {
-  offset(r = 1) offset(delta = -1) union() {
-    square([profundidade_base, parede]);                    // base
-    square([parede, parede + altura_aba]);                   // aba da frente
-    translate([x_encosto, 0]) rotate(angulo)
-      square([altura_encosto, parede]);                      // encosto
-    hull() {                                                 // escora de trás
-      translate([profundidade_base - parede, 0]) square([parede, parede]);
-      translate([x_encosto, 0]) rotate(angulo)
-        translate([altura_encosto * 0.55, 0]) square([parede, parede]);
-    }
-  }
-}
-
-linear_extrude(largura) perfil();
-`;
-
 /* ================= Estado ================= */
 const S = {
-  projId: novoId(), origem: 'exemplo', titulo: 'Suporte de celular',
-  pedido: '', fotos: [], entendimento: null, spec: '', codigo: EXEMPLO, notas: '',
+  projId: novoId(), origem: null, titulo: '', fase: null,
+  pedido: '', fotos: [], entendimento: null, esboco: null, esbocoPNG: null, spec: '', codigo: '', notas: '',
   ajustes: {}, editadoAMao: false,
   stl: null, pos: null, analise: null, compiledCode: null,
   ocupado: false, criado: Date.now(),
 };
-const ORIGEM_TXT = { exemplo: 'exemplo', ia: 'gerado pela IA', relevo: 'imagem em relevo', manual: 'código editado' };
+const ORIGEM_TXT = { ia: 'gerado pela IA', relevo: 'imagem em relevo', manual: 'código colado ou editado' };
 
 /* ================= Motor OpenSCAD =================
    O OpenSCAD 2025.07 (núcleo Manifold) vem do jsDelivr num único módulo de 14 MB, com o .wasm
@@ -469,7 +437,7 @@ function motorPronto(versao) {
   motor.ready = true;
   $('chip-motor').textContent = 'OpenSCAD ' + (versao || '').replace(/^(\d{4})\.(\d{2}).*$/, '$1.$2') + (motor.local ? ' · na página' : ' · pronto');
   $('chip-motor').className = 'chip num on';
-  if (!S.pos) $('stage-txt').textContent = 'Compilando…';
+  atualizarPalco();
 }
 // Reserva: o mesmo motor rodando na página (trava a tela durante a compilação, mas funciona).
 async function motorNaPagina(motivo) {
@@ -516,11 +484,26 @@ async function compilarNaPagina(code, args) {
 }
 const FONTS_CONF = '<?xml version="1.0"?>\n<!DOCTYPE fontconfig SYSTEM "fonts.dtd">\n<fontconfig><dir>/fonts</dir></fontconfig>\n';
 function motorFalhou(msg) {
-  motor.falhou = true;
+  motor.falhou = true; motor.erro = String(msg || '');
   $('chip-motor').textContent = 'OpenSCAD: não abriu';
   $('chip-motor').className = 'chip num off';
-  $('stage-msg').hidden = false;
-  $('stage-txt').textContent = 'O OpenSCAD não abriu neste aparelho (' + msg + '). Verifique a internet e recarregue a página.';
+  atualizarPalco();
+}
+// Mensagem no lugar da prévia quando não há modelo para mostrar.
+function atualizarPalco(fase) {
+  if (fase !== undefined) S.fase = fase;
+  const vendo = !!S.pos && V.ok;
+  $('stage-msg').hidden = vendo;
+  $('view').classList.toggle('vazio', !S.pos);
+  $('stage-prog').hidden = motor.ready || motor.falhou;
+  let t, sub;
+  if (motor.falhou) { t = 'O OpenSCAD não abriu'; sub = motor.erro + '. Verifique a internet e recarregue a página.'; }
+  else if (S.pos && !V.ok) { t = 'Sem prévia 3D'; sub = V.falha || 'Este aparelho não abriu a prévia 3D.'; }
+  else if (S.fase === 'gerando') { t = 'A IA está desenhando a peça'; sub = 'Acompanhe o andamento na etapa Modelo. Pode levar alguns minutos.'; }
+  else if (S.fase === 'erro') { t = 'O código não compilou'; sub = 'Veja o erro na etapa Modelo.'; }
+  else { t = 'Nenhum modelo ainda'; sub = 'Descreva a peça na etapa 1 e toque em Entender o pedido.'; }
+  if (!motor.ready && !motor.falhou) sub += ' Carregando o OpenSCAD (14 MB, só na primeira vez)…';
+  $('stage-txt').textContent = t; $('stage-sub').textContent = sub;
 }
 function reiniciarMotor() {
   if (motor.local) return;
@@ -660,10 +643,10 @@ const V = { ok: false, renderer: null, scene: null, camera: null, mesh: null, be
   ctl: { theta: -Math.PI / 3, phi: 1.05, dist: 260, target: null } };
 function cor(nome) { return getComputedStyle(document.documentElement).getPropertyValue(nome).trim() || '#888'; }
 function init3D() {
-  if (!window.THREE) { $('stage-txt').textContent = 'A prévia 3D não carregou (sem acesso à biblioteca three.js). O resto funciona.'; return; }
+  if (!window.THREE) { V.falha = 'A biblioteca three.js não carregou. O resto funciona.'; return; }
   try {
     V.renderer = new THREE.WebGLRenderer({ canvas: $('cv'), antialias: true, alpha: true });
-  } catch (e) { $('stage-txt').textContent = 'Este aparelho não abriu a prévia 3D (WebGL).'; return; }
+  } catch (e) { V.falha = 'Este aparelho não abriu a prévia 3D (WebGL). O resto funciona.'; return; }
   V.ok = true;
   V.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   V.scene = new THREE.Scene();
@@ -720,7 +703,7 @@ function mesa(cx, cy, cGrid, cMajor) {
 }
 function mostrarModelo(pos, a) {
   S.pos = pos; S.analise = a;
-  $('stage-msg').hidden = true;
+  atualizarPalco(null);
   $('dim').textContent = fmtDim(a.size);
   mostrarChecks(a);
   if (!V.ok) return;
@@ -976,13 +959,15 @@ async function compilarEMostrar(code, opt = {}) {
   if (!r.ok) {
     const erro = resumoErro(r.log, code);
     if (!opt.calado) { $('erro-comp').textContent = 'Erro de compilação\n' + erro; $('erro-comp').hidden = false; }
-    if (!S.pos) { $('stage-msg').hidden = false; $('stage-txt').textContent = 'O código não compilou. Veja o erro na etapa 3.'; }
+    if (!S.pos) atualizarPalco('erro');
     return { ok: false, erro, log: r.log };
   }
   $('erro-comp').hidden = true;
   const pos = lerSTL(r.stl), a = analisar(pos);
   S.stl = r.stl; S.compiledCode = code;
   mostrarModelo(pos, a);
+  $('card-baixar').hidden = false;
+  $('tag-origem').hidden = !S.origem;
   if (opt.salvar) agendarSalvar();
   return { ok: true, pos, a, stl: r.stl, log: r.log, code };
 }
@@ -992,12 +977,50 @@ function definirCodigo(code, origem) {
   $('codigo').value = code;
   $('modelo-origem').textContent = ORIGEM_TXT[S.origem] || '';
   $('tag-origem').textContent = ORIGEM_TXT[S.origem] || '';
+  $('tag-origem').hidden = !S.origem || !S.pos;
+  $('modelo-corpo').hidden = !(code || S.origem === 'manual');
+  if (code || S.origem) $('card-modelo').hidden = false;
   mostrarParams();
+  atualizarBotoes();
 }
 function definirTitulo(t) {
-  S.titulo = (t || 'Modelo').trim().slice(0, 80);
+  S.titulo = (t || '').trim().slice(0, 80);
   $('titulo').value = S.titulo;
-  $('nome-arq').value = slug(S.titulo);
+  $('nome-arq').value = S.titulo ? slug(S.titulo) : '';
+}
+// Tira o modelo da tela (prévia, parâmetros, código). O que já foi gerado continua em Guardados.
+function limparModelo() {
+  versaoComp++; clearTimeout(tParam);
+  S.pos = null; S.analise = null; S.stl = null; S.compiledCode = null; S.notas = ''; S.ajustes = {}; S.editadoAMao = false; S.origem = null;
+  if (V.ok) {
+    if (V.mesh) { V.scene.remove(V.mesh); V.mesh.geometry.dispose(); V.mesh.material.dispose(); V.mesh = null; }
+    if (V.bed) { V.scene.remove(V.bed); V.bed.children.forEach((c) => { c.geometry.dispose(); c.material.dispose(); }); V.bed = null; }
+    V.quadro = null; pedirQuadro();
+  }
+  $('dim').textContent = '—'; $('checks').innerHTML = '';
+  $('notas').hidden = true; $('erro-comp').hidden = true; $('det-vistas').hidden = true; $('log').textContent = ''; $('baixar-status').textContent = '';
+  definirCodigo('', null);
+  $('card-modelo').hidden = true; $('card-baixar').hidden = true;
+  actModelo.limpar();
+  atualizarPalco(null);
+}
+// Pedido novo: começa um projeto do zero.
+function novoProjeto() {
+  limparModelo();
+  S.projId = novoId(); S.criado = Date.now(); S.entendimento = null; S.esboco = null; S.esbocoPNG = null; S.spec = '';
+  conta.ultimo = '';
+  $('card-ent').hidden = true; $('ent-obs').value = '';
+  definirTitulo('');
+}
+function colarCodigo() {
+  if (S.ocupado) return;
+  novoProjeto();
+  S.origem = 'manual'; S.spec = 'Modelo escrito ou colado pelo usuário.';
+  definirTitulo('Modelo');
+  definirCodigo('', 'manual');
+  $('det-codigo').open = true;
+  $('card-modelo').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  $('codigo').focus();
 }
 
 /* ================= Claude (capacidade sample) ================= */
@@ -1101,11 +1124,13 @@ function atualizarBotoes() {
   $('btn-entender').disabled = semIA || oc;
   $('btn-direto').disabled = semIA || oc;
   $('btn-gerar').disabled = semIA || oc;
+  $('btn-redesenhar').disabled = semIA || oc;
   $('btn-mudar').disabled = semIA || oc;
   $('btn-conferir').disabled = semIA || oc || !S.pos;
   $('btn-compilar').disabled = oc;
-  $('btn-relevo').disabled = oc;
-  $('box-mudanca').hidden = semIA;
+  $('btn-colar').disabled = oc;
+  $('btn-relevo').disabled = oc || !(RV.loops && RV.loops.length);
+  $('box-mudanca').hidden = semIA || !S.codigo;
   document.querySelectorAll('.atividade [data-parar]').forEach((c) => { c.hidden = !oc; });
 }
 
@@ -1151,37 +1176,99 @@ function ajustesTexto() {
   if (S.editadoAMao) t += '\nO usuário editou o código à mão; mantenha essas edições.';
   return t;
 }
-function promptEntender(pedido, nImg) {
-  return REGRAS + '\n\nTAREFA\nEntender o pedido abaixo antes de modelar. Ainda não escreva código.\n' +
-    (nImg ? 'Há ' + nImg + ' imagem(ns) anexada(s) pelo usuário (esboço técnico, foto ou desenho). Em esboço com cotas, leia todas as cotas e use-as exatamente; se alguma estiver ilegível ou ambígua, pergunte. Foto sem cotas não dá escala: pergunte as medidas que faltarem, sempre com uma sugestão.\n' : '') +
-    '\nPEDIDO DO USUÁRIO\n"""\n' + (pedido || '(sem texto; veja as imagens)') + '\n"""\n\n' +
-    'Responda só com um objeto JSON, sem nada fora dele, neste formato:\n' +
-    '{"titulo": "nome curto da peça", "resumo": "o que é a peça e como ela vai ser, em 1 a 3 frases", "medidas": [{"nome": "Largura total", "valor": "80 mm", "origem": "pedido"}], "suposicoes": ["..."], "perguntas": [{"pergunta": "...", "sugestao": "resposta sugerida"}], "orientacao": "como a peça fica na mesa para imprimir e por quê", "riscos": ["pontos de atenção na impressão"]}\n' +
-    '"origem" é "pedido" (está no texto), "imagem" (lida na imagem) ou "suposicao" (você escolheu). Liste todas as medidas que definem a peça. No máximo 5 perguntas, só as que mudam o modelo; sem dúvidas, devolva "perguntas": [].';
+function promptEntender(pedido, descImgs, anterior, correcoes) {
+  return REGRAS + '\n\nTAREFA\nEntender o pedido e devolver um esboço rápido para o usuário conferir antes de modelar. Ainda não escreva OpenSCAD.\n' +
+    (descImgs ? descImgs + ' Em esboço com cotas, use as cotas exatamente. Foto sem cotas não dá escala: suponha medidas comuns para esse tipo de peça e diga quais supôs.\n' : '') +
+    '\nPEDIDO DO USUÁRIO\n"""\n' + (pedido || '(sem texto; veja as imagens)') + '\n"""\n' +
+    (anterior ? '\nSEU ENTENDIMENTO ANTERIOR\n' + JSON.stringify({ titulo: anterior.titulo, resumo: anterior.resumo, medidas: anterior.medidas, suposicoes: anterior.suposicoes }) +
+      '\n\nCORREÇÕES DO USUÁRIO, NA ORDEM (valem mais que o resto)\n' + correcoes.map((c) => '- ' + c).join('\n') + '\n' : '') +
+    '\nResponda só com dois blocos, nesta ordem, sem texto fora deles:\n' +
+    '1. Um bloco ```json com {"titulo": "nome curto da peça", "resumo": "uma ou duas frases curtas", "medidas": [{"nome": "Largura", "valor": "80 mm"}], "suposicoes": ["..."], "pergunta": {"texto": "...", "sugestao": "..."}}\n' +
+    '   "medidas": só as 3 a 6 principais, que o usuário confere de olho. "suposicoes": no máximo 3, curtas, só o que você escolheu sem estar no pedido. "pergunta": só se uma dúvida mudar muito a peça; senão null.\n' +
+    '2. Um bloco ```svg com um esboço técnico simples da peça: as duas vistas que melhor mostram a forma (em geral FRENTE e TOPO), lado a lado e na mesma escala entre si, com linhas de cota e as medidas principais em mm. ' +
+    'Use viewBox="0 0 640 360" width="640" height="360" e um <rect> branco do tamanho todo como fundo; contorno da peça em preto, 2 px, sem preenchimento; arestas escondidas tracejadas; cotas em azul #1f5fbf com setas; textos com font-family="sans-serif" font-size="14"; o nome de cada vista em cima dela. Nada de script, imagem, link, CSS ou fonte externa. No máximo 12 KB.';
 }
-function promptGerar(spec, pedido, nImg) {
-  return REGRAS + '\n\n' + CODIGO + '\n\nTAREFA\nEscrever o modelo OpenSCAD da peça especificada abaixo.\n' +
-    (nImg ? 'A(s) ' + nImg + ' imagem(ns) anexada(s) é(são) a(s) que o usuário mandou com o pedido; use-as para a forma e as proporções.\n' : '') +
-    '\nESPECIFICAÇÃO CONFIRMADA PELO USUÁRIO\n' + spec + '\n\nPEDIDO ORIGINAL\n"""\n' + (pedido || '(só imagens)') + '\n"""\n\n' + verificar() +
+// Imagens que vão para a IA, em ordem, e a frase que diz o que é cada uma.
+function imagensDoProjeto(vistas, nomeEsboco) {
+  const itens = [];
+  if (vistas) itens.push({ blob: vistas, nome: 'as quatro vistas do modelo compilado' });
+  if (S.esbocoPNG) itens.push({ blob: S.esbocoPNG, nome: nomeEsboco || 'o esboço que o usuário aprovou' });
+  S.fotos.forEach((f) => itens.push({ blob: f.blob, nome: 'imagem que o usuário mandou com o pedido (esboço, foto ou desenho)' }));
+  const usados = itens.slice(0, maxImagens());
+  return { blobs: usados.map((x) => x.blob), texto: usados.length ? 'Imagens anexadas, na ordem: ' + usados.map((x, i) => (i + 1) + ') ' + x.nome).join('; ') + '.' : '' };
+}
+function promptGerar(spec, pedido, descImgs) {
+  return REGRAS + '\n\n' + CODIGO + '\n\nTAREFA\nEscrever o modelo OpenSCAD da peça especificada abaixo.\n' + (descImgs ? descImgs + '\n' : '') +
+    '\nESPECIFICAÇÃO CONFIRMADA PELO USUÁRIO\n' + spec + '\n\nPEDIDO ORIGINAL\n"""\n' + (pedido || '(só imagens)') + '\n"""\n' +
+    (S.esboco ? '\nESBOÇO APROVADO PELO USUÁRIO (SVG; as cotas dele valem como medidas)\n' + S.esboco + '\n' : '') + '\n' + verificar() +
     'RESPOSTA FINAL\nO código completo num único bloco ```openscad. Depois do bloco, no máximo 4 linhas curtas para o usuário: o que você supôs e algum cuidado na impressão. Não repita a especificação.';
 }
-function promptConferir(nUser) {
+function promptConferir(descImgs) {
   return REGRAS + '\n\n' + CODIGO + '\n\nTAREFA\nConferir se o modelo compilado corresponde ao pedido.\n' +
-    'A primeira imagem tem quatro vistas do modelo compilado: FRENTE (olhando de −Y para +Y, X para a direita), DIREITA (olhando de +X, Y para a direita), TOPO (de cima, X para a direita, Y para cima) e PERSPECTIVA. As três primeiras são projeções ortográficas na mesma escala, com grade de 10 mm (linhas mais escuras a cada 50 mm). Faces em laranja têm balanço acima de 45° e precisariam de suporte.\n' +
-    (nUser ? 'As outras imagens são as que o usuário mandou com o pedido.\n' : '') +
+    'As quatro vistas do modelo compilado são FRENTE (olhando de −Y para +Y, X para a direita), DIREITA (olhando de +X, Y para a direita), TOPO (de cima, X para a direita, Y para cima) e PERSPECTIVA. As três primeiras são projeções ortográficas na mesma escala, com grade de 10 mm (linhas mais escuras a cada 50 mm). Faces em laranja têm balanço acima de 45° e precisariam de suporte.\n' +
+    (descImgs ? descImgs + '\n' : '') +
     '\nESPECIFICAÇÃO\n' + (S.spec || '(sem especificação escrita; use o código e os comentários)') + ajustesTexto() +
     '\n\nMEDIDAS DO MODELO COMPILADO\n' + medidasTexto(S.analise) +
     '\n\nCÓDIGO ATUAL\n```openscad\n' + S.codigo + '\n```\n\n' +
-    'Compare forma, proporções, posição e tamanho de furos, encaixes e detalhes com a especificação e com as imagens do usuário. Confira também as regras de impressão. Não mude o que é questão de gosto nem desfaça ajustes do usuário.\n' +
+    'Compare forma, proporções, posição e tamanho de furos, encaixes e detalhes com a especificação' + (S.esboco ? ', com o esboço aprovado' : '') + ' e com as imagens do usuário. Confira também as regras de impressão. Não mude o que é questão de gosto nem desfaça ajustes do usuário.\n' +
     'Responda começando com uma linha exatamente "VEREDITO: OK" ou "VEREDITO: CORRIGIR". Depois liste o que encontrou, uma linha por item começando com "- " (no máximo 6). Se o veredito for CORRIGIR, termine com o código completo corrigido num único bloco ```openscad' +
     (temFerramentas() ? ', compilado antes com a ferramenta compilar_e_medir.' : '.');
 }
-function promptMudar(texto, nImg) {
+function promptMudar(texto, descImgs) {
   return REGRAS + '\n\n' + CODIGO + '\n\nTAREFA\nAlterar o modelo conforme o pedido de mudança, mantendo todo o resto igual (parâmetros, nomes, orientação).\n' +
-    (nImg ? 'As imagens anexadas são as que o usuário mandou com o pedido original.\n' : '') +
+    (descImgs ? descImgs + '\n' : '') +
     '\nESPECIFICAÇÃO\n' + (S.spec || '(sem especificação escrita; use o código e os comentários)') + ajustesTexto() +
     '\n\nCÓDIGO ATUAL\n```openscad\n' + S.codigo + '\n```\n\nMUDANÇA PEDIDA\n"""\n' + texto + '\n"""\n\n' + verificar() +
     'RESPOSTA FINAL\nO código completo num único bloco ```openscad. Depois do bloco, até 3 linhas sobre o que mudou.';
+}
+// Resposta do entendimento: um bloco json e um bloco svg.
+function lerEntendimento(text) {
+  const mj = /```json[^\n]*\n([\s\S]*?)```/i.exec(text);
+  let ent = null;
+  const tentar = (t) => { try { const v = JSON.parse(t); return v && typeof v === 'object' && !Array.isArray(v) ? v : null; } catch (e) { return null; } };
+  if (mj) ent = tentar(mj[1]);
+  if (!ent) { const semSvg = text.replace(/<svg[\s\S]*?<\/svg>/gi, ''); const i = semSvg.indexOf('{'), j = semSvg.lastIndexOf('}'); if (i >= 0 && j > i) ent = tentar(semSvg.slice(i, j + 1)); }
+  if (!ent) return null;
+  const ms = /```svg[^\n]*\n([\s\S]*?)```/i.exec(text);
+  ent.svg = limparSVG(ms ? ms[1] : (text.match(/<svg[\s\S]*<\/svg>/i) || [])[0]);
+  return ent;
+}
+// O esboço é mostrado como <img>, que não roda script; mesmo assim tira o que não é desenho.
+function limparSVG(svg) {
+  if (!svg) return null;
+  let s = String(svg);
+  const i = s.search(/<svg[\s>]/i), j = s.lastIndexOf('</svg>');
+  if (i < 0 || j < i) return null;
+  s = s.slice(i, j + 6)
+    .replace(/<script[\s\S]*?<\/script>/gi, '').replace(/<foreignObject[\s\S]*?<\/foreignObject>/gi, '').replace(/<(image|use|style)\b[\s\S]*?(\/>|<\/\1>)/gi, '')
+    .replace(/\son[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+    .replace(/\s(?:xlink:)?href\s*=\s*("[^"]*"|'[^']*')/gi, (m, v) => (/^["']#/.test(v) ? m : ''));
+  const abre = s.slice(0, s.indexOf('>') + 1);
+  let novo = abre;
+  if (!/xmlns=/.test(novo)) novo = novo.replace(/<svg/i, '<svg xmlns="http://www.w3.org/2000/svg"');
+  const vb = /viewBox\s*=\s*["']\s*[-\d.]+[\s,]+[-\d.]+[\s,]+([\d.]+)[\s,]+([\d.]+)/i.exec(novo);
+  if (!/\swidth\s*=/.test(novo)) novo = novo.replace(/<svg/i, '<svg width="' + (vb ? vb[1] : 640) + '" height="' + (vb ? vb[2] : 360) + '"');
+  s = novo + s.slice(abre.length);
+  return s.length <= 60000 ? s : null;
+}
+function svgURL(svg) { return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); }
+// O esboço também vai como imagem para a IA (PNG, fundo branco).
+function svgParaPNG(svg) {
+  return new Promise((res) => {
+    try {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const W = 1280, k = W / (img.naturalWidth || 640), H = Math.max(1, Math.round((img.naturalHeight || 360) * k));
+          const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+          const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, W, H); g.drawImage(img, 0, 0, W, H);
+          cv.toBlob((b) => res(b || null), 'image/png');
+        } catch (e) { res(null); }
+      };
+      img.onerror = () => res(null);
+      img.src = svgURL(svg);
+    } catch (e) { res(null); }
+  });
 }
 function promptCorrigir(code, erro) {
   return CODIGO + '\n\nTAREFA\nO código abaixo não compila no OpenSCAD 2025.07 (núcleo Manifold, sem bibliotecas externas). Corrija o erro sem mudar o desenho.\n\nERRO\n' + erro +
@@ -1229,96 +1316,82 @@ function ferramentaCompilar(reg, act) {
 }
 
 /* ================= Fluxos com a IA ================= */
-async function entender() {
+async function entender(corrigir) {
   const pedido = $('pedido').value.trim();
   if (!pedido && !S.fotos.length) { $('pedido').focus(); return; }
+  const obs = corrigir ? $('ent-obs').value.trim() : '';
+  if (corrigir && !obs) { $('ent-obs').focus(); return; }
+  if (!corrigir) novoProjeto();
   ocupar(true); actPedido.limpar(); actPedido.rodando();
-  const p = actPedido.passo(S.fotos.length ? 'Lendo o pedido e as imagens…' : 'Lendo o pedido…');
+  const p = actPedido.passo(corrigir ? 'Redesenhando o esboço…' : S.fotos.length ? 'Lendo o pedido e as imagens…' : 'Lendo o pedido…');
+  const anterior = corrigir ? S.entendimento : null;
+  const correcoes = corrigir ? [...((anterior && anterior.correcoes) || []), obs] : [];
   try {
-    const ent = await perguntar(promptEntender(pedido, Math.min(S.fotos.length, maxImagens())), { imagens: S.fotos.map((f) => f.blob), json: true });
-    if (!ent || typeof ent !== 'object') throw { code: 'invalid_json' };
+    const im = imagensDoProjeto(null, 'o seu esboço anterior, que o usuário pediu para corrigir');
+    const { text } = await perguntar(promptEntender(pedido, im.texto, anterior, correcoes), { imagens: im.blobs });
+    const ent = lerEntendimento(text);
+    if (!ent) throw { code: 'invalid_json' };
+    ent.correcoes = correcoes;
     S.entendimento = ent; S.pedido = pedido;
+    S.esboco = ent.svg || null;
+    S.esbocoPNG = S.esboco ? await svgParaPNG(S.esboco) : null;
     mostrarEntendimento(ent);
-    p.ok('Pedido lido. Confira a etapa 2.');
+    if (corrigir) $('ent-obs').value = '';
+    p.ok(corrigir ? 'Esboço redesenhado.' : 'Pronto. Confira o esboço na etapa 2.');
     $('card-ent').scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (e) { p.falhou(erroIA(e)); }
   finally { ocupar(false); actPedido.parado(); }
 }
 function mostrarEntendimento(ent) {
-  const box = $('ent-corpo'); box.innerHTML = '';
-  const res = el('p', 'ent-res');
-  res.append(el('strong', null, String(ent.titulo || 'Peça')), document.createTextNode(String(ent.resumo || '')));
-  box.append(res);
-  const meds = Array.isArray(ent.medidas) ? ent.medidas : [];
-  if (meds.length) {
-    const sec = el('div', 'ent-sec'); sec.append(el('h3', null, 'Medidas (edite o que estiver errado)'));
-    const lista = el('div', 'medidas');
-    meds.forEach((m, i) => {
-      const row = el('div', 'medida'), nm = el('label', 'nm', String(m.nome || 'Medida'));
-      const og = String(m.origem || '').toLowerCase(); nm.htmlFor = 'med_' + i;
-      nm.append(el('span', 'og' + (og.startsWith('sup') ? ' sup' : ''), og.startsWith('sup') ? 'suposição' : og.startsWith('ima') ? 'da imagem' : 'do pedido'));
-      const inp = el('input'); inp.type = 'text'; inp.id = 'med_' + i; inp.value = String(m.valor || ''); inp.dataset.nome = String(m.nome || ''); inp.dataset.orig = inp.value; inp.dataset.og = og;
-      row.append(nm, inp); lista.append(row);
-    });
-    sec.append(lista); box.append(sec);
-  }
-  const listaSimples = (titulo, arr) => {
-    if (!Array.isArray(arr) || !arr.length) return;
-    const sec = el('div', 'ent-sec'), ul = el('ul'); sec.append(el('h3', null, titulo));
-    arr.forEach((x) => ul.append(el('li', null, String(x)))); sec.append(ul); box.append(sec);
-  };
-  listaSimples('Suposições', ent.suposicoes);
-  const pergs = Array.isArray(ent.perguntas) ? ent.perguntas : [];
-  if (pergs.length) {
-    const sec = el('div', 'ent-sec'); sec.append(el('h3', null, 'Perguntas (a sugestão já vem preenchida)'));
-    pergs.forEach((q, i) => {
-      const d = el('div', 'pergunta'), lab = el('label', null, String(q.pergunta || q)); lab.htmlFor = 'perg_' + i;
-      const inp = el('input'); inp.type = 'text'; inp.id = 'perg_' + i; inp.value = String(q.sugestao || ''); inp.dataset.pergunta = String(q.pergunta || q);
-      d.append(lab, inp); sec.append(d);
-    });
-    box.append(sec);
-  }
-  if (ent.orientacao) { const sec = el('div', 'ent-sec'); sec.append(el('h3', null, 'Orientação na mesa'), el('p', 'hint', String(ent.orientacao))); box.append(sec); }
-  listaSimples('Pontos de atenção', ent.riscos);
-  $('ent-obs').value = '';
+  $('ent-titulo').textContent = String(ent.titulo || 'Peça');
+  $('ent-resumo').textContent = String(ent.resumo || '');
+  $('ent-esboco').hidden = !S.esboco; $('ent-sem-esboco').hidden = !!S.esboco;
+  if (S.esboco) $('ent-img').src = svgURL(S.esboco);
+  const ul = $('ent-medidas'); ul.innerHTML = '';
+  (Array.isArray(ent.medidas) ? ent.medidas : []).slice(0, 8).forEach((m) => {
+    const li = el('li'); li.append(document.createTextNode(String((m && m.nome) || '') + ' '), el('b', 'num', String((m && m.valor) || ''))); ul.append(li);
+  });
+  const sup = Array.isArray(ent.suposicoes) ? ent.suposicoes.slice(0, 3).map(String) : [];
+  $('ent-sup').textContent = sup.length ? 'Supus: ' + sup.join('; ') : ''; $('ent-sup').hidden = !sup.length;
+  const q = ent.pergunta && typeof ent.pergunta === 'object' && (ent.pergunta.texto || ent.pergunta.pergunta) ? ent.pergunta : null;
+  const box = $('ent-perg'); box.textContent = ''; box.hidden = !q;
+  if (q) box.append(el('b', null, String(q.texto || q.pergunta)), document.createTextNode(q.sugestao ? ' Responda no campo abaixo; se não responder, fica: ' + q.sugestao + '.' : ' Responda no campo abaixo.'));
   $('card-ent').hidden = false;
+  atualizarBotoes();
 }
-function specDoEntendimento() {
+function specDoEntendimento(obsFinal) {
   const ent = S.entendimento || {};
   const linhas = ['Peça: ' + (ent.titulo || ''), String(ent.resumo || '')];
-  const meds = Array.from(document.querySelectorAll('#ent-corpo .medida input'));
-  if (meds.length) {
-    linhas.push('Medidas:');
-    meds.forEach((i) => {
-      const mudou = i.value.trim() !== i.dataset.orig;
-      linhas.push('- ' + i.dataset.nome + ': ' + i.value.trim() + (mudou ? ' (corrigida pelo usuário)' : i.dataset.og.startsWith('sup') ? ' (suposição aceita)' : ''));
-    });
-  }
-  if (Array.isArray(ent.suposicoes) && ent.suposicoes.length) linhas.push('Suposições aceitas:', ...ent.suposicoes.map((s) => '- ' + s));
-  const pergs = Array.from(document.querySelectorAll('#ent-corpo .pergunta input'));
-  if (pergs.length) linhas.push('Respostas do usuário:', ...pergs.map((i) => '- ' + i.dataset.pergunta + ' → ' + (i.value.trim() || '(sem resposta; escolha um valor razoável)')));
-  if (ent.orientacao) linhas.push('Orientação de impressão: ' + ent.orientacao);
-  if (Array.isArray(ent.riscos) && ent.riscos.length) linhas.push('Pontos de atenção: ' + ent.riscos.join('; '));
-  const obs = $('ent-obs').value.trim();
-  if (obs) linhas.push('Correções do usuário (valem mais que o resto): ' + obs);
+  const meds = Array.isArray(ent.medidas) ? ent.medidas : [];
+  if (meds.length) linhas.push('Medidas principais:', ...meds.map((m) => '- ' + ((m && m.nome) || '') + ': ' + ((m && m.valor) || '')));
+  if (Array.isArray(ent.suposicoes) && ent.suposicoes.length) linhas.push('Suposições aceitas:', ...ent.suposicoes.map((x) => '- ' + x));
+  const q = ent.pergunta && typeof ent.pergunta === 'object' ? ent.pergunta : null;
+  if (q && (q.texto || q.pergunta)) linhas.push('Pergunta feita ao usuário: ' + (q.texto || q.pergunta) + (q.sugestao ? ' Se as correções abaixo não responderem, vale: ' + q.sugestao + '.' : ''));
+  const corr = [...(ent.correcoes || []), ...(obsFinal ? [obsFinal] : [])];
+  if (corr.length) linhas.push('Correções e respostas do usuário, na ordem (valem mais que o resto, inclusive mais que o esboço):', ...corr.map((c) => '- ' + c));
+  if (S.esboco) linhas.push('O usuário aprovou o esboço; o SVG vai no fim do pedido e também como imagem.');
   return linhas.filter(Boolean).join('\n');
 }
 async function gerar(direto) {
   const pedido = $('pedido').value.trim();
-  if (direto && !pedido && !S.fotos.length) { $('pedido').focus(); return; }
+  if (direto) {
+    if (!pedido && !S.fotos.length) { $('pedido').focus(); return; }
+    novoProjeto();
+  } else limparModelo();
   S.pedido = pedido;
-  if (direto) S.entendimento = null;
-  const spec = direto ? 'Pedido do usuário, sem etapa de confirmação:\n' + (pedido || '(veja as imagens)') : specDoEntendimento();
+  const obs = direto ? '' : $('ent-obs').value.trim();
+  const spec = direto ? 'Pedido do usuário, sem etapa de confirmação:\n' + (pedido || '(veja as imagens)') : specDoEntendimento(obs);
+  S.spec = spec; S.origem = 'ia';
+  definirTitulo((S.entendimento && S.entendimento.titulo) || pedido.split('\n')[0].slice(0, 60) || 'Modelo');
+  $('card-modelo').hidden = false;
+  atualizarPalco('gerando');
   ocupar(true); actModelo.limpar(); actModelo.rodando();
   $('card-modelo').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  S.projId = novoId(); S.criado = Date.now(); S.spec = spec; S.ajustes = {}; S.editadoAMao = false; S.origem = 'ia';
-  definirTitulo((S.entendimento && S.entendimento.titulo) || pedido.split('\n')[0].slice(0, 60) || 'Modelo');
-  $('notas').hidden = true;
-  const imgs = S.fotos.map((f) => f.blob);
   try {
     const reg = { n: 0, ultimo: null };
     const p = actModelo.passo('Escrevendo o modelo em OpenSCAD…');
-    const { text } = await perguntar(promptGerar(spec, pedido, Math.min(imgs.length, maxImagens())), { imagens: imgs, ferramentas: ferramentaCompilar(reg, actModelo), act: actModelo });
+    const im = imagensDoProjeto(null);
+    const { text } = await perguntar(promptGerar(spec, pedido, im.texto), { imagens: im.blobs, ferramentas: ferramentaCompilar(reg, actModelo), act: actModelo });
     const code = extrairCodigo(text);
     if (!code) { p.falhou('A resposta não trouxe código. Tente de novo.'); return; }
     p.ok('Código escrito');
@@ -1328,7 +1401,7 @@ async function gerar(direto) {
     await conferir(2);
     agendarSalvar(0);
   } catch (e) { actModelo.passo('').falhou(erroIA(e)); }
-  finally { ocupar(false); actModelo.parado(); }
+  finally { ocupar(false); actModelo.parado(); if (!S.pos) atualizarPalco(S.codigo ? 'erro' : null); }
 }
 async function aplicarCodigo(code, reg, origem) {
   let r = reg && reg.ultimo && reg.ultimo.code === code ? reg.ultimo : null;
@@ -1359,9 +1432,9 @@ async function conferir(rodadas) {
     const p = actModelo.passo(i ? 'Conferindo a correção…' : 'Conferindo as vistas com o pedido…');
     const png = await vistasPNG();
     if (!png) { p.falhou('Sem prévia 3D para gerar as vistas'); return; }
-    const user = S.fotos.map((f) => f.blob).slice(0, Math.max(0, maxImagens() - 1));
+    const im = imagensDoProjeto(png);
     const reg = { n: 0, ultimo: null };
-    const { text } = await perguntar(promptConferir(user.length), { imagens: [png, ...user], ferramentas: ferramentaCompilar(reg, actModelo), act: actModelo });
+    const { text } = await perguntar(promptConferir(im.texto), { imagens: im.blobs, ferramentas: ferramentaCompilar(reg, actModelo), act: actModelo });
     const v = lerVeredito(text);
     if (v.ok || !v.codigo) { p.ok(v.ok ? 'Confere com o pedido' : 'Conferência sem correção de código'); p.itens(v.itens); return; }
     p.ok('Achou o que corrigir'); p.itens(v.itens);
@@ -1373,18 +1446,18 @@ async function mudar() {
   const texto = $('mudanca').value.trim();
   if (!texto) { $('mudanca').focus(); return; }
   ocupar(true); actModelo.limpar(); actModelo.rodando();
-  const imgs = S.fotos.map((f) => f.blob);
   try {
     const reg = { n: 0, ultimo: null };
     const p = actModelo.passo('Aplicando a mudança…');
-    const { text } = await perguntar(promptMudar(texto, Math.min(imgs.length, maxImagens())), { imagens: imgs, ferramentas: ferramentaCompilar(reg, actModelo), act: actModelo });
+    const im = imagensDoProjeto(null);
+    const { text } = await perguntar(promptMudar(texto, im.texto), { imagens: im.blobs, ferramentas: ferramentaCompilar(reg, actModelo), act: actModelo });
     const code = extrairCodigo(text);
     if (!code) { p.falhou('A resposta não trouxe código. Tente de novo.'); return; }
     p.ok('Mudança escrita');
     const notas = extrairNotas(text);
     if (notas) { $('notas').textContent = notas; $('notas').hidden = false; }
     S.spec = (S.spec ? S.spec + '\n' : '') + 'Mudança pedida depois (vale mais que o resto): ' + texto;
-    if (!(await aplicarCodigo(code, reg, S.origem === 'exemplo' ? 'ia' : S.origem))) return;
+    if (!(await aplicarCodigo(code, reg, S.origem || 'ia'))) return;
     $('mudanca').value = '';
     if ($('auto-conferir').checked) await conferir(1);
     agendarSalvar(0);
@@ -1628,12 +1701,11 @@ ${caminhos.map((c) => '  ' + c).join(',\n')}
 }
 async function gerarRelevo() {
   if (!RV.loops || !RV.loops.length) return;
-  S.projId = novoId(); S.criado = Date.now(); S.entendimento = null; S.ajustes = {}; S.editadoAMao = false; S.notas = '';
+  if (S.ocupado) return;
+  novoProjeto();
   definirTitulo('Relevo ' + (RV.nome || 'da imagem'));
   S.spec = 'Relevo (placa ou chaveiro) gerado a partir de uma imagem; os contornos estão em pontos no fim do código.';
-  $('notas').hidden = true; $('card-ent').hidden = true;
   definirCodigo(codigoRelevo(), 'relevo');
-  actModelo.limpar();
   $('card-modelo').scrollIntoView({ behavior: 'smooth', block: 'start' });
   const r = await compilarEMostrar(S.codigo, { forcar: true });
   if (r.ok) agendarSalvar(0);
@@ -1702,8 +1774,8 @@ async function iniciarConta() {
 }
 function agendarSalvar(ms = 2500) { clearTimeout(conta.timer); conta.timer = setTimeout(salvar, ms); }
 async function salvar() {
-  if (!conta.col || S.origem === 'exemplo' || !S.codigo) return;
-  const doc = { titulo: S.titulo, origem: S.origem, pedido: S.pedido || '', spec: S.spec || '', entendimento: S.entendimento || null, codigo: S.codigo, ajustes: S.ajustes, notas: S.notas || '', criado: S.criado || Date.now() };
+  if (!conta.col || !S.codigo || !S.compiledCode) return;
+  const doc = { titulo: S.titulo, origem: S.origem, pedido: S.pedido || '', spec: S.spec || '', entendimento: S.entendimento || null, esboco: S.esboco || null, codigo: S.codigo, ajustes: S.ajustes, notas: S.notas || '', criado: S.criado || Date.now() };
   const chave = JSON.stringify(doc);
   if (chave === conta.ultimo) return;
   if (chave.length > 240000) { $('baixar-status').textContent = 'Este modelo é grande demais para guardar na conta; baixe o .zip para não perder.'; return; }
@@ -1733,15 +1805,16 @@ function mostrarGuardados() {
 }
 async function abrirGuardado(id, x) {
   if (S.ocupado) return;
+  novoProjeto();
   S.projId = id; S.criado = x.criado || Date.now(); S.pedido = x.pedido || ''; S.spec = x.spec || ''; S.entendimento = x.entendimento || null;
   S.ajustes = x.ajustes || {}; S.notas = x.notas || ''; S.editadoAMao = false;
-  conta.ultimo = '';
+  S.esboco = typeof x.esboco === 'string' ? limparSVG(x.esboco) : null;
+  S.esbocoPNG = S.esboco ? await svgParaPNG(S.esboco) : null;
   $('pedido').value = S.pedido;
   definirTitulo(x.titulo || 'Modelo');
   definirCodigo(String(x.codigo || ''), x.origem || 'manual');
   $('notas').textContent = S.notas; $('notas').hidden = !S.notas;
-  $('card-ent').hidden = true; $('card-guardados').hidden = true;
-  actModelo.limpar();
+  $('card-guardados').hidden = true;
   $('card-modelo').scrollIntoView({ behavior: 'smooth', block: 'start' });
   await compilarEMostrar(S.codigo, { forcar: true });
 }
@@ -1757,14 +1830,16 @@ $('in-fotos').addEventListener('change', (e) => { adicionarFotos(e.target.files)
 $('in-relevo').addEventListener('change', (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) abrirRelevo(f).catch((err) => { $('r-info').textContent = 'Não consegui abrir essa imagem (' + err.message + ').'; $('relevo-ctl').hidden = false; }); });
 ['r-limiar', 'r-suave', 'r-manchas', 'r-inverter'].forEach((id) => $(id).addEventListener('input', atualizarRelevo));
 $('btn-relevo').addEventListener('click', gerarRelevo);
-$('btn-entender').addEventListener('click', entender);
+$('btn-entender').addEventListener('click', () => entender(false));
+$('btn-redesenhar').addEventListener('click', () => entender(true));
+$('btn-colar').addEventListener('click', colarCodigo);
 $('btn-direto').addEventListener('click', () => gerar(true));
 $('btn-gerar').addEventListener('click', () => gerar(false));
 $('btn-mudar').addEventListener('click', mudar);
 $('btn-conferir').addEventListener('click', conferirManual);
 $('btn-compilar').addEventListener('click', async () => {
   const code = $('codigo').value;
-  if (code !== S.codigo) { S.editadoAMao = true; if (S.origem === 'exemplo') S.origem = 'manual'; }
+  if (code !== S.codigo) { S.editadoAMao = true; if (!S.origem) S.origem = 'manual'; }
   definirCodigo(code, S.origem);
   const r = await compilarEMostrar(code, { forcar: true, salvar: true });
   if (r.ok) $('erro-comp').hidden = true;
@@ -1780,12 +1855,11 @@ const tierSalvo = local.get('modelador.tier'); if (tierSalvo) $('tier').value = 
 $('tier').addEventListener('change', () => local.set('modelador.tier', $('tier').value));
 
 /* ================= Início ================= */
-definirTitulo(S.titulo);
-definirCodigo(EXEMPLO, 'exemplo');
+definirTitulo('');
 atualizarBotoes();
 init3D();
 iniciarMotor();
-compilarEMostrar(EXEMPLO, { forcar: true });
+atualizarPalco(null);
 iniciarIA();
 iniciarConta();
 (async () => { if (window.claude && window.claude.use) { try { downloads = await window.claude.use('downloads'); } catch (e) { downloads = null; } } })();
