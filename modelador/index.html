@@ -1,0 +1,1792 @@
+<title>Modelador V3 SE</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Irmão do Fatiador V3 SE: bancada de oficina, grafite azulado e laranja de sinalização.
+   Layout: prévia 3D fixa à esquerda com as conferências embaixo; etapas numeradas à direita (uma coluna no celular). */
+:root {
+  --bg: #eef1f4;
+  --panel: #ffffff;
+  --ink: #18202a;
+  --muted: #5d6875;
+  --line: #d8dee5;
+  --accent: #f2601d;
+  --accent-ink: #ffffff;
+  --soft: #f4f6f8;
+  --stage: #dfe4ea;
+  --grid: #b3bcc6;
+  --grid-major: #8e99a6;
+  --model: #8496aa;
+  --overhang: #f2601d;
+  --ok: #1f8a5b;
+  --warn: #b5530a;
+  --bad: #c22f2f;
+  --ok-bg: #e3f3eb;
+  --warn-bg: #fbeedf;
+  --bad-bg: #fbe5e5;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --bar-h: 54px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11151a; --panel: #181d24; --ink: #e8edf2; --muted: #98a3b0; --line: #2a323c;
+    --accent: #ff7a3d; --accent-ink: #1a0d05; --soft: #1f252d; --stage: #0d1014; --grid: #2c3540; --grid-major: #46525f;
+    --model: #9fb1c4; --overhang: #ff7a3d; --ok: #4cc38a; --warn: #f0a057; --bad: #f07373;
+    --ok-bg: #15291f; --warn-bg: #2d2114; --bad-bg: #2e1818; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11151a; --panel: #181d24; --ink: #e8edf2; --muted: #98a3b0; --line: #2a323c;
+  --accent: #ff7a3d; --accent-ink: #1a0d05; --soft: #1f252d; --stage: #0d1014; --grid: #2c3540; --grid-major: #46525f;
+  --model: #9fb1c4; --overhang: #ff7a3d; --ok: #4cc38a; --warn: #f0a057; --bad: #f07373;
+  --ok-bg: #15291f; --warn-bg: #2d2114; --bad-bg: #2e1818; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 var(--font-body); -webkit-text-size-adjust: 100%; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--panel); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; min-height: var(--bar-h); display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap;
+  padding-block: 9px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: var(--panel); border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: baseline; gap: 10px; min-width: 0; margin-right: auto; }
+.brand strong { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; white-space: nowrap; }
+.brand span { color: var(--muted); font-size: 13px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { font: 500 12px/1 var(--font-mono); color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 6px 9px; white-space: nowrap; }
+.chip.on { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 45%, var(--line)); }
+.chip.off { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 45%, var(--line)); }
+
+.layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px;
+  padding-block: 16px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+@media (min-width: 900px) {
+  .layout { grid-template-columns: minmax(0, 1fr) minmax(360px, 440px); align-items: start; }
+  .view { position: sticky; top: calc(var(--bar-h) + env(safe-area-inset-top, 0px) + 16px); }
+  .stage { height: calc(100vh - var(--bar-h) - 230px); min-height: 360px; }
+}
+
+/* Prévia */
+.view { display: grid; gap: 12px; min-width: 0; }
+.stage { position: relative; height: 46vh; min-height: 260px; max-height: 720px; border-radius: 10px; overflow: hidden; background: var(--stage); border: 1px solid var(--line); touch-action: none; }
+.stage canvas { display: block; width: 100%; height: 100%; }
+.stage-top { position: absolute; left: 10px; top: 10px; right: 10px; display: flex; gap: 8px; align-items: center; pointer-events: none; flex-wrap: wrap; }
+.dim { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; font-size: 13px; }
+.tag { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; }
+.stage-tools { position: absolute; right: 10px; bottom: 10px; display: flex; gap: 6px; }
+.stage-tools button { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+.stage-tools button[aria-pressed="true"] { border-color: var(--overhang); color: var(--overhang); }
+.stage-msg { position: absolute; inset: 0; display: grid; place-content: center; gap: 10px; text-align: center; padding: 24px; color: var(--muted); font-size: 14px; }
+.prog { width: min(260px, 70vw); height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin: 0 auto; }
+.prog i { display: block; height: 100%; width: 35%; background: var(--accent); border-radius: 3px; animation: vai 1.4s ease-in-out infinite; }
+@keyframes vai { from { transform: translateX(-100%); } to { transform: translateX(290%); } }
+@media (prefers-reduced-motion: reduce) { .prog i { animation: none; width: 100%; opacity: .5; } }
+
+.checks { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; }
+.check { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; min-width: 0; }
+.check b { font-weight: 600; font-size: 13px; }
+.check span.v { grid-column: 2; color: var(--muted); font-size: 13px; }
+.pill { grid-row: span 2; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 700 12px/1 var(--font-mono); }
+.pill.ok { background: var(--ok-bg); color: var(--ok); }
+.pill.warn { background: var(--warn-bg); color: var(--warn); }
+.pill.bad { background: var(--bad-bg); color: var(--bad); }
+.pill.info { background: var(--soft); color: var(--muted); }
+
+/* Etapas */
+.steps { display: grid; gap: 14px; min-width: 0; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.card h2 { margin: 0; font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 10px; text-wrap: balance; }
+.card h2 .n { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font: 600 13px/1 var(--font-mono); background: var(--ink); color: var(--panel); flex: none; }
+.card h2 .aside { margin-left: auto; font-size: 12px; font-weight: 500; color: var(--muted); }
+label.lbl, .lbl { font-size: 13px; font-weight: 600; color: var(--muted); }
+textarea, input[type="text"], input[type="number"], select { width: 100%; background: var(--soft); border: 1px solid var(--line); border-radius: 7px; padding: 9px 10px; }
+textarea { resize: vertical; min-height: 44px; }
+textarea:focus, input:focus, select:focus { border-color: var(--accent); outline: none; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.row > select { width: auto; flex: 1 1 200px; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { border: 1px solid var(--line); background: var(--soft); border-radius: 8px; padding: 10px 14px; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.ghost { background: transparent; }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.file { cursor: pointer; }
+.hint { color: var(--muted); font-size: 13px; margin: 0; }
+.note { margin: 0; font-size: 13px; color: var(--muted); background: var(--soft); border-radius: 8px; padding: 10px 12px; }
+.note.warn { color: var(--warn); background: var(--warn-bg); }
+.note.bad { color: var(--bad); background: var(--bad-bg); white-space: pre-wrap; font-family: var(--font-mono); font-size: 12px; overflow-x: auto; }
+.status { margin: 0; font-size: 13px; color: var(--muted); min-height: 1em; }
+
+.seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--soft); border: 1px solid var(--line); border-radius: 8px; padding: 3px; gap: 3px; }
+.seg button { border: 0; background: transparent; border-radius: 6px; padding: 8px 6px; font-size: 14px; font-weight: 600; color: var(--muted); }
+.seg button[aria-selected="true"] { background: var(--panel); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.pane { display: grid; gap: 10px; }
+
+.fotos { display: flex; gap: 8px; flex-wrap: wrap; }
+.foto { position: relative; width: 74px; height: 74px; border-radius: 7px; overflow: hidden; border: 1px solid var(--line); background: var(--soft); }
+.foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.foto button { position: absolute; top: 3px; right: 3px; width: 22px; height: 22px; border-radius: 50%; border: 0; background: rgba(0,0,0,.6); color: #fff; font-size: 13px; line-height: 22px; padding: 0; }
+
+/* Atividade da IA */
+.atividade { display: grid; gap: 8px; }
+.trilha { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.trilha > li { display: grid; grid-template-columns: 16px 1fr auto; gap: 8px; align-items: start; font-size: 14px; }
+.trilha > li .tm { color: var(--muted); font-size: 12px; }
+.trilha > li > ul { grid-column: 2 / -1; margin: 2px 0 0; padding-left: 16px; color: var(--muted); font-size: 13px; }
+.dot { width: 12px; height: 12px; border-radius: 50%; margin-top: 4px; border: 2px solid var(--muted); }
+.run .dot { border-color: var(--accent); border-right-color: transparent; animation: gira .8s linear infinite; }
+.ok .dot { border-color: var(--ok); background: var(--ok); }
+.fail .dot { border-color: var(--bad); background: var(--bad); }
+.fail .t { color: var(--bad); }
+@keyframes gira { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .run .dot { animation: none; } }
+.stream { font: 12px/1.45 var(--font-mono); color: var(--muted); background: var(--soft); border-radius: 7px; padding: 8px 10px; max-height: 120px; overflow: hidden; white-space: pre-wrap; word-break: break-word; display: flex; flex-direction: column-reverse; }
+
+/* Entendimento */
+.ent-res { margin: 0; }
+.ent-res strong { display: block; font-size: 15px; }
+.medidas { display: grid; gap: 6px; }
+.medida { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 120px); gap: 8px; align-items: center; }
+.medida .nm { font-size: 14px; min-width: 0; }
+.medida .og { display: inline-block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-left: 6px; }
+.medida .og.sup { color: var(--warn); }
+.medida input { padding: 6px 8px; font-family: var(--font-mono); font-size: 14px; }
+.ent-sec { display: grid; gap: 6px; }
+.ent-sec h3 { margin: 4px 0 0; font-size: 13px; color: var(--muted); font-weight: 600; }
+.ent-sec ul { margin: 0; padding-left: 18px; font-size: 14px; }
+.pergunta { display: grid; gap: 4px; font-size: 14px; }
+.pergunta input { padding: 7px 9px; }
+
+/* Modelo */
+.titulo-in { font-weight: 600; font-size: 15px; }
+.notas { font-size: 14px; white-space: pre-wrap; margin: 0; }
+.params { display: grid; gap: 12px; }
+.params fieldset { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px 12px; margin: 0; display: grid; gap: 10px; min-width: 0; }
+.params fieldset:disabled { opacity: .55; }
+.params legend { font-size: 12px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); padding: 0 4px; }
+.param { display: grid; grid-template-columns: minmax(0, 1fr) 84px; gap: 4px 10px; align-items: center; }
+.param label { font-size: 13px; grid-column: 1 / -1; }
+.param label code { font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-left: 6px; }
+.param input[type="range"] { width: 100%; accent-color: var(--accent); margin: 0; }
+.param input[type="number"] { padding: 5px 7px; font-family: var(--font-mono); font-size: 13px; text-align: right; }
+.param.bool { grid-template-columns: auto 1fr; }
+.param.bool label { grid-column: 2; }
+.param.bool input { width: 20px; height: 20px; accent-color: var(--accent); margin: 0; }
+.param.full > select, .param.full > input[type="text"] { grid-column: 1 / -1; }
+details { border-top: 1px solid var(--line); padding-top: 10px; }
+summary { cursor: pointer; font-weight: 600; font-size: 14px; }
+details > *:not(summary) { margin-top: 10px; }
+#codigo { font: 12px/1.5 var(--font-mono); min-height: 260px; white-space: pre; overflow-wrap: normal; overflow-x: auto; tab-size: 2; }
+#log { font: 12px/1.45 var(--font-mono); background: var(--soft); border-radius: 7px; padding: 10px; max-height: 260px; overflow: auto; white-space: pre-wrap; word-break: break-word; margin: 0; color: var(--muted); }
+#img-vistas { width: 100%; border-radius: 8px; border: 1px solid var(--line); display: block; }
+
+/* Relevo */
+#cv-relevo { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); background: #fff; display: block; }
+.slider { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; align-items: center; font-size: 13px; }
+.slider input[type="range"] { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); margin: 0; }
+.slider output { color: var(--muted); }
+.check-line { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+.check-line input { width: 18px; height: 18px; accent-color: var(--accent); margin: 0; }
+
+/* Guardados */
+.lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.lista li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+.lista li b { display: block; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lista li span { font-size: 12px; color: var(--muted); }
+.lista button { padding: 6px 10px; font-size: 13px; }
+.lista button.confirma { border-color: var(--bad); color: var(--bad); }
+</style>
+
+<header class="bar">
+  <div class="brand"><strong>Modelador V3 SE</strong><span>pedido → OpenSCAD → STL</span></div>
+  <div class="chips">
+    <span class="chip num" id="chip-motor">OpenSCAD: carregando</span>
+    <span class="chip num" id="chip-ia">Claude: verificando</span>
+  </div>
+  <button class="btn ghost" id="btn-guardados" hidden>Guardados</button>
+</header>
+
+<main class="layout">
+  <section class="view" aria-label="Prévia do modelo">
+    <div class="stage" id="stage">
+      <canvas id="cv"></canvas>
+      <div class="stage-top"><span class="dim num" id="dim">—</span><span class="tag" id="tag-origem">Exemplo</span></div>
+      <div class="stage-msg" id="stage-msg"><span id="stage-txt">Baixando o OpenSCAD (14 MB, só na primeira vez)…</span><div class="prog"><i></i></div></div>
+      <div class="stage-tools"><button id="btn-balanco" aria-pressed="true" title="Pinta de laranja as faces com balanço acima de 45°">Balanços</button><button id="btn-centro">Centralizar</button></div>
+    </div>
+    <div class="checks" id="checks"></div>
+  </section>
+
+  <section class="steps">
+    <article class="card" id="card-guardados" hidden>
+      <h2>Modelos guardados <span class="aside">na sua conta</span></h2>
+      <ul class="lista" id="lista-guardados"></ul>
+      <p class="hint" id="guardados-vazio">Nada guardado ainda. Cada modelo gerado aqui fica salvo na sua conta, sem as fotos.</p>
+    </article>
+
+    <article class="card" id="card-pedido">
+      <h2><span class="n">1</span>Pedido</h2>
+      <div class="seg" role="tablist">
+        <button role="tab" id="tab-ia" aria-selected="true" aria-controls="pane-ia">Descrever ou esboço</button>
+        <button role="tab" id="tab-relevo" aria-selected="false" aria-controls="pane-relevo">Imagem em relevo</button>
+      </div>
+
+      <div class="pane" id="pane-ia" role="tabpanel">
+        <label class="lbl" for="pedido">O que você quer imprimir? Dê as medidas em mm.</label>
+        <textarea id="pedido" rows="5" placeholder="Ex.: suporte de parede para o controle da TV. O controle tem 45 × 20 mm de seção e 180 mm de comprimento. Dois furos para parafuso de 4 mm com cabeça escareada."></textarea>
+        <div class="fotos" id="fotos"></div>
+        <div class="row">
+          <label class="btn ghost file" for="in-fotos">Adicionar esboço ou foto</label>
+          <input type="file" id="in-fotos" accept="image/*" multiple hidden>
+          <span class="hint" id="fotos-hint">Esboço com cotas, foto da peça ou desenho.</span>
+        </div>
+        <div class="row">
+          <label class="lbl" for="tier">IA</label>
+          <select id="tier">
+            <option value="complex">Mais capaz (mais lenta)</option>
+            <option value="default">Equilibrada</option>
+          </select>
+        </div>
+        <div class="actions">
+          <button class="btn primary" id="btn-entender">Entender o pedido</button>
+          <button class="btn ghost" id="btn-direto">Gerar sem confirmar</button>
+        </div>
+        <p class="note warn" id="ia-off" hidden></p>
+        <div class="atividade" id="act-pedido" hidden></div>
+      </div>
+
+      <div class="pane" id="pane-relevo" role="tabpanel" hidden>
+        <div class="row">
+          <label class="btn ghost file" for="in-relevo">Escolher imagem</label>
+          <input type="file" id="in-relevo" accept="image/*" hidden>
+          <span class="hint">Logo, silhueta ou desenho de traço, de preferência com fundo claro. Não usa a IA.</span>
+        </div>
+        <canvas id="cv-relevo" hidden></canvas>
+        <div class="pane" id="relevo-ctl" hidden>
+          <div class="slider"><label for="r-limiar">Limiar claro/escuro</label><output class="num" id="o-limiar" for="r-limiar"></output><input type="range" id="r-limiar" min="1" max="254" step="1" value="128"></div>
+          <div class="slider"><label for="r-suave">Suavizar contorno</label><output class="num" id="o-suave" for="r-suave"></output><input type="range" id="r-suave" min="0" max="4" step="1" value="1"></div>
+          <div class="slider"><label for="r-manchas">Ignorar manchas menores que</label><output class="num" id="o-manchas" for="r-manchas"></output><input type="range" id="r-manchas" min="0" max="400" step="5" value="40"></div>
+          <label class="check-line"><input type="checkbox" id="r-inverter"> Desenho claro em fundo escuro</label>
+          <p class="hint num" id="r-info"></p>
+          <div class="actions"><button class="btn primary" id="btn-relevo">Gerar modelo 3D</button></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card" id="card-ent" hidden>
+      <h2><span class="n">2</span>O que a IA entendeu</h2>
+      <div id="ent-corpo" class="pane"></div>
+      <label class="lbl" for="ent-obs">Correções ou detalhes que faltaram</label>
+      <textarea id="ent-obs" rows="2" placeholder="Ex.: a aba de cima deve ter 15 mm, não 10."></textarea>
+      <div class="actions"><button class="btn primary" id="btn-gerar">Gerar modelo</button></div>
+    </article>
+
+    <article class="card" id="card-modelo">
+      <h2><span class="n">3</span>Modelo <span class="aside" id="modelo-origem">exemplo</span></h2>
+      <input type="text" id="titulo" class="titulo-in" aria-label="Nome do modelo" value="Suporte de celular">
+      <div class="atividade" id="act-modelo" hidden></div>
+      <p class="notas" id="notas" hidden></p>
+      <p class="note bad" id="erro-comp" hidden></p>
+      <div class="params" id="params"></div>
+      <div class="pane" id="box-mudanca">
+        <label class="lbl" for="mudanca">Pedir mudança à IA</label>
+        <textarea id="mudanca" rows="2" placeholder="Ex.: furo de 5 mm em vez de 4; arredondar os cantos de fora."></textarea>
+        <label class="check-line"><input type="checkbox" id="auto-conferir" checked> Conferir as vistas depois de cada mudança</label>
+        <div class="actions">
+          <button class="btn" id="btn-mudar">Aplicar mudança</button>
+          <button class="btn ghost" id="btn-conferir">Conferir as vistas com a IA</button>
+        </div>
+      </div>
+      <details id="det-vistas" hidden><summary>Vistas que a IA conferiu</summary><img id="img-vistas" alt="Frente, direita, topo e perspectiva do modelo, com grade de 10 mm"></details>
+      <details id="det-codigo"><summary>Código OpenSCAD</summary>
+        <textarea id="codigo" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Código OpenSCAD"></textarea>
+        <div class="actions"><button class="btn" id="btn-compilar">Compilar este código</button></div>
+      </details>
+      <details id="det-log"><summary>Registro do OpenSCAD</summary><pre id="log"></pre></details>
+    </article>
+
+    <article class="card" id="card-baixar">
+      <h2><span class="n">4</span>Baixar STL</h2>
+      <label class="lbl" for="nome-arq">Nome do arquivo</label>
+      <input type="text" id="nome-arq" value="suporte_de_celular">
+      <div class="actions"><button class="btn primary" id="btn-baixar">Baixar .zip com o STL</button></div>
+      <p class="hint">Aqui o app só salva .zip. Dentro vão o <b>.stl</b> e o <b>.scad</b> (o código, para editar depois). No Fatiador, abra o .zip direto; ou toque nele no app Arquivos para extrair o .stl.</p>
+      <p class="status" id="baixar-status"></p>
+    </article>
+  </section>
+</main>
+
+<script type="text/plain" id="src-motor">
+// Worker do motor: cada compilação usa uma instância nova do OpenSCAD (a mesma instância
+// não aguenta duas execuções). O .wasm é compilado uma vez só e reaproveitado.
+let cfg = null, lib = null, fontes = null, carregando = null, modulo = null;
+const c0 = WebAssembly.compile.bind(WebAssembly);
+WebAssembly.compile = (src) => modulo ? Promise.resolve(modulo) : c0(src).then((m) => (modulo = m));
+const FONTS_CONF = '<?xml version="1.0"?>\n<!DOCTYPE fontconfig SYSTEM "fonts.dtd">\n<fontconfig><dir>/fonts</dir></fontconfig>\n';
+async function instancia(log) {
+  const o = await lib.createOpenSCAD({ print: (s) => log.push(String(s)), printErr: (s) => log.push(String(s)) });
+  return o.getInstance();
+}
+function preparar() {
+  if (!carregando) carregando = (async () => {
+    lib = await import(cfg.cdn + cfg.scad);
+    const log = [], m = await instancia(log);
+    try { m.callMain(['--version']); } catch (e) { /* só a versão */ }
+    postMessage({ type: 'ready', versao: ((log.join(' ').match(/version\s+(\S+)/)) || [])[1] || '' });
+  })().catch((e) => { carregando = null; postMessage({ type: 'fatal', message: String((e && e.message) || e) }); throw e; });
+  return carregando;
+}
+async function compilar(code) {
+  await preparar();
+  const log = [], t0 = performance.now(), m = await instancia(log), FS = m.FS;
+  if (/\btext\s*\(/.test(code)) {
+    try { if (!fontes) fontes = await import(cfg.cdn + cfg.fontes); fontes.addFonts(m); FS.writeFile('/fonts/fonts.conf', FONTS_CONF); }
+    catch (e) { log.push('WARNING: as fontes não carregaram; text() pode falhar.'); }
+  }
+  FS.writeFile('/modelo.scad', code);
+  let ret = -1;
+  try { ret = m.callMain(['/modelo.scad', '--backend=manifold', '--export-format=binstl', '-o', '/modelo.stl']); }
+  catch (e) { log.push('ERROR: o OpenSCAD parou com uma exceção interna (' + ((e && e.message) || e) + ').'); }
+  let stl = null;
+  try { stl = FS.readFile('/modelo.stl'); } catch (e) { stl = null; }
+  const ok = ret === 0 && stl && stl.length > 84;
+  return { ok, ret, log, ms: Math.round(performance.now() - t0), stl: ok ? stl : null };
+}
+let fila = Promise.resolve();
+self.onmessage = (ev) => {
+  const msg = ev.data || {};
+  if (msg.type === 'prepare') { cfg = msg; preparar().catch(() => {}); return; }
+  if (msg.type === 'compile') {
+    fila = fila.then(async () => {
+      let r;
+      try { r = await compilar(String(msg.code || '')); }
+      catch (e) { r = { ok: false, ret: -1, log: ['ERROR: ' + ((e && e.message) || e)], ms: 0, stl: null }; }
+      const buf = r.stl ? r.stl.buffer.slice(r.stl.byteOffset, r.stl.byteOffset + r.stl.byteLength) : null;
+      postMessage({ type: 'result', id: msg.id, ok: r.ok, ret: r.ret, log: r.log, ms: r.ms, stl: buf }, buf ? [buf] : []);
+    });
+  }
+};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const BED = { x: 220, y: 220, z: 250 };
+
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+function fmt(n, d = 1) { return Number(n).toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d }); }
+function r2(n) { return Math.round(n * 100) / 100; }
+function novoId() { return 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function slug(s) { return (s || 'modelo').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '').toLowerCase().slice(0, 50) || 'modelo'; }
+const local = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* sem armazenamento */ } },
+};
+
+/* ================= Exemplo inicial ================= */
+const EXEMPLO = `// Suporte de celular (exemplo do Modelador V3 SE)
+// Impresso deitado: o perfil fica na mesa e a largura sobe em Z, sem balanços.
+
+/* [Medidas] */
+// Largura do suporte (mm)
+largura = 70; // [40:1:120]
+// Inclinação do encosto (graus)
+angulo = 65; // [50:1:80]
+// Vão para o celular com capa (mm)
+espessura_celular = 12; // [6:0.5:20]
+// Comprimento do encosto (mm)
+altura_encosto = 90; // [50:1:140]
+// Profundidade da base (mm)
+profundidade_base = 85; // [60:1:130]
+
+/* [Paredes] */
+// Espessura das paredes (mm)
+parede = 4; // [2:0.5:8]
+// Altura da aba da frente (mm)
+altura_aba = 10; // [5:1:20]
+
+/* [Hidden] */
+$fa = 2; $fs = 0.4;
+x_encosto = parede + espessura_celular + parede * sin(angulo);
+
+module perfil() {
+  offset(r = 1) offset(delta = -1) union() {
+    square([profundidade_base, parede]);                    // base
+    square([parede, parede + altura_aba]);                   // aba da frente
+    translate([x_encosto, 0]) rotate(angulo)
+      square([altura_encosto, parede]);                      // encosto
+    hull() {                                                 // escora de trás
+      translate([profundidade_base - parede, 0]) square([parede, parede]);
+      translate([x_encosto, 0]) rotate(angulo)
+        translate([altura_encosto * 0.55, 0]) square([parede, parede]);
+    }
+  }
+}
+
+linear_extrude(largura) perfil();
+`;
+
+/* ================= Estado ================= */
+const S = {
+  projId: novoId(), origem: 'exemplo', titulo: 'Suporte de celular',
+  pedido: '', fotos: [], entendimento: null, spec: '', codigo: EXEMPLO, notas: '',
+  ajustes: {}, editadoAMao: false,
+  stl: null, pos: null, analise: null, compiledCode: null,
+  ocupado: false, criado: Date.now(),
+};
+const ORIGEM_TXT = { exemplo: 'exemplo', ia: 'gerado pela IA', relevo: 'imagem em relevo', manual: 'código editado' };
+
+/* ================= Motor OpenSCAD =================
+   O OpenSCAD 2025.07 (núcleo Manifold) vem do jsDelivr num único módulo de 14 MB, com o .wasm
+   embutido; as fontes do text() vêm noutro módulo, só quando o código usa text(). Roda num
+   worker criado a partir do script abaixo; se o worker não abrir, compila na própria página. */
+const CDN = window.__CDN_MODELADOR || 'https://cdn.jsdelivr.net/npm/';
+const PACOTE_SCAD = 'openscad-wasm@0.0.4/openscad.js';
+const PACOTE_FONTES = '@lofcz/openscad-wasm@0.0.2/openscad.fonts.js';
+const motor = { w: null, ready: false, seq: 0, pend: new Map(), falhou: false, local: null };
+function iniciarMotor() {
+  let url;
+  try { url = URL.createObjectURL(new Blob([$('src-motor').textContent], { type: 'text/javascript' })); motor.w = new Worker(url, { type: 'module' }); }
+  catch (e) { motorNaPagina(); return; }
+  motor.w.onmessage = (ev) => {
+    const m = ev.data || {};
+    if (m.type === 'ready') motorPronto(m.versao);
+    else if (m.type === 'fatal') { if (!motor.ready) motorNaPagina(m.message); }
+    else if (m.type === 'result') {
+      const p = motor.pend.get(m.id);
+      if (p) { motor.pend.delete(m.id); clearTimeout(p.timer); p.resolve(m); }
+    }
+  };
+  motor.w.onerror = (e) => { e.preventDefault && e.preventDefault(); if (!motor.ready) motorNaPagina(e.message); };
+  motor.w.postMessage({ type: 'prepare', cdn: CDN, scad: PACOTE_SCAD, fontes: PACOTE_FONTES });
+}
+function motorPronto(versao) {
+  motor.ready = true;
+  $('chip-motor').textContent = 'OpenSCAD ' + (versao || '').replace(/^(\d{4})\.(\d{2}).*$/, '$1.$2') + (motor.local ? ' · na página' : ' · pronto');
+  $('chip-motor').className = 'chip num on';
+  if (!S.pos) $('stage-txt').textContent = 'Compilando…';
+}
+// Reserva: o mesmo motor rodando na página (trava a tela durante a compilação, mas funciona).
+async function motorNaPagina(motivo) {
+  if (motor.local) return;
+  try { if (motor.w) motor.w.terminate(); } catch (e) { /* já parado */ }
+  motor.w = null;
+  const pend = Array.from(motor.pend.entries()); motor.pend.clear();
+  motor.local = { lib: null, fontes: null, modulo: null };
+  pend.forEach(([id, p]) => motor.pend.set(id, p));
+  try {
+    const lib = await import(CDN + PACOTE_SCAD);
+    const c0 = WebAssembly.compile.bind(WebAssembly);
+    WebAssembly.compile = (src) => motor.local.modulo ? Promise.resolve(motor.local.modulo) : c0(src).then((m) => (motor.local.modulo = m));
+    motor.local.lib = lib;
+    const r = await compilarNaPagina('', ['--version']);
+    motorPronto(((r.log.join(' ').match(/version\s+(\S+)/)) || [])[1]);
+  } catch (e) {
+    motor.local.lib = null;
+    motorFalhou((motivo ? motivo + '; ' : '') + (e && e.message || e));
+    motor.pend.forEach((p) => { clearTimeout(p.timer); p.resolve({ ok: false, log: ['ERROR: o OpenSCAD não abriu neste aparelho'] }); });
+    motor.pend.clear();
+    return;
+  }
+  // Compilações pedidas enquanto o motor carregava, em ordem.
+  const fila = Array.from(motor.pend.values()); motor.pend.clear();
+  for (const p of fila) { clearTimeout(p.timer); p.resolve(await compilarNaPagina(p.code)); }
+}
+async function compilarNaPagina(code, args) {
+  const log = [], t0 = performance.now(), L = motor.local;
+  const o = await L.lib.createOpenSCAD({ print: (s) => log.push(String(s)), printErr: (s) => log.push(String(s)) });
+  const m = o.getInstance();
+  if (args) { try { m.callMain(args); } catch (e) { /* versão */ } return { ok: false, log }; }
+  if (/\btext\s*\(/.test(code)) {
+    try { if (!L.fontes) L.fontes = await import(CDN + PACOTE_FONTES); L.fontes.addFonts(m); m.FS.writeFile('/fonts/fonts.conf', FONTS_CONF); }
+    catch (e) { log.push('WARNING: as fontes não carregaram; text() pode falhar.'); }
+  }
+  m.FS.writeFile('/modelo.scad', code);
+  let ret = -1;
+  try { ret = m.callMain(['/modelo.scad', '--backend=manifold', '--export-format=binstl', '-o', '/modelo.stl']); }
+  catch (e) { log.push('ERROR: o OpenSCAD parou com uma exceção interna (' + (e && e.message || e) + ').'); }
+  let stl = null; try { stl = m.FS.readFile('/modelo.stl'); } catch (e) { stl = null; }
+  const ok = ret === 0 && stl && stl.length > 84;
+  return { ok, ret, log, ms: Math.round(performance.now() - t0), stl: ok ? stl.buffer.slice(stl.byteOffset, stl.byteOffset + stl.byteLength) : null };
+}
+const FONTS_CONF = '<?xml version="1.0"?>\n<!DOCTYPE fontconfig SYSTEM "fonts.dtd">\n<fontconfig><dir>/fonts</dir></fontconfig>\n';
+function motorFalhou(msg) {
+  motor.falhou = true;
+  $('chip-motor').textContent = 'OpenSCAD: não abriu';
+  $('chip-motor').className = 'chip num off';
+  $('stage-msg').hidden = false;
+  $('stage-txt').textContent = 'O OpenSCAD não abriu neste aparelho (' + msg + '). Verifique a internet e recarregue a página.';
+}
+function reiniciarMotor() {
+  if (motor.local) return;
+  try { motor.w.terminate(); } catch (e) { /* já parado */ }
+  motor.pend.forEach((p) => { clearTimeout(p.timer); p.resolve({ ok: false, log: ['ERROR: compilação interrompida'] }); });
+  motor.pend.clear();
+  motor.ready = false;
+  iniciarMotor();
+}
+function compilar(code) {
+  if (motor.local && motor.local.lib) return compilarNaPagina(code);
+  return new Promise((resolve) => {
+    if (motor.falhou) { resolve({ ok: false, log: ['ERROR: o OpenSCAD não abriu neste aparelho'] }); return; }
+    const id = ++motor.seq;
+    const timer = setTimeout(() => {
+      motor.pend.delete(id);
+      resolve({ ok: false, log: ['ERROR: a compilação passou do tempo e foi interrompida. Simplifique o modelo (minkowski e $fn alto pesam muito).'] });
+      reiniciarMotor();
+    }, motor.ready ? 180000 : 600000);
+    motor.pend.set(id, { resolve, timer, code });
+    if (motor.w) motor.w.postMessage({ type: 'compile', id, code });
+  });
+}
+function resumoErro(log, code) {
+  const rel = (log || []).filter((l) => /ERROR|Assertion|TRACE|WARNING/.test(l));
+  let out = rel.filter((l) => /ERROR|Assertion|TRACE/.test(l)).slice(0, 6);
+  if (!out.length) out = rel.slice(0, 6);
+  if (!out.length) out = ['O código não produziu nenhum sólido (o objeto final está vazio).'];
+  const m = /modelo\.scad.{0,12}line (\d+)/.exec(out.join('\n'));
+  if (m && code) { const n = +m[1]; out.push('Linha ' + n + ': ' + ((code.split('\n')[n - 1]) || '').trim()); }
+  return out.join('\n');
+}
+
+/* ================= STL e análise ================= */
+function lerSTL(buf) {
+  const dv = new DataView(buf);
+  const n = buf.byteLength >= 84 ? dv.getUint32(80, true) : 0;
+  if (84 + n * 50 === buf.byteLength) {
+    const pos = new Float32Array(n * 9);
+    for (let i = 0; i < n; i++) { const o = 84 + i * 50 + 12; for (let k = 0; k < 9; k++) pos[i * 9 + k] = dv.getFloat32(o + k * 4, true); }
+    return pos;
+  }
+  const txt = new TextDecoder().decode(buf), out = [], re = /vertex\s+(\S+)\s+(\S+)\s+(\S+)/g;
+  let m; while ((m = re.exec(txt))) out.push(+m[1], +m[2], +m[3]);
+  return new Float32Array(out);
+}
+function analisar(pos) {
+  const n = pos.length / 9;
+  const min = [Infinity, Infinity, Infinity], max = [-Infinity, -Infinity, -Infinity];
+  for (let i = 0; i < pos.length; i += 3) for (let k = 0; k < 3; k++) { const v = pos[i + k]; if (v < min[k]) min[k] = v; if (v > max[k]) max[k] = v; }
+  const zmin = min[2], over = new Uint8Array(n);
+  let vol = 0, area = 0, overA = 0, bedA = 0;
+  for (let t = 0; t < n; t++) {
+    const o = t * 9;
+    const ax = pos[o], ay = pos[o + 1], az = pos[o + 2], bx = pos[o + 3], by = pos[o + 4], bz = pos[o + 5], cx = pos[o + 6], cy = pos[o + 7], cz = pos[o + 8];
+    const ux = bx - ax, uy = by - ay, uz = bz - az, vx = cx - ax, vy = cy - ay, vz = cz - az;
+    const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+    const len = Math.hypot(nx, ny, nz);
+    vol += (ax * (by * cz - bz * cy) - ay * (bx * cz - bz * cx) + az * (bx * cy - by * cx)) / 6;
+    if (!len) continue;
+    const A = len / 2, z = nz / len;
+    area += A;
+    const tmax = Math.max(az, bz, cz), tmin = Math.min(az, bz, cz);
+    if (z < -0.999 && tmax < zmin + 0.02) bedA += A;
+    else if (z < -0.7072 && tmin > zmin + 0.25) { over[t] = 1; overA += A; }
+  }
+  let parts = null, abertas = null;
+  if (n <= 600000) {
+    const ids = new Map(), vid = new Int32Array(n * 3);
+    for (let i = 0; i < n * 3; i++) {
+      const k = Math.round(pos[i * 3] * 1e4) + ',' + Math.round(pos[i * 3 + 1] * 1e4) + ',' + Math.round(pos[i * 3 + 2] * 1e4);
+      let id = ids.get(k); if (id === undefined) { id = ids.size; ids.set(k, id); } vid[i] = id;
+    }
+    const nv = ids.size, par = new Int32Array(nv);
+    for (let i = 0; i < nv; i++) par[i] = i;
+    const raiz = (x) => { while (par[x] !== x) { par[x] = par[par[x]]; x = par[x]; } return x; };
+    const arestas = new Map();
+    for (let t = 0; t < n; t++) {
+      const a = vid[t * 3], b = vid[t * 3 + 1], c = vid[t * 3 + 2];
+      const ra = raiz(a), rb = raiz(b); if (ra !== rb) par[ra] = rb;
+      const rb2 = raiz(b), rc = raiz(c); if (rb2 !== rc) par[rb2] = rc;
+      for (const [p, q] of [[a, b], [b, c], [c, a]]) { const key = p < q ? p * nv + q : q * nv + p; arestas.set(key, (arestas.get(key) || 0) + 1); }
+    }
+    const raizes = new Set(); for (let i = 0; i < nv; i++) raizes.add(raiz(i));
+    parts = raizes.size;
+    abertas = 0; arestas.forEach((c) => { if (c !== 2) abertas++; });
+  }
+  const size = [max[0] - min[0], max[1] - min[1], max[2] - min[2]];
+  return { n, min, max, size, vol, area, overA, bedA, over, parts, abertas };
+}
+function fmtDim(s) { return fmt(s[0]) + ' × ' + fmt(s[1]) + ' × ' + fmt(s[2]) + ' mm'; }
+function medidasParaIA(a, r) {
+  const ecos = (r && r.log || []).filter((l) => /^ECHO/.test(l)).slice(0, 20);
+  const avisos = (r && r.log || []).filter((l) => /^WARNING/.test(l)).slice(0, 8);
+  return {
+    compilou: true,
+    caixa_mm: { x: r2(a.size[0]), y: r2(a.size[1]), z: r2(a.size[2]) },
+    de_mm: { x: r2(a.min[0]), y: r2(a.min[1]), z: r2(a.min[2]) },
+    ate_mm: { x: r2(a.max[0]), y: r2(a.max[1]), z: r2(a.max[2]) },
+    volume_cm3: r2(a.vol / 1000),
+    partes_separadas: a.parts,
+    area_apoiada_na_mesa_mm2: Math.round(a.bedA),
+    area_com_balanco_acima_de_45_graus_mm2: Math.round(a.overA),
+    cabe_na_mesa: a.size[0] <= BED.x && a.size[1] <= BED.y && a.size[2] <= BED.z,
+    superficie_fechada: a.abertas === 0,
+    triangulos: a.n,
+    ecos, avisos,
+  };
+}
+function medidasTexto(a) {
+  return 'Caixa delimitadora: ' + fmtDim(a.size) + ' (de x ' + fmt(a.min[0]) + ', y ' + fmt(a.min[1]) + ', z ' + fmt(a.min[2]) + ' até x ' + fmt(a.max[0]) + ', y ' + fmt(a.max[1]) + ', z ' + fmt(a.max[2]) + ')\n' +
+    'Volume: ' + fmt(a.vol / 1000, 2) + ' cm³. Partes separadas: ' + (a.parts == null ? '?' : a.parts) + '. Área apoiada na mesa: ' + Math.round(a.bedA) + ' mm². Área com balanço acima de 45°: ' + Math.round(a.overA) + ' mm².';
+}
+
+/* ================= Conferências ================= */
+function mostrarChecks(a) {
+  const box = $('checks'); box.innerHTML = '';
+  const add = (estado, titulo, valor) => {
+    const d = el('div', 'check');
+    d.append(el('span', 'pill ' + estado, estado === 'ok' ? '✓' : estado === 'info' ? 'i' : '!'), el('b', null, titulo), el('span', 'v', valor));
+    box.append(d);
+  };
+  const cabe = a.size[0] <= BED.x && a.size[1] <= BED.y && a.size[2] <= BED.z;
+  add(cabe ? 'ok' : 'bad', cabe ? 'Cabe na mesa' : 'Não cabe na mesa', fmtDim(a.size) + ' (máx. 220 × 220 × 250)');
+  if (Math.abs(a.min[2]) > 0.01) add('warn', 'Não começa em z = 0', 'A base está em z = ' + fmt(a.min[2], 2) + ' mm. O Fatiador assenta na mesa, mas confira a orientação.');
+  else if (a.bedA < 25) add('warn', 'Pouca área na mesa', Math.round(a.bedA) + ' mm² apoiados: risco de soltar. Use borda (brim) ou mude a orientação.');
+  else add('ok', 'Apoiada na mesa', Math.round(a.bedA) + ' mm² de contato');
+  if (a.parts != null) add(a.parts === 1 ? 'ok' : 'warn', a.parts === 1 ? 'Uma peça só' : a.parts + ' partes separadas', a.parts === 1 ? 'Tudo ligado' : 'Confira se era para sair em partes');
+  if (a.overA < 1) add('ok', 'Sem balanços', 'Nada acima de 45°');
+  else if (a.overA < 30) add('info', 'Balanços pequenos', Math.round(a.overA) + ' mm² acima de 45° (em laranja)');
+  else add('warn', 'Precisa de suporte', Math.round(a.overA) + ' mm² acima de 45° (em laranja)');
+  if (a.abertas != null) add(a.abertas === 0 ? 'ok' : 'bad', a.abertas === 0 ? 'Superfície fechada' : 'Superfície aberta', a.abertas === 0 ? fmt(a.vol / 1000, 1) + ' cm³ · ' + a.n.toLocaleString('pt-BR') + ' triângulos' : a.abertas + ' arestas soltas');
+}
+
+/* ================= Prévia 3D ================= */
+const V = { ok: false, renderer: null, scene: null, camera: null, mesh: null, bed: null, sujo: false, overOn: true,
+  ctl: { theta: -Math.PI / 3, phi: 1.05, dist: 260, target: null } };
+function cor(nome) { return getComputedStyle(document.documentElement).getPropertyValue(nome).trim() || '#888'; }
+function init3D() {
+  if (!window.THREE) { $('stage-txt').textContent = 'A prévia 3D não carregou (sem acesso à biblioteca three.js). O resto funciona.'; return; }
+  try {
+    V.renderer = new THREE.WebGLRenderer({ canvas: $('cv'), antialias: true, alpha: true });
+  } catch (e) { $('stage-txt').textContent = 'Este aparelho não abriu a prévia 3D (WebGL).'; return; }
+  V.ok = true;
+  V.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  V.scene = new THREE.Scene();
+  V.camera = new THREE.PerspectiveCamera(38, 1, 0.5, 6000);
+  V.camera.up.set(0, 0, 1);
+  V.ctl.target = new THREE.Vector3(0, 0, 20);
+  V.scene.add(new THREE.HemisphereLight(0xffffff, 0x50606f, 0.8));
+  const d1 = new THREE.DirectionalLight(0xffffff, 0.55); d1.position.set(-0.6, -1, 1.4); V.scene.add(d1);
+  const d2 = new THREE.DirectionalLight(0xffffff, 0.25); d2.position.set(1, 0.8, 0.6); V.scene.add(d2);
+  new ResizeObserver(redimensionar).observe($('stage'));
+  redimensionar();
+  gestos();
+  const mq = window.matchMedia('(prefers-color-scheme: dark)');
+  if (mq.addEventListener) mq.addEventListener('change', recolorir);
+  new MutationObserver(recolorir).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+}
+function redimensionar() {
+  if (!V.ok) return;
+  const st = $('stage'), w = st.clientWidth, h = st.clientHeight;
+  if (!w || !h) return;
+  V.renderer.setSize(w, h, false);
+  V.camera.aspect = w / h; V.camera.updateProjectionMatrix();
+  pedirQuadro();
+}
+function pedirQuadro() { if (!V.ok || V.sujo) return; V.sujo = true; requestAnimationFrame(() => { V.sujo = false; V.renderer.render(V.scene, V.camera); }); }
+function posCamera() {
+  const c = V.ctl, sp = Math.sin(c.phi);
+  V.camera.position.set(c.target.x + c.dist * sp * Math.cos(c.theta), c.target.y + c.dist * sp * Math.sin(c.theta), c.target.z + c.dist * Math.cos(c.phi));
+  V.camera.lookAt(c.target);
+  pedirQuadro();
+}
+function enquadrar() {
+  if (!V.ok || !S.analise) return;
+  const a = S.analise, m = Math.max(a.size[0], a.size[1], a.size[2], 20);
+  V.ctl.target.set((a.min[0] + a.max[0]) / 2, (a.min[1] + a.max[1]) / 2, (a.min[2] + a.max[2]) / 2);
+  V.ctl.dist = m * 2.3 + 30;
+  V.ctl.theta = -Math.PI / 3; V.ctl.phi = 1.05;
+  posCamera();
+}
+function coresMalha(a, base, laranja) {
+  const cb = new THREE.Color(base), co = new THREE.Color(laranja), arr = new Float32Array(a.n * 9);
+  for (let t = 0; t < a.n; t++) { const c = (V.overOn && a.over[t]) ? co : cb; for (let k = 0; k < 3; k++) { arr[t * 9 + k * 3] = c.r; arr[t * 9 + k * 3 + 1] = c.g; arr[t * 9 + k * 3 + 2] = c.b; } }
+  return arr;
+}
+function mesa(cx, cy, cGrid, cMajor) {
+  const g = new THREE.Group(), x0 = Math.round(cx / 10) * 10 - BED.x / 2, y0 = Math.round(cy / 10) * 10 - BED.y / 2;
+  const fino = [], forte = [];
+  for (let i = 0; i <= BED.x; i += 10) (i % 50 === 0 ? forte : fino).push(x0 + i, y0, 0, x0 + i, y0 + BED.y, 0);
+  for (let j = 0; j <= BED.y; j += 10) (j % 50 === 0 ? forte : fino).push(x0, y0 + j, 0, x0 + BED.x, y0 + j, 0);
+  const lin = (arr, c) => { const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(arr, 3)); return new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: c })); };
+  g.add(lin(fino, cGrid), lin(forte, cMajor));
+  g.position.z = -0.05;
+  return g;
+}
+function mostrarModelo(pos, a) {
+  S.pos = pos; S.analise = a;
+  $('stage-msg').hidden = true;
+  $('dim').textContent = fmtDim(a.size);
+  mostrarChecks(a);
+  if (!V.ok) return;
+  const primeira = !V.mesh;
+  if (V.mesh) { V.scene.remove(V.mesh); V.mesh.geometry.dispose(); V.mesh.material.dispose(); }
+  if (V.bed) { V.scene.remove(V.bed); V.bed.children.forEach((c) => { c.geometry.dispose(); c.material.dispose(); }); }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(coresMalha(a, cor('--model'), cor('--overhang')), 3));
+  geo.computeVertexNormals();
+  V.mesh = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({ vertexColors: true, flatShading: true, shininess: 18 }));
+  V.scene.add(V.mesh);
+  V.bed = mesa((a.min[0] + a.max[0]) / 2, (a.min[1] + a.max[1]) / 2, cor('--grid'), cor('--grid-major'));
+  V.scene.add(V.bed);
+  // Reenquadra quando a peça muda de tamanho ou de lugar; ajuste fino num parâmetro mantém a câmera.
+  const m = Math.max(a.size[0], a.size[1], a.size[2], 1), c = [(a.min[0] + a.max[0]) / 2, (a.min[1] + a.max[1]) / 2, (a.min[2] + a.max[2]) / 2];
+  const q = V.quadro, longe = !q || Math.abs(m - q.m) / q.m > 0.25 || Math.hypot(c[0] - q.c[0], c[1] - q.c[1], c[2] - q.c[2]) > 0.3 * q.m;
+  if (primeira || longe) { V.quadro = { m, c }; enquadrar(); } else pedirQuadro();
+  atualizarBotoes();
+}
+function recolorir() {
+  if (!V.ok || !V.mesh || !S.analise) return;
+  V.mesh.geometry.setAttribute('color', new THREE.BufferAttribute(coresMalha(S.analise, cor('--model'), cor('--overhang')), 3));
+  const a = S.analise;
+  V.scene.remove(V.bed);
+  V.bed = mesa((a.min[0] + a.max[0]) / 2, (a.min[1] + a.max[1]) / 2, cor('--grid'), cor('--grid-major'));
+  V.scene.add(V.bed);
+  pedirQuadro();
+}
+function gestos() {
+  const cv = $('cv'), pts = new Map(); let gesto = null, botao = 0;
+  cv.addEventListener('pointerdown', (e) => { cv.setPointerCapture(e.pointerId); pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); botao = e.button || (e.shiftKey ? 2 : 0); gesto = null; });
+  cv.addEventListener('pointermove', (e) => {
+    if (!pts.has(e.pointerId)) return;
+    const ant = pts.get(e.pointerId), cur = { x: e.clientX, y: e.clientY };
+    if (pts.size === 1) {
+      const dx = cur.x - ant.x, dy = cur.y - ant.y;
+      if (botao === 2) arrastar(dx, dy);
+      else { V.ctl.theta -= dx * 0.008; V.ctl.phi = Math.min(Math.PI - 0.05, Math.max(0.05, V.ctl.phi - dy * 0.008)); posCamera(); }
+      pts.set(e.pointerId, cur);
+    } else if (pts.size === 2) {
+      pts.set(e.pointerId, cur);
+      const p = Array.from(pts.values()), meio = { x: (p[0].x + p[1].x) / 2, y: (p[0].y + p[1].y) / 2 }, dist = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
+      if (gesto) { if (dist > 0 && gesto.dist > 0) V.ctl.dist = Math.min(2500, Math.max(15, V.ctl.dist * gesto.dist / dist)); arrastar(meio.x - gesto.meio.x, meio.y - gesto.meio.y); }
+      gesto = { meio, dist };
+    }
+  });
+  const fim = (e) => { pts.delete(e.pointerId); if (pts.size < 2) gesto = null; };
+  cv.addEventListener('pointerup', fim); cv.addEventListener('pointercancel', fim);
+  cv.addEventListener('contextmenu', (e) => e.preventDefault());
+  cv.addEventListener('wheel', (e) => { e.preventDefault(); V.ctl.dist = Math.min(2500, Math.max(15, V.ctl.dist * Math.exp(e.deltaY * 0.0012))); posCamera(); }, { passive: false });
+}
+function arrastar(dx, dy) {
+  const h = $('stage').clientHeight || 1, k = 2 * V.ctl.dist * Math.tan(V.camera.fov * Math.PI / 360) / h;
+  const dir = new THREE.Vector3().setFromMatrixColumn(V.camera.matrix, 0), cima = new THREE.Vector3().setFromMatrixColumn(V.camera.matrix, 1);
+  V.ctl.target.addScaledVector(dir, -dx * k).addScaledVector(cima, dy * k);
+  posCamera();
+}
+
+/* Quatro vistas (frente, direita, topo, perspectiva) numa imagem para a IA conferir. */
+let rVistas = null;
+function vistasCanvas() {
+  const a = S.analise, pos = S.pos;
+  if (!V.ok || !a || !pos) return null;
+  const T = 512;
+  if (!rVistas) { rVistas = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); rVistas.setPixelRatio(1); rVistas.setSize(T, T); }
+  const sc = new THREE.Scene();
+  sc.add(new THREE.AmbientLight(0xffffff, 0.55));
+  const luz = new THREE.DirectionalLight(0xffffff, 0.6); sc.add(luz); sc.add(luz.target);
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const cb = new THREE.Color('#c9d1da'), co = new THREE.Color('#f2601d'), cols = new Float32Array(a.n * 9);
+  for (let t = 0; t < a.n; t++) { const c = a.over[t] ? co : cb; for (let k = 0; k < 3; k++) { cols[t * 9 + k * 3] = c.r; cols[t * 9 + k * 3 + 1] = c.g; cols[t * 9 + k * 3 + 2] = c.b; } }
+  geo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+  geo.computeVertexNormals();
+  const malha = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 }));
+  sc.add(malha);
+  let bordas = null;
+  if (a.n < 250000) { bordas = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 25), new THREE.LineBasicMaterial({ color: 0x1d2630 })); sc.add(bordas); }
+  const c = [(a.min[0] + a.max[0]) / 2, (a.min[1] + a.max[1]) / 2, (a.min[2] + a.max[2]) / 2];
+  const maior = Math.max(a.size[0], a.size[1], a.size[2], 1), s = T * 0.78 / maior;
+  const vs = [
+    { nome: 'FRENTE', sub: 'olhando de −Y', dir: [0, -1, 0], up: [0, 0, 1], h: 0, v: 2, hn: 'X', vn: 'Z' },
+    { nome: 'DIREITA', sub: 'olhando de +X', dir: [1, 0, 0], up: [0, 0, 1], h: 1, v: 2, hn: 'Y', vn: 'Z' },
+    { nome: 'TOPO', sub: 'de cima', dir: [0, 0, 1], up: [0, 1, 0], h: 0, v: 1, hn: 'X', vn: 'Y' },
+    { nome: 'PERSPECTIVA', sub: 'de frente, à direita e de cima', dir: [0.75, -1, 0.7], up: [0, 0, 1] },
+  ];
+  const out = document.createElement('canvas'); out.width = out.height = 2 * T;
+  const g = out.getContext('2d');
+  g.fillStyle = '#ffffff'; g.fillRect(0, 0, 2 * T, 2 * T);
+  vs.forEach((vw, i) => {
+    const x0 = (i % 2) * T, y0 = Math.floor(i / 2) * T;
+    const d = new THREE.Vector3(...vw.dir).normalize();
+    let esc = s;
+    if (vw.h == null) {
+      const cam0 = new THREE.OrthographicCamera(-1, 1, 1, -1, -1e4, 1e4); cam0.up.set(...vw.up); cam0.position.set(c[0] + d.x * 1000, c[1] + d.y * 1000, c[2] + d.z * 1000); cam0.lookAt(c[0], c[1], c[2]); cam0.updateMatrixWorld();
+      let ext = 1;
+      for (let q = 0; q < 8; q++) { const p = new THREE.Vector3(q & 1 ? a.max[0] : a.min[0], q & 2 ? a.max[1] : a.min[1], q & 4 ? a.max[2] : a.min[2]).applyMatrix4(cam0.matrixWorldInverse); ext = Math.max(ext, Math.abs(p.x), Math.abs(p.y)); }
+      esc = T * 0.4 / ext;
+    }
+    const cam = new THREE.OrthographicCamera(-T / 2 / esc, T / 2 / esc, T / 2 / esc, -T / 2 / esc, -1e4, 1e4);
+    cam.up.set(...vw.up);
+    cam.position.set(c[0] + d.x * 1000, c[1] + d.y * 1000, c[2] + d.z * 1000);
+    cam.lookAt(c[0], c[1], c[2]);
+    luz.position.set(c[0] + d.x * 1000 - 300, c[1] + d.y * 1000 - 200, c[2] + d.z * 1000 + 500); luz.target.position.set(c[0], c[1], c[2]);
+    rVistas.setClearColor(0x000000, 0);
+    rVistas.render(sc, cam);
+    g.save(); g.beginPath(); g.rect(x0, y0, T, T); g.clip();
+    g.fillStyle = '#f6f7f9'; g.fillRect(x0, y0, T, T);
+    if (vw.h != null) {
+      const hc = c[vw.h], vc = c[vw.v];
+      for (let k = Math.floor((hc - T / 2 / esc) / 10) * 10; k <= hc + T / 2 / esc; k += 10) {
+        const px = x0 + T / 2 + (k - hc) * esc; g.strokeStyle = k % 50 === 0 ? '#b8c0ca' : '#dde2e8'; g.lineWidth = 1; g.beginPath(); g.moveTo(px, y0); g.lineTo(px, y0 + T); g.stroke();
+      }
+      for (let k = Math.floor((vc - T / 2 / esc) / 10) * 10; k <= vc + T / 2 / esc; k += 10) {
+        const py = y0 + T / 2 - (k - vc) * esc; g.strokeStyle = k % 50 === 0 ? '#b8c0ca' : '#dde2e8'; g.lineWidth = 1; g.beginPath(); g.moveTo(x0, py); g.lineTo(x0 + T, py); g.stroke();
+      }
+    }
+    g.drawImage(rVistas.domElement, x0, y0);
+    g.fillStyle = '#18202a'; g.font = '600 20px sans-serif'; g.fillText(vw.nome, x0 + 14, y0 + 30);
+    g.fillStyle = '#5d6875'; g.font = '15px sans-serif'; g.fillText(vw.sub, x0 + 14, y0 + 50);
+    if (vw.h != null) {
+      g.font = '15px monospace'; g.fillStyle = '#18202a';
+      g.fillText(vw.hn + ' ' + fmt(a.size[vw.h]) + ' mm  ·  ' + vw.vn + ' ' + fmt(a.size[vw.v]) + ' mm  ·  grade 10 mm', x0 + 14, y0 + T - 14);
+    }
+    g.restore();
+  });
+  g.strokeStyle = '#8e99a6'; g.lineWidth = 2; g.beginPath(); g.moveTo(T, 0); g.lineTo(T, 2 * T); g.moveTo(0, T); g.lineTo(2 * T, T); g.stroke();
+  geo.dispose(); malha.material.dispose(); if (bordas) { bordas.geometry.dispose(); bordas.material.dispose(); }
+  return out;
+}
+function vistasPNG() {
+  const cv = vistasCanvas();
+  if (!cv) return Promise.resolve(null);
+  return new Promise((res) => cv.toBlob((b) => { if (b) { const img = $('img-vistas'); if (img.dataset.url) URL.revokeObjectURL(img.dataset.url); img.dataset.url = URL.createObjectURL(b); img.src = img.dataset.url; $('det-vistas').hidden = false; } res(b); }, 'image/png'));
+}
+
+/* ================= Parâmetros (formato do Customizer) ================= */
+function lerParams(code) {
+  const linhas = code.split('\n'), ps = [];
+  let grupo = 'Parâmetros', oculto = false;
+  for (let i = 0; i < linhas.length; i++) {
+    const L = linhas[i];
+    const g = /^\s*\/\*\s*\[([^\]]+)\]\s*\*\/\s*$/.exec(L);
+    if (g) { grupo = g[1].trim(); oculto = /^hidden$/i.test(grupo); continue; }
+    if (/^\s*(module|function)\b/.test(L)) break;
+    if (/^\s*[#%!*]?\s*[A-Za-z_]\w*\s*\(/.test(L) && !/^\s*[A-Za-z_]\w*\s*=/.test(L)) break;
+    if (oculto) continue;
+    const m = /^\s*([A-Za-z_]\w*)\s*=\s*([^;]+?)\s*;\s*(?:\/\/\s*(.*))?$/.exec(L);
+    if (!m) continue;
+    const nome = m[1], lit = m[2], com = (m[3] || '').trim();
+    const acima = i > 0 ? /^\s*\/\/\s*(.+?)\s*$/.exec(linhas[i - 1]) : null;
+    let tipo, valor;
+    if (/^-?(\d+\.?\d*|\.\d+)$/.test(lit)) { tipo = 'num'; valor = +lit; }
+    else if (lit === 'true' || lit === 'false') { tipo = 'bool'; valor = lit === 'true'; }
+    else if (/^"(?:[^"\\]|\\.)*"$/.test(lit)) { tipo = 'texto'; try { valor = JSON.parse(lit); } catch (e) { valor = lit.slice(1, -1); } }
+    else continue;
+    const p = { nome, tipo, valor, linha: i, grupo, desc: com };
+    const fx = /^\[([^\]]*)\]\s*(.*)$/.exec(com);
+    if (fx) {
+      p.desc = fx[2].trim();
+      const corpo = fx[1].trim();
+      if (corpo.includes(',')) {
+        p.opcoes = corpo.split(',').map((o) => { const [v, ...rot] = o.split(':'); const vv = v.trim(); return { v: tipo === 'num' ? +vv : vv.replace(/^"|"$/g, ''), rot: (rot.join(':') || vv).trim() }; });
+        if (tipo === 'num' || tipo === 'texto') p.tipo = 'opcao';
+      } else if (tipo === 'num') {
+        const nums = corpo.split(':').map(Number);
+        if (nums.every((x) => isFinite(x))) {
+          if (nums.length === 1) { p.min = 0; p.max = nums[0]; }
+          else if (nums.length === 2) { p.min = nums[0]; p.max = nums[1]; }
+          else { p.min = nums[0]; p.passo = nums[1]; p.max = nums[2]; }
+        }
+      }
+    }
+    if (!p.desc && acima && !/^\[/.test(acima[1])) p.desc = acima[1];
+    if (p.tipo === 'num' && p.passo == null) {
+      const casas = (String(valor).split('.')[1] || '').length;
+      p.passo = p.min != null && p.max != null && p.max - p.min <= 5 ? 0.1 : Math.pow(10, -casas);
+    }
+    if (p.tipo === 'num' && p.min == null) { p.min = Math.min(0, valor); p.max = Math.max(10, Math.abs(valor) * 3); }
+    ps.push(p);
+  }
+  return ps;
+}
+function literal(p, v) {
+  if (p.tipo === 'bool') return v ? 'true' : 'false';
+  if (p.tipo === 'texto' || (p.tipo === 'opcao' && typeof v === 'string')) return JSON.stringify(String(v));
+  return String(Math.round(Number(v) * 1000) / 1000);
+}
+function trocarParam(code, p, v) {
+  const linhas = code.split('\n');
+  const L = linhas[p.linha];
+  const m = /^(\s*[A-Za-z_]\w*\s*=\s*)([^;]+?)(\s*;.*)$/.exec(L);
+  if (!m) return code;
+  linhas[p.linha] = m[1] + literal(p, v) + m[3];
+  return linhas.join('\n');
+}
+function mostrarParams() {
+  const box = $('params'); box.innerHTML = '';
+  const ps = lerParams(S.codigo);
+  if (!ps.length) { box.hidden = true; return; }
+  box.hidden = false;
+  let grupo = null, fs = null;
+  ps.forEach((p) => {
+    if (p.grupo !== grupo) { grupo = p.grupo; fs = el('fieldset'); fs.append(el('legend', null, grupo)); box.append(fs); }
+    const id = 'p_' + p.nome, row = el('div', 'param');
+    const lab = el('label', null, p.desc || p.nome.replace(/_/g, ' ')); lab.htmlFor = id;
+    if (p.desc) lab.append(el('code', null, p.nome));
+    if (p.tipo === 'bool') {
+      row.classList.add('bool');
+      const cb = el('input'); cb.type = 'checkbox'; cb.id = id; cb.checked = !!p.valor;
+      cb.addEventListener('change', () => paramMudou(p, cb.checked));
+      row.append(cb, lab);
+    } else if (p.tipo === 'opcao') {
+      row.classList.add('full');
+      const sel = el('select'); sel.id = id;
+      p.opcoes.forEach((o) => { const op = el('option', null, o.rot); op.value = String(o.v); if (String(o.v) === String(p.valor)) op.selected = true; sel.append(op); });
+      sel.addEventListener('change', () => paramMudou(p, typeof p.valor === 'number' ? +sel.value : sel.value));
+      row.append(lab, sel);
+    } else if (p.tipo === 'texto') {
+      row.classList.add('full');
+      const inp = el('input'); inp.type = 'text'; inp.id = id; inp.value = p.valor;
+      inp.addEventListener('input', () => paramMudou(p, inp.value));
+      row.append(lab, inp);
+    } else {
+      const rg = el('input'); rg.type = 'range'; rg.min = p.min; rg.max = p.max; rg.step = p.passo; rg.value = p.valor; rg.setAttribute('aria-label', p.desc || p.nome);
+      const nb = el('input'); nb.type = 'number'; nb.id = id; nb.step = p.passo; nb.value = p.valor; nb.inputMode = 'decimal';
+      rg.addEventListener('input', () => { nb.value = rg.value; paramMudou(p, +rg.value); });
+      nb.addEventListener('change', () => { const v = +String(nb.value).replace(',', '.'); if (isFinite(v)) { if (v >= p.min && v <= p.max) rg.value = v; paramMudou(p, v); } });
+      row.append(lab, rg, nb);
+    }
+    fs.append(row);
+  });
+  travarParams(S.ocupado);
+}
+function travarParams(sim) { document.querySelectorAll('#params fieldset').forEach((f) => { f.disabled = sim; }); }
+let tParam = null;
+function paramMudou(p, v) {
+  S.codigo = trocarParam(S.codigo, p, v);
+  S.ajustes[p.nome] = v;
+  if (document.activeElement !== $('codigo')) $('codigo').value = S.codigo;
+  clearTimeout(tParam);
+  tParam = setTimeout(() => compilarEMostrar(S.codigo, { salvar: true }), 350);
+}
+
+/* ================= Compilar e mostrar ================= */
+let versaoComp = 0;
+async function compilarEMostrar(code, opt = {}) {
+  const v = ++versaoComp;
+  const r = await compilar(code);
+  if (v !== versaoComp && !opt.forcar) return { ok: false, antigo: true };
+  $('log').textContent = (r.log || []).join('\n').slice(-20000);
+  if (!r.ok) {
+    const erro = resumoErro(r.log, code);
+    if (!opt.calado) { $('erro-comp').textContent = 'Erro de compilação\n' + erro; $('erro-comp').hidden = false; }
+    if (!S.pos) { $('stage-msg').hidden = false; $('stage-txt').textContent = 'O código não compilou. Veja o erro na etapa 3.'; }
+    return { ok: false, erro, log: r.log };
+  }
+  $('erro-comp').hidden = true;
+  const pos = lerSTL(r.stl), a = analisar(pos);
+  S.stl = r.stl; S.compiledCode = code;
+  mostrarModelo(pos, a);
+  if (opt.salvar) agendarSalvar();
+  return { ok: true, pos, a, stl: r.stl, log: r.log, code };
+}
+function definirCodigo(code, origem) {
+  S.codigo = code;
+  if (origem) S.origem = origem;
+  $('codigo').value = code;
+  $('modelo-origem').textContent = ORIGEM_TXT[S.origem] || '';
+  $('tag-origem').textContent = ORIGEM_TXT[S.origem] || '';
+  mostrarParams();
+}
+function definirTitulo(t) {
+  S.titulo = (t || 'Modelo').trim().slice(0, 80);
+  $('titulo').value = S.titulo;
+  $('nome-arq').value = slug(S.titulo);
+}
+
+/* ================= Claude (capacidade sample) ================= */
+let sample = null, caps = null;
+async function iniciarIA() {
+  const use = window.claude && window.claude.use;
+  if (!use) { iaDesligada('Abra este artefato no app do Claude ou em claude.ai para usar a IA. A imagem em relevo e o editor de código funcionam mesmo assim.'); return; }
+  try { sample = await window.claude.use('sample'); } catch (e) { sample = null; }
+  if (!sample) { iaDesligada('A IA não está disponível nesta visualização. Abra o artefato no app do Claude ou em claude.ai. A imagem em relevo e o editor de código funcionam mesmo assim.'); return; }
+  try { caps = await sample.limits(); } catch (e) { caps = null; }
+  const tiers = caps && caps.modelTiers;
+  if (tiers) Array.from($('tier').options).forEach((o) => { if (!tiers.includes(o.value)) o.disabled = true; });
+  if ($('tier').selectedOptions[0] && $('tier').selectedOptions[0].disabled) $('tier').value = 'default';
+  if (!(caps && caps.images)) $('fotos-hint').textContent = 'Esta visualização não envia imagens ao Claude; descreva a peça em texto.';
+  $('chip-ia').textContent = 'Claude: disponível';
+  $('chip-ia').className = 'chip num on';
+  atualizarBotoes();
+}
+function iaDesligada(msg) {
+  sample = null;
+  $('chip-ia').textContent = 'Claude: indisponível';
+  $('chip-ia').className = 'chip num off';
+  $('ia-off').textContent = msg; $('ia-off').hidden = false;
+  atualizarBotoes();
+}
+function maxImagens() { return caps && caps.images ? caps.images.maxCount || 1 : 0; }
+function erroIA(e) {
+  const c = e && e.code;
+  if (c === 'cancelled') return 'Parado.';
+  if (c === 'not_granted') { iaDesligada('Você não permitiu o uso do Claude nesta página. Para liberar, recarregue e aceite o pedido de permissão. A imagem em relevo e o editor de código continuam funcionando.'); return 'Sem permissão para usar o Claude.'; }
+  if (c === 'sampling_disabled' || c === 'not_declared' || c === 'capability_disabled' || c === 'capability_removed') { iaDesligada('O Claude não está disponível nesta conta ou neste aplicativo.'); return 'Claude indisponível.'; }
+  if (c === 'images_unavailable') return 'Esta visualização não envia imagens. Tire as fotos e descreva em texto.';
+  if (c === 'tools_unavailable') return 'Esta visualização não deixa a IA compilar sozinha. Tente de novo.';
+  if (c === 'rate_limited') return 'Limite de uso do Claude atingido por agora. Tente de novo mais tarde.';
+  if (c === 'session_expired') return 'Sua sessão expirou. Entre de novo no Claude e recarregue a página.';
+  if (c === 'image_rejected') return 'Uma das imagens não foi aceita. Tente outra foto (JPEG ou PNG, menor).';
+  if (c === 'refused') return 'O Claude recusou este pedido. Reescreva o pedido.';
+  if (c === 'prompt_too_large') return 'O pedido ficou grande demais (código ou imagens). Tire uma imagem ou simplifique.';
+  if (c === 'invalid_json') return 'A resposta veio num formato inesperado. Tente de novo.';
+  if (c === 'empty_completion') return 'O Claude não respondeu nada. Tente de novo com um pedido mais curto.';
+  if (e && e.message && !c) return e.message;
+  return 'Falha na conexão com o Claude. Tente de novo.';
+}
+let iaCtl = null;
+function perguntar(prompt, { imagens = [], ferramentas = null, json = false, act = null } = {}) {
+  const opts = { signal: iaCtl.signal };
+  const tier = $('tier').value, tiers = caps && caps.modelTiers;
+  if (!tiers || tiers.includes(tier)) opts.modelTier = tier;
+  const imgs = imagens.filter(Boolean).slice(0, maxImagens());
+  if (imgs.length) opts.images = imgs;
+  if (ferramentas && caps && caps.tools) opts.tools = ferramentas;
+  else opts.cache = false;
+  if (act) opts.onText = ({ text }) => act.texto(text);
+  return json ? sample.json(prompt, opts) : sample(prompt, opts);
+}
+function temFerramentas() { return !!(caps && caps.tools); }
+
+/* Painel de atividade: passos com tempo, texto chegando e botão Parar. */
+function Atividade(box) {
+  let lista = null, fluxo = null, timer = null;
+  const api = {
+    limpar() {
+      box.innerHTML = ''; box.hidden = true;
+      lista = el('ol', 'trilha'); fluxo = el('div', 'stream num'); fluxo.hidden = true;
+      const parar = el('button', 'btn ghost', 'Parar'); parar.addEventListener('click', () => { if (iaCtl) iaCtl.abort(); });
+      const ctl = el('div', 'actions'); ctl.append(parar); ctl.dataset.parar = '1';
+      box.append(lista, fluxo, ctl);
+      return api;
+    },
+    passo(txt) {
+      box.hidden = false;
+      const li = el('li', 'run'), t = el('span', 't', txt), tm = el('span', 'tm num', '');
+      li.append(el('span', 'dot'), t, tm);
+      lista.append(li);
+      const t0 = Date.now();
+      clearInterval(timer);
+      timer = setInterval(() => { tm.textContent = Math.round((Date.now() - t0) / 1000) + ' s'; }, 1000);
+      const fim = (cls, novo) => { clearInterval(timer); li.className = cls; if (novo) t.textContent = novo; tm.textContent = Math.round((Date.now() - t0) / 1000) + ' s'; fluxo.hidden = true; fluxo.textContent = ''; };
+      return {
+        ok: (novo) => fim('ok', novo),
+        falhou: (novo) => fim('fail', novo),
+        itens: (arr) => { if (!arr || !arr.length) return; const ul = el('ul'); arr.forEach((x) => ul.append(el('li', null, x))); li.append(ul); },
+      };
+    },
+    texto(t) { fluxo.hidden = false; fluxo.textContent = t.slice(-700); },
+    parado() { clearInterval(timer); const c = box.querySelector('[data-parar]'); if (c) c.hidden = true; },
+    rodando() { const c = box.querySelector('[data-parar]'); if (c) c.hidden = false; },
+  };
+  return api.limpar();
+}
+const actPedido = Atividade($('act-pedido')), actModelo = Atividade($('act-modelo'));
+
+function ocupar(sim) {
+  S.ocupado = sim;
+  if (sim) iaCtl = new AbortController();
+  atualizarBotoes();
+  travarParams(sim);
+}
+function atualizarBotoes() {
+  const semIA = !sample, oc = S.ocupado;
+  $('btn-entender').disabled = semIA || oc;
+  $('btn-direto').disabled = semIA || oc;
+  $('btn-gerar').disabled = semIA || oc;
+  $('btn-mudar').disabled = semIA || oc;
+  $('btn-conferir').disabled = semIA || oc || !S.pos;
+  $('btn-compilar').disabled = oc;
+  $('btn-relevo').disabled = oc;
+  $('box-mudanca').hidden = semIA;
+  document.querySelectorAll('.atividade [data-parar]').forEach((c) => { c.hidden = !oc; });
+}
+
+/* ================= Textos para a IA ================= */
+const REGRAS = `Você projeta peças para impressão 3D em OpenSCAD, com qualidade de projetista experiente.
+
+IMPRESSORA
+Creality Ender-3 V3 SE, bico de 0,4 mm, PLA, camadas de 0,2 mm, área útil de 220 × 220 × 250 mm. As paredes saem com linhas de 0,42 a 0,45 mm.
+
+REGRAS DE PROJETO PARA FDM
+- Medidas em mm. Respeite exatamente as medidas do pedido; quando faltar uma, escolha um valor comum para esse tipo de peça.
+- A peça sai pronta para imprimir: apoiada em z = 0, perto da origem em XY e já na orientação de impressão (face plana maior na mesa; sem balanço acima de 45° sempre que der; pontes de até 10 mm são aceitáveis).
+- Espessura mínima de parede 1,2 mm (3 linhas); peças que levam esforço, 2 a 3 mm. Detalhes finos com pelo menos 0,8 mm.
+- Folgas entre peças que encaixam: 0,15 mm por lado para encaixe justo, 0,3 mm para deslizante, 0,4 mm para partes que giram.
+- Furos para parafuso passante: M3 3,4 mm; M4 4,5 mm; M5 5,5 mm; escareado quando a cabeça for embutida. Parafuso de rosca soberba direto no plástico: diâmetro do parafuso menos 0,5 mm.
+- Furos horizontais (eixo paralelo à mesa) com mais de 6 mm: forma de gota ou topo chanfrado, para sair sem suporte.
+- Aresta de baixo que encosta na mesa: chanfro de 0,5 mm, nunca arredondado. Cantos verticais podem ser arredondados.
+- Texto em relevo ou rebaixado: letras com pelo menos 5 mm de altura, 0,6 a 1 mm de profundidade, fonte "Liberation Sans:style=Bold".
+- Resolução: $fa = 2; $fs = 0.4; (não use $fn alto na peça inteira).`;
+
+const CODIGO = `FORMATO DO CÓDIGO
+- OpenSCAD 2025.07 com o núcleo Manifold.
+- Comece pelos parâmetros ajustáveis no formato do Customizer do OpenSCAD:
+  /* [Grupo] */
+  // Descrição curta em português (mm)
+  nome_do_parametro = valor; // [min:passo:max]
+  Para escolha entre opções: // [0:Rótulo A, 1:Rótulo B]. Só números, true/false e textos entre aspas nos ajustáveis. Nomes em português, sem acento, em snake_case. Constantes que não devem ser ajustadas ficam depois de /* [Hidden] */.
+- Toda medida importante vira parâmetro e o resto do código depende dela: mudar um parâmetro dentro da faixa não pode quebrar a peça.
+- Depois dos parâmetros, módulos com nomes claros e comentários curtos em português. O objeto final é chamado no fim do arquivo.
+- Não use import(), surface(), include/use de bibliotecas (não há nenhuma instalada) nem os modificadores de depuração (#, %, !, *).
+- Escreva você mesmo os módulos auxiliares: cantos arredondados com offset(r) em 2D ou hull() de cilindros e esferas; chanfros com hull() ou linear_extrude(scale=); furo em gota com hull() de um círculo e um quadrado girado 45°; rosca com linear_extrude(twist=) de um perfil deslocado ou com polyhedron(). fill() e text() estão disponíveis.
+- Uma peça só, a não ser que o pedido peça várias; nesse caso, espaçadas 5 mm na mesa.`;
+
+function verificar() {
+  return temFerramentas()
+    ? 'Antes da resposta final, compile o código com a ferramenta compilar_e_medir e confira se o resultado bate com a especificação: caixa delimitadora, peça apoiada em z = 0, uma parte só (salvo pedido), sem balanço acima de 45° que dava para evitar, superfície fechada. Se algo não bater, corrija e compile de novo (no máximo 4 compilações).\n\n'
+    : 'Revise o código com cuidado antes de responder: ele precisa compilar no OpenSCAD 2025.07 sem erros.\n\n';
+}
+function ajustesTexto() {
+  const ks = Object.keys(S.ajustes);
+  let t = '';
+  if (ks.length) t += '\nAjustes que o usuário fez nos parâmetros depois disso (valem mais que a especificação): ' + ks.map((k) => k + ' = ' + JSON.stringify(S.ajustes[k])).join(', ') + '.';
+  if (S.editadoAMao) t += '\nO usuário editou o código à mão; mantenha essas edições.';
+  return t;
+}
+function promptEntender(pedido, nImg) {
+  return REGRAS + '\n\nTAREFA\nEntender o pedido abaixo antes de modelar. Ainda não escreva código.\n' +
+    (nImg ? 'Há ' + nImg + ' imagem(ns) anexada(s) pelo usuário (esboço técnico, foto ou desenho). Em esboço com cotas, leia todas as cotas e use-as exatamente; se alguma estiver ilegível ou ambígua, pergunte. Foto sem cotas não dá escala: pergunte as medidas que faltarem, sempre com uma sugestão.\n' : '') +
+    '\nPEDIDO DO USUÁRIO\n"""\n' + (pedido || '(sem texto; veja as imagens)') + '\n"""\n\n' +
+    'Responda só com um objeto JSON, sem nada fora dele, neste formato:\n' +
+    '{"titulo": "nome curto da peça", "resumo": "o que é a peça e como ela vai ser, em 1 a 3 frases", "medidas": [{"nome": "Largura total", "valor": "80 mm", "origem": "pedido"}], "suposicoes": ["..."], "perguntas": [{"pergunta": "...", "sugestao": "resposta sugerida"}], "orientacao": "como a peça fica na mesa para imprimir e por quê", "riscos": ["pontos de atenção na impressão"]}\n' +
+    '"origem" é "pedido" (está no texto), "imagem" (lida na imagem) ou "suposicao" (você escolheu). Liste todas as medidas que definem a peça. No máximo 5 perguntas, só as que mudam o modelo; sem dúvidas, devolva "perguntas": [].';
+}
+function promptGerar(spec, pedido, nImg) {
+  return REGRAS + '\n\n' + CODIGO + '\n\nTAREFA\nEscrever o modelo OpenSCAD da peça especificada abaixo.\n' +
+    (nImg ? 'A(s) ' + nImg + ' imagem(ns) anexada(s) é(são) a(s) que o usuário mandou com o pedido; use-as para a forma e as proporções.\n' : '') +
+    '\nESPECIFICAÇÃO CONFIRMADA PELO USUÁRIO\n' + spec + '\n\nPEDIDO ORIGINAL\n"""\n' + (pedido || '(só imagens)') + '\n"""\n\n' + verificar() +
+    'RESPOSTA FINAL\nO código completo num único bloco ```openscad. Depois do bloco, no máximo 4 linhas curtas para o usuário: o que você supôs e algum cuidado na impressão. Não repita a especificação.';
+}
+function promptConferir(nUser) {
+  return REGRAS + '\n\n' + CODIGO + '\n\nTAREFA\nConferir se o modelo compilado corresponde ao pedido.\n' +
+    'A primeira imagem tem quatro vistas do modelo compilado: FRENTE (olhando de −Y para +Y, X para a direita), DIREITA (olhando de +X, Y para a direita), TOPO (de cima, X para a direita, Y para cima) e PERSPECTIVA. As três primeiras são projeções ortográficas na mesma escala, com grade de 10 mm (linhas mais escuras a cada 50 mm). Faces em laranja têm balanço acima de 45° e precisariam de suporte.\n' +
+    (nUser ? 'As outras imagens são as que o usuário mandou com o pedido.\n' : '') +
+    '\nESPECIFICAÇÃO\n' + (S.spec || '(sem especificação escrita; use o código e os comentários)') + ajustesTexto() +
+    '\n\nMEDIDAS DO MODELO COMPILADO\n' + medidasTexto(S.analise) +
+    '\n\nCÓDIGO ATUAL\n```openscad\n' + S.codigo + '\n```\n\n' +
+    'Compare forma, proporções, posição e tamanho de furos, encaixes e detalhes com a especificação e com as imagens do usuário. Confira também as regras de impressão. Não mude o que é questão de gosto nem desfaça ajustes do usuário.\n' +
+    'Responda começando com uma linha exatamente "VEREDITO: OK" ou "VEREDITO: CORRIGIR". Depois liste o que encontrou, uma linha por item começando com "- " (no máximo 6). Se o veredito for CORRIGIR, termine com o código completo corrigido num único bloco ```openscad' +
+    (temFerramentas() ? ', compilado antes com a ferramenta compilar_e_medir.' : '.');
+}
+function promptMudar(texto, nImg) {
+  return REGRAS + '\n\n' + CODIGO + '\n\nTAREFA\nAlterar o modelo conforme o pedido de mudança, mantendo todo o resto igual (parâmetros, nomes, orientação).\n' +
+    (nImg ? 'As imagens anexadas são as que o usuário mandou com o pedido original.\n' : '') +
+    '\nESPECIFICAÇÃO\n' + (S.spec || '(sem especificação escrita; use o código e os comentários)') + ajustesTexto() +
+    '\n\nCÓDIGO ATUAL\n```openscad\n' + S.codigo + '\n```\n\nMUDANÇA PEDIDA\n"""\n' + texto + '\n"""\n\n' + verificar() +
+    'RESPOSTA FINAL\nO código completo num único bloco ```openscad. Depois do bloco, até 3 linhas sobre o que mudou.';
+}
+function promptCorrigir(code, erro) {
+  return CODIGO + '\n\nTAREFA\nO código abaixo não compila no OpenSCAD 2025.07 (núcleo Manifold, sem bibliotecas externas). Corrija o erro sem mudar o desenho.\n\nERRO\n' + erro +
+    '\n\nCÓDIGO\n```openscad\n' + code + '\n```\n\n' +
+    (temFerramentas() ? 'Compile a correção com a ferramenta compilar_e_medir antes de responder.\n\n' : '') +
+    'RESPOSTA FINAL\nO código completo corrigido num único bloco ```openscad, sem mais nada.';
+}
+function extrairCodigo(text) {
+  const re = /```[ \t]*([A-Za-z]*)[^\n]*\n([\s\S]*?)```/g;
+  let m, scad = null, qualquer = null;
+  while ((m = re.exec(text))) { const lang = m[1].toLowerCase(); if (lang === 'openscad' || lang === 'scad') scad = m[2]; else if (!lang) qualquer = m[2]; }
+  const c = scad || qualquer;
+  return c ? c.replace(/\s+$/, '') + '\n' : null;
+}
+function extrairNotas(text) {
+  const i = text.lastIndexOf('```');
+  if (i < 0) return '';
+  return text.slice(i + 3).trim().split('\n').map((l) => l.trim()).filter(Boolean).slice(0, 5).join('\n');
+}
+function lerVeredito(text) {
+  const i = text.lastIndexOf('VEREDITO:');
+  const resto = i >= 0 ? text.slice(i) : text;
+  const corrigir = /^VEREDITO:\s*CORRIGIR/i.test(resto);
+  const antesCodigo = resto.split('```')[0];
+  const itens = antesCodigo.split('\n').filter((l) => /^\s*[-•]\s+/.test(l)).map((l) => l.replace(/^\s*[-•]\s+/, '').trim()).slice(0, 6);
+  return { ok: !corrigir, itens, codigo: corrigir ? extrairCodigo(resto) : null };
+}
+function ferramentaCompilar(reg, act) {
+  return [{
+    name: 'compilar_e_medir',
+    description: 'Compila um código OpenSCAD completo neste aparelho (OpenSCAD 2025.07, núcleo Manifold, sem bibliotecas externas) e devolve os erros, ou as medidas do sólido: caixa delimitadora em mm, posição, volume, partes separadas, área apoiada na mesa, área com balanço acima de 45°, se cabe na mesa e as linhas de echo().',
+    inputSchema: { type: 'object', properties: { codigo: { type: 'string', description: 'Código OpenSCAD completo' } }, required: ['codigo'] },
+    async execute(input, ctx) {
+      const code = String((input && input.codigo) || '');
+      if (!code.trim()) throw new Error('código vazio');
+      const n = ++reg.n, p = act.passo('Compilando a tentativa ' + n + '…');
+      const r = await compilarEMostrar(code, { calado: true, forcar: true });
+      if (ctx && ctx.signal && ctx.signal.aborted) throw new Error('cancelado');
+      if (!r.ok) { p.falhou('Tentativa ' + n + ': erro de compilação'); return { compilou: false, erro: r.erro }; }
+      reg.ultimo = r;
+      p.ok('Tentativa ' + n + ': ' + fmtDim(r.a.size));
+      return medidasParaIA(r.a, r);
+    },
+  }];
+}
+
+/* ================= Fluxos com a IA ================= */
+async function entender() {
+  const pedido = $('pedido').value.trim();
+  if (!pedido && !S.fotos.length) { $('pedido').focus(); return; }
+  ocupar(true); actPedido.limpar(); actPedido.rodando();
+  const p = actPedido.passo(S.fotos.length ? 'Lendo o pedido e as imagens…' : 'Lendo o pedido…');
+  try {
+    const ent = await perguntar(promptEntender(pedido, Math.min(S.fotos.length, maxImagens())), { imagens: S.fotos.map((f) => f.blob), json: true });
+    if (!ent || typeof ent !== 'object') throw { code: 'invalid_json' };
+    S.entendimento = ent; S.pedido = pedido;
+    mostrarEntendimento(ent);
+    p.ok('Pedido lido. Confira a etapa 2.');
+    $('card-ent').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (e) { p.falhou(erroIA(e)); }
+  finally { ocupar(false); actPedido.parado(); }
+}
+function mostrarEntendimento(ent) {
+  const box = $('ent-corpo'); box.innerHTML = '';
+  const res = el('p', 'ent-res');
+  res.append(el('strong', null, String(ent.titulo || 'Peça')), document.createTextNode(String(ent.resumo || '')));
+  box.append(res);
+  const meds = Array.isArray(ent.medidas) ? ent.medidas : [];
+  if (meds.length) {
+    const sec = el('div', 'ent-sec'); sec.append(el('h3', null, 'Medidas (edite o que estiver errado)'));
+    const lista = el('div', 'medidas');
+    meds.forEach((m, i) => {
+      const row = el('div', 'medida'), nm = el('label', 'nm', String(m.nome || 'Medida'));
+      const og = String(m.origem || '').toLowerCase(); nm.htmlFor = 'med_' + i;
+      nm.append(el('span', 'og' + (og.startsWith('sup') ? ' sup' : ''), og.startsWith('sup') ? 'suposição' : og.startsWith('ima') ? 'da imagem' : 'do pedido'));
+      const inp = el('input'); inp.type = 'text'; inp.id = 'med_' + i; inp.value = String(m.valor || ''); inp.dataset.nome = String(m.nome || ''); inp.dataset.orig = inp.value; inp.dataset.og = og;
+      row.append(nm, inp); lista.append(row);
+    });
+    sec.append(lista); box.append(sec);
+  }
+  const listaSimples = (titulo, arr) => {
+    if (!Array.isArray(arr) || !arr.length) return;
+    const sec = el('div', 'ent-sec'), ul = el('ul'); sec.append(el('h3', null, titulo));
+    arr.forEach((x) => ul.append(el('li', null, String(x)))); sec.append(ul); box.append(sec);
+  };
+  listaSimples('Suposições', ent.suposicoes);
+  const pergs = Array.isArray(ent.perguntas) ? ent.perguntas : [];
+  if (pergs.length) {
+    const sec = el('div', 'ent-sec'); sec.append(el('h3', null, 'Perguntas (a sugestão já vem preenchida)'));
+    pergs.forEach((q, i) => {
+      const d = el('div', 'pergunta'), lab = el('label', null, String(q.pergunta || q)); lab.htmlFor = 'perg_' + i;
+      const inp = el('input'); inp.type = 'text'; inp.id = 'perg_' + i; inp.value = String(q.sugestao || ''); inp.dataset.pergunta = String(q.pergunta || q);
+      d.append(lab, inp); sec.append(d);
+    });
+    box.append(sec);
+  }
+  if (ent.orientacao) { const sec = el('div', 'ent-sec'); sec.append(el('h3', null, 'Orientação na mesa'), el('p', 'hint', String(ent.orientacao))); box.append(sec); }
+  listaSimples('Pontos de atenção', ent.riscos);
+  $('ent-obs').value = '';
+  $('card-ent').hidden = false;
+}
+function specDoEntendimento() {
+  const ent = S.entendimento || {};
+  const linhas = ['Peça: ' + (ent.titulo || ''), String(ent.resumo || '')];
+  const meds = Array.from(document.querySelectorAll('#ent-corpo .medida input'));
+  if (meds.length) {
+    linhas.push('Medidas:');
+    meds.forEach((i) => {
+      const mudou = i.value.trim() !== i.dataset.orig;
+      linhas.push('- ' + i.dataset.nome + ': ' + i.value.trim() + (mudou ? ' (corrigida pelo usuário)' : i.dataset.og.startsWith('sup') ? ' (suposição aceita)' : ''));
+    });
+  }
+  if (Array.isArray(ent.suposicoes) && ent.suposicoes.length) linhas.push('Suposições aceitas:', ...ent.suposicoes.map((s) => '- ' + s));
+  const pergs = Array.from(document.querySelectorAll('#ent-corpo .pergunta input'));
+  if (pergs.length) linhas.push('Respostas do usuário:', ...pergs.map((i) => '- ' + i.dataset.pergunta + ' → ' + (i.value.trim() || '(sem resposta; escolha um valor razoável)')));
+  if (ent.orientacao) linhas.push('Orientação de impressão: ' + ent.orientacao);
+  if (Array.isArray(ent.riscos) && ent.riscos.length) linhas.push('Pontos de atenção: ' + ent.riscos.join('; '));
+  const obs = $('ent-obs').value.trim();
+  if (obs) linhas.push('Correções do usuário (valem mais que o resto): ' + obs);
+  return linhas.filter(Boolean).join('\n');
+}
+async function gerar(direto) {
+  const pedido = $('pedido').value.trim();
+  if (direto && !pedido && !S.fotos.length) { $('pedido').focus(); return; }
+  S.pedido = pedido;
+  if (direto) S.entendimento = null;
+  const spec = direto ? 'Pedido do usuário, sem etapa de confirmação:\n' + (pedido || '(veja as imagens)') : specDoEntendimento();
+  ocupar(true); actModelo.limpar(); actModelo.rodando();
+  $('card-modelo').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  S.projId = novoId(); S.criado = Date.now(); S.spec = spec; S.ajustes = {}; S.editadoAMao = false; S.origem = 'ia';
+  definirTitulo((S.entendimento && S.entendimento.titulo) || pedido.split('\n')[0].slice(0, 60) || 'Modelo');
+  $('notas').hidden = true;
+  const imgs = S.fotos.map((f) => f.blob);
+  try {
+    const reg = { n: 0, ultimo: null };
+    const p = actModelo.passo('Escrevendo o modelo em OpenSCAD…');
+    const { text } = await perguntar(promptGerar(spec, pedido, Math.min(imgs.length, maxImagens())), { imagens: imgs, ferramentas: ferramentaCompilar(reg, actModelo), act: actModelo });
+    const code = extrairCodigo(text);
+    if (!code) { p.falhou('A resposta não trouxe código. Tente de novo.'); return; }
+    p.ok('Código escrito');
+    S.notas = extrairNotas(text);
+    if (S.notas) { $('notas').textContent = S.notas; $('notas').hidden = false; }
+    if (!(await aplicarCodigo(code, reg, 'ia'))) return;
+    await conferir(2);
+    agendarSalvar(0);
+  } catch (e) { actModelo.passo('').falhou(erroIA(e)); }
+  finally { ocupar(false); actModelo.parado(); }
+}
+async function aplicarCodigo(code, reg, origem) {
+  let r = reg && reg.ultimo && reg.ultimo.code === code ? reg.ultimo : null;
+  if (r) mostrarModelo(r.pos, r.a); else r = await compilarEMostrar(code, { calado: true, forcar: true });
+  for (let t = 0; !r.ok && t < 2; t++) {
+    const p = actModelo.passo('Corrigindo erro de compilação…');
+    p.itens([r.erro.split('\n')[0]]);
+    const reg2 = { n: 0, ultimo: null };
+    const { text } = await perguntar(promptCorrigir(code, r.erro), { ferramentas: ferramentaCompilar(reg2, actModelo), act: actModelo });
+    const novo = extrairCodigo(text);
+    if (!novo) { p.falhou('A correção não trouxe código'); break; }
+    code = novo;
+    r = reg2.ultimo && reg2.ultimo.code === code ? reg2.ultimo : await compilarEMostrar(code, { calado: true, forcar: true });
+    if (reg2.ultimo === r) mostrarModelo(r.pos, r.a);
+    if (r.ok) p.ok('Erro corrigido'); else p.falhou('Ainda não compila');
+  }
+  definirCodigo(code, origem);
+  if (!r.ok) {
+    $('erro-comp').textContent = 'Erro de compilação\n' + r.erro; $('erro-comp').hidden = false;
+    actModelo.passo('').falhou('O código não compilou. Veja o erro abaixo; dá para pedir uma mudança ou editar o código.');
+    return false;
+  }
+  S.stl = r.stl; S.compiledCode = code; $('erro-comp').hidden = true;
+  return true;
+}
+async function conferir(rodadas) {
+  for (let i = 0; i < rodadas; i++) {
+    const p = actModelo.passo(i ? 'Conferindo a correção…' : 'Conferindo as vistas com o pedido…');
+    const png = await vistasPNG();
+    if (!png) { p.falhou('Sem prévia 3D para gerar as vistas'); return; }
+    const user = S.fotos.map((f) => f.blob).slice(0, Math.max(0, maxImagens() - 1));
+    const reg = { n: 0, ultimo: null };
+    const { text } = await perguntar(promptConferir(user.length), { imagens: [png, ...user], ferramentas: ferramentaCompilar(reg, actModelo), act: actModelo });
+    const v = lerVeredito(text);
+    if (v.ok || !v.codigo) { p.ok(v.ok ? 'Confere com o pedido' : 'Conferência sem correção de código'); p.itens(v.itens); return; }
+    p.ok('Achou o que corrigir'); p.itens(v.itens);
+    if (!(await aplicarCodigo(v.codigo, reg, S.origem))) return;
+    if (i === rodadas - 1) actModelo.passo('').ok('A última correção não foi conferida de novo. Toque em “Conferir as vistas com a IA” se quiser outra rodada.');
+  }
+}
+async function mudar() {
+  const texto = $('mudanca').value.trim();
+  if (!texto) { $('mudanca').focus(); return; }
+  ocupar(true); actModelo.limpar(); actModelo.rodando();
+  const imgs = S.fotos.map((f) => f.blob);
+  try {
+    const reg = { n: 0, ultimo: null };
+    const p = actModelo.passo('Aplicando a mudança…');
+    const { text } = await perguntar(promptMudar(texto, Math.min(imgs.length, maxImagens())), { imagens: imgs, ferramentas: ferramentaCompilar(reg, actModelo), act: actModelo });
+    const code = extrairCodigo(text);
+    if (!code) { p.falhou('A resposta não trouxe código. Tente de novo.'); return; }
+    p.ok('Mudança escrita');
+    const notas = extrairNotas(text);
+    if (notas) { $('notas').textContent = notas; $('notas').hidden = false; }
+    S.spec = (S.spec ? S.spec + '\n' : '') + 'Mudança pedida depois (vale mais que o resto): ' + texto;
+    if (!(await aplicarCodigo(code, reg, S.origem === 'exemplo' ? 'ia' : S.origem))) return;
+    $('mudanca').value = '';
+    if ($('auto-conferir').checked) await conferir(1);
+    agendarSalvar(0);
+  } catch (e) { actModelo.passo('').falhou(erroIA(e)); }
+  finally { ocupar(false); actModelo.parado(); }
+}
+async function conferirManual() {
+  ocupar(true); actModelo.limpar(); actModelo.rodando();
+  try { if (S.compiledCode !== S.codigo) { const r = await compilarEMostrar(S.codigo, { forcar: true }); if (!r.ok) return; } await conferir(1); agendarSalvar(0); }
+  catch (e) { actModelo.passo('').falhou(erroIA(e)); }
+  finally { ocupar(false); actModelo.parado(); }
+}
+
+/* ================= Fotos do pedido ================= */
+function carregarImagem(file) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => res({ img, url });
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('não consegui abrir a imagem')); };
+    img.src = url;
+  });
+}
+async function normalizarFoto(file) {
+  const { img, url } = await carregarImagem(file);
+  const k = Math.min(1, 2000 / Math.max(img.naturalWidth, img.naturalHeight));
+  const cv = document.createElement('canvas'); cv.width = Math.round(img.naturalWidth * k); cv.height = Math.round(img.naturalHeight * k);
+  const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height); g.drawImage(img, 0, 0, cv.width, cv.height);
+  URL.revokeObjectURL(url);
+  const blob = await new Promise((r) => cv.toBlob(r, 'image/jpeg', 0.9));
+  return { blob, url: URL.createObjectURL(blob) };
+}
+async function adicionarFotos(files) {
+  for (const f of Array.from(files)) {
+    try { S.fotos.push(await normalizarFoto(f)); } catch (e) { $('fotos-hint').textContent = 'Não consegui abrir ' + f.name + '.'; }
+  }
+  mostrarFotos();
+}
+function mostrarFotos() {
+  const box = $('fotos'); box.innerHTML = '';
+  S.fotos.forEach((f, i) => {
+    const d = el('div', 'foto'), im = el('img'); im.src = f.url; im.alt = 'Imagem ' + (i + 1) + ' do pedido';
+    const x = el('button', null, '×'); x.setAttribute('aria-label', 'Tirar imagem ' + (i + 1));
+    x.addEventListener('click', () => { URL.revokeObjectURL(f.url); S.fotos.splice(i, 1); mostrarFotos(); });
+    d.append(im, x); box.append(d);
+  });
+  const mx = maxImagens();
+  if (mx && S.fotos.length > mx - 1) $('fotos-hint').textContent = 'O Claude recebe até ' + mx + ' imagens por vez; na conferência vão as ' + Math.max(0, mx - 1) + ' primeiras.';
+}
+
+/* ================= Imagem em relevo (sem IA) ================= */
+const RV = { nome: '', W: 0, H: 0, cinza: null, img: null, loops: null };
+async function abrirRelevo(file) {
+  const { img, url } = await carregarImagem(file);
+  const k = Math.min(1, 600 / Math.max(img.naturalWidth, img.naturalHeight));
+  const W = Math.max(2, Math.round(img.naturalWidth * k)), H = Math.max(2, Math.round(img.naturalHeight * k));
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, W, H); g.drawImage(img, 0, 0, W, H);
+  URL.revokeObjectURL(url);
+  const d = g.getImageData(0, 0, W, H).data, cinza = new Float32Array(W * H);
+  for (let i = 0; i < W * H; i++) cinza[i] = 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2];
+  Object.assign(RV, { nome: file.name.replace(/\.[^.]+$/, ''), W, H, cinza, fundo: cv });
+  $('r-limiar').value = otsu(cinza);
+  const cvr = $('cv-relevo'); cvr.width = W; cvr.height = H; cvr.hidden = false;
+  $('relevo-ctl').hidden = false;
+  atualizarRelevo();
+}
+function otsu(c) {
+  const h = new Float64Array(256); for (let i = 0; i < c.length; i++) h[Math.max(0, Math.min(255, Math.round(c[i])))]++;
+  let total = c.length, soma = 0; for (let i = 0; i < 256; i++) soma += i * h[i];
+  let sB = 0, wB = 0, melhor = 0, T = 128;
+  for (let t = 0; t < 256; t++) {
+    wB += h[t]; if (!wB) continue; const wF = total - wB; if (!wF) break;
+    sB += t * h[t]; const mB = sB / wB, mF = (soma - sB) / wF, v = wB * wF * (mB - mF) * (mB - mF);
+    if (v > melhor) { melhor = v; T = t; }
+  }
+  return Math.max(1, Math.min(254, T + 0.5));
+}
+function borrar(c, W, H, r) {
+  if (!r) return c;
+  let a = Float32Array.from(c), b = new Float32Array(c.length);
+  for (let it = 0; it < 2; it++) {
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { let s = 0, n = 0; for (let k = -r; k <= r; k++) { const xx = x + k; if (xx >= 0 && xx < W) { s += a[y * W + xx]; n++; } } b[y * W + x] = s / n; }
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { let s = 0, n = 0; for (let k = -r; k <= r; k++) { const yy = y + k; if (yy >= 0 && yy < H) { s += b[yy * W + x]; n++; } } a[y * W + x] = s / n; }
+  }
+  return a;
+}
+/* Quadrados marchantes com interpolação: contornos fechados, em pixels. */
+function tracar(c, W, H, T, inverter) {
+  const GW = W + 2, GH = H + 2, val = new Float32Array(GW * GH).fill(-1);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { let v = inverter ? c[y * W + x] - T : T - c[y * W + x]; if (v === 0) v = -1e-3; val[(y + 1) * GW + x + 1] = v; }
+  const viz = new Map();
+  const liga = (e1, e2) => { (viz.get(e1) || viz.set(e1, []).get(e1)).push(e2); (viz.get(e2) || viz.set(e2, []).get(e2)).push(e1); };
+  for (let cy = 0; cy < GH - 1; cy++) for (let cx = 0; cx < GW - 1; cx++) {
+    const a = val[cy * GW + cx], b = val[cy * GW + cx + 1], cc = val[(cy + 1) * GW + cx + 1], d = val[(cy + 1) * GW + cx];
+    const k = (a > 0 ? 8 : 0) | (b > 0 ? 4 : 0) | (cc > 0 ? 2 : 0) | (d > 0 ? 1 : 0);
+    if (k === 0 || k === 15) continue;
+    const eT = 2 * (cy * GW + cx), eR = 2 * (cy * GW + cx + 1) + 1, eB = 2 * ((cy + 1) * GW + cx), eL = 2 * (cy * GW + cx) + 1;
+    const centro = (a + b + cc + d) / 4 > 0;
+    switch (k) {
+      case 1: case 14: liga(eL, eB); break;
+      case 2: case 13: liga(eB, eR); break;
+      case 3: case 12: liga(eL, eR); break;
+      case 4: case 11: liga(eT, eR); break;
+      case 6: case 9: liga(eT, eB); break;
+      case 7: case 8: liga(eT, eL); break;
+      case 5: if (centro) { liga(eT, eL); liga(eB, eR); } else { liga(eT, eR); liga(eL, eB); } break;
+      case 10: if (centro) { liga(eT, eR); liga(eL, eB); } else { liga(eT, eL); liga(eB, eR); } break;
+    }
+  }
+  const ponto = (e) => {
+    const vert = e & 1, i = e >> 1, x = i % GW, y = (i / GW) | 0;
+    const va = val[i], vb = vert ? val[i + GW] : val[i + 1], t = va / (va - vb);
+    return vert ? [x - 1 + 0.5, y + t - 1 + 0.5] : [x + t - 1 + 0.5, y - 1 + 0.5];
+  };
+  const visto = new Set(), loops = [];
+  viz.forEach((_, e0) => {
+    if (visto.has(e0)) return;
+    const loop = []; let ant = -1, cur = e0;
+    for (let guard = 0; guard < 4e6; guard++) {
+      visto.add(cur); loop.push(ponto(cur));
+      const vs = viz.get(cur); const prox = vs[0] !== ant ? vs[0] : vs[1];
+      if (prox === undefined || prox === e0) break;
+      ant = cur; cur = prox;
+      if (visto.has(cur)) break;
+    }
+    if (loop.length >= 3) loops.push(loop);
+  });
+  return loops;
+}
+function areaLoop(p) { let s = 0; for (let i = 0, j = p.length - 1; i < p.length; j = i++) s += (p[j][0] + p[i][0]) * (p[j][1] - p[i][1]); return s / 2; }
+function dp(pts, eps) {
+  if (pts.length < 3) return pts;
+  const keep = new Uint8Array(pts.length); keep[0] = keep[pts.length - 1] = 1;
+  const pilha = [[0, pts.length - 1]];
+  while (pilha.length) {
+    const [i, j] = pilha.pop(); const [ax, ay] = pts[i], [bx, by] = pts[j];
+    const dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy) || 1e-9;
+    let mx = -1, mi = -1;
+    for (let k = i + 1; k < j; k++) { const d = Math.abs((pts[k][0] - ax) * dy - (pts[k][1] - ay) * dx) / L; if (d > mx) { mx = d; mi = k; } }
+    if (mx > eps) { keep[mi] = 1; pilha.push([i, mi], [mi, j]); }
+  }
+  return pts.filter((_, k) => keep[k]);
+}
+function simplificarLoop(loop, eps) {
+  let far = 0, fd = -1;
+  for (let i = 1; i < loop.length; i++) { const d = Math.hypot(loop[i][0] - loop[0][0], loop[i][1] - loop[0][1]); if (d > fd) { fd = d; far = i; } }
+  const a = dp(loop.slice(0, far + 1), eps), b = dp(loop.slice(far).concat([loop[0]]), eps);
+  const r = a.concat(b.slice(1, -1));
+  return r.length >= 3 ? r : loop;
+}
+let tRelevo = null;
+function atualizarRelevo() { clearTimeout(tRelevo); tRelevo = setTimeout(atualizarRelevoJa, 80); }
+function atualizarRelevoJa() {
+  if (!RV.cinza) return;
+  const T = +$('r-limiar').value, sv = +$('r-suave').value, mn = +$('r-manchas').value, inv = $('r-inverter').checked;
+  $('o-limiar').textContent = Math.round(T); $('o-suave').textContent = sv ? sv + ' px' : 'não'; $('o-manchas').textContent = mn + ' px²';
+  const c = borrar(RV.cinza, RV.W, RV.H, sv);
+  let loops = tracar(c, RV.W, RV.H, T, inv).filter((l) => Math.abs(areaLoop(l)) >= Math.max(mn, 2));
+  let eps = 0.5, simp, total;
+  for (let it = 0; it < 8; it++) { simp = loops.map((l) => simplificarLoop(l, eps)).filter((l) => l.length >= 3); total = simp.reduce((s, l) => s + l.length, 0); if (total <= 6000) break; eps *= 1.6; }
+  RV.loops = simp;
+  const cv = $('cv-relevo'), g = cv.getContext('2d');
+  g.clearRect(0, 0, RV.W, RV.H); g.globalAlpha = 0.35; g.drawImage(RV.fundo, 0, 0); g.globalAlpha = 1;
+  const path = new Path2D();
+  simp.forEach((l) => { path.moveTo(l[0][0], l[0][1]); for (let i = 1; i < l.length; i++) path.lineTo(l[i][0], l[i][1]); path.closePath(); });
+  g.fillStyle = 'rgba(242, 96, 29, 0.55)'; g.fill(path, 'evenodd');
+  g.strokeStyle = '#18202a'; g.lineWidth = Math.max(1, RV.W / 400); g.stroke(path);
+  $('r-info').textContent = simp.length ? simp.length + ' contornos · ' + total + ' pontos' : 'Nenhum contorno com este limiar. Mexa no limiar ou marque “claro em fundo escuro”.';
+  $('btn-relevo').disabled = !simp.length || S.ocupado;
+}
+function codigoRelevo() {
+  const loops = RV.loops;
+  let minx = Infinity, maxx = -Infinity, miny = Infinity, maxy = -Infinity;
+  loops.forEach((l) => l.forEach(([x, y]) => { if (x < minx) minx = x; if (x > maxx) maxx = x; if (y < miny) miny = y; if (y > maxy) maxy = y; }));
+  const W = maxx - minx, H = maxy - miny;
+  const pts = [], caminhos = [];
+  let topo = [0, H];
+  loops.forEach((l) => {
+    const idx = [];
+    l.forEach(([x, y]) => { const X = Math.round((x - minx) * 10) / 10, Y = Math.round((maxy - y) * 10) / 10; if (Y >= topo[1] - 1e-6) topo = [X, Y]; idx.push(pts.length); pts.push('[' + X + ',' + Y + ']'); });
+    caminhos.push('[' + idx.join(',') + ']');
+  });
+  const quebra = (arr) => { const out = []; for (let i = 0; i < arr.length; i += 12) out.push('  ' + arr.slice(i, i + 12).join(',')); return out.join(',\n'); };
+  const largura = 60;
+  return `// ${S.titulo.replace(/\n/g, ' ')}
+// Relevo gerado a partir de uma imagem pelo Modelador V3 SE (contornos em pontos, no fim).
+
+/* [Desenho] */
+// Largura do desenho (mm)
+largura = ${largura}; // [10:1:200]
+// Altura do desenho (mm)
+altura_relevo = 2; // [0.4:0.2:20]
+
+/* [Base] */
+// Forma da base
+forma_base = 1; // [0:Sem base, 1:Acompanha o contorno, 2:Retângulo]
+// Espessura da base (mm)
+espessura_base = 2; // [0.6:0.2:10]
+// Margem da base em volta do desenho (mm)
+margem_base = 3; // [0:0.5:20]
+
+/* [Chaveiro] */
+// Furo para argola de chaveiro (precisa de base)
+argola = false;
+// Diâmetro do furo da argola (mm)
+diametro_furo = 5; // [2:0.5:12]
+
+/* [Hidden] */
+$fa = 2; $fs = 0.4;
+aro = 2.5; // parede em volta do furo da argola (mm)
+largura_original = ${Math.round(W * 10) / 10}; // largura do desenho nas unidades dos pontos
+altura_original = ${Math.round(H * 10) / 10};
+topo = [${topo[0]}, ${topo[1]}]; // ponto mais alto do desenho
+escala = largura / largura_original;
+centro_argola = forma_base == 2
+  ? [largura / 2, altura_original * escala + margem_base + diametro_furo / 2 + aro - 1.5]
+  : [topo[0] * escala, topo[1] * escala + margem_base + diametro_furo / 2 + aro - 1.5];
+
+module desenho() { scale([escala, escala]) polygon(pontos, caminhos); }
+module base2d() {
+  if (forma_base == 1) offset(r = margem_base) desenho();
+  else translate([-margem_base, -margem_base]) square([largura + 2 * margem_base, altura_original * escala + 2 * margem_base]);
+}
+
+translate([-largura / 2, -altura_original * escala / 2, 0]) {
+  if (forma_base > 0)
+    linear_extrude(espessura_base) difference() {
+      union() { base2d(); if (argola) translate(centro_argola) circle(d = diametro_furo + 2 * aro); }
+      if (argola) translate(centro_argola) circle(d = diametro_furo);
+    }
+  translate([0, 0, forma_base > 0 ? espessura_base : 0]) linear_extrude(altura_relevo) desenho();
+}
+
+pontos = [
+${quebra(pts)}
+];
+caminhos = [
+${caminhos.map((c) => '  ' + c).join(',\n')}
+];
+`;
+}
+async function gerarRelevo() {
+  if (!RV.loops || !RV.loops.length) return;
+  S.projId = novoId(); S.criado = Date.now(); S.entendimento = null; S.ajustes = {}; S.editadoAMao = false; S.notas = '';
+  definirTitulo('Relevo ' + (RV.nome || 'da imagem'));
+  S.spec = 'Relevo (placa ou chaveiro) gerado a partir de uma imagem; os contornos estão em pontos no fim do código.';
+  $('notas').hidden = true; $('card-ent').hidden = true;
+  definirCodigo(codigoRelevo(), 'relevo');
+  actModelo.limpar();
+  $('card-modelo').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const r = await compilarEMostrar(S.codigo, { forcar: true });
+  if (r.ok) agendarSalvar(0);
+}
+
+/* ================= Baixar ================= */
+let downloads = null;
+const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(u8) { let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = CRC[(c ^ u8[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+async function zipar(arquivos) {
+  const partes = [], central = []; let off = 0;
+  const d = new Date(), dtime = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1), ddate = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  for (const f of arquivos) {
+    const data = f.data, nm = new TextEncoder().encode(f.nome);
+    let metodo = 0, comp = data;
+    if (typeof CompressionStream !== 'undefined') {
+      try { comp = new Uint8Array(await new Response(new Blob([data]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer()); metodo = 8; } catch (e) { comp = data; metodo = 0; }
+    }
+    const crc = crc32(data), lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, metodo, true); lh.setUint16(10, dtime, true); lh.setUint16(12, ddate, true);
+    lh.setUint32(14, crc, true); lh.setUint32(18, comp.length, true); lh.setUint32(22, data.length, true); lh.setUint16(26, nm.length, true); lh.setUint16(28, 0, true);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, metodo, true); ch.setUint16(12, dtime, true); ch.setUint16(14, ddate, true);
+    ch.setUint32(16, crc, true); ch.setUint32(20, comp.length, true); ch.setUint32(24, data.length, true); ch.setUint16(28, nm.length, true); ch.setUint32(42, off, true);
+    partes.push(lh.buffer, nm, comp); central.push(ch.buffer, nm);
+    off += 30 + nm.length + comp.length;
+  }
+  const tam = central.reduce((s, b) => s + b.byteLength, 0), fim = new DataView(new ArrayBuffer(22));
+  fim.setUint32(0, 0x06054b50, true); fim.setUint16(8, arquivos.length, true); fim.setUint16(10, arquivos.length, true); fim.setUint32(12, tam, true); fim.setUint32(16, off, true);
+  return new Blob([...partes, ...central, fim.buffer], { type: 'application/zip' });
+}
+async function baixar() {
+  const st = $('baixar-status');
+  if (!downloads) { st.textContent = 'Baixar não funciona nesta visualização. Abra o artefato no app do Claude ou em claude.ai.'; return; }
+  if (S.compiledCode !== S.codigo || !S.stl) {
+    st.textContent = 'Compilando a versão atual…';
+    const r = await compilarEMostrar(S.codigo, { forcar: true });
+    if (!r.ok) { st.textContent = 'O código atual não compila; corrija antes de baixar.'; return; }
+  }
+  const base = slug($('nome-arq').value || S.titulo);
+  st.textContent = 'Preparando ' + base + '.zip…';
+  try {
+    const blob = await zipar([{ nome: base + '.stl', data: new Uint8Array(S.stl) }, { nome: base + '.scad', data: new TextEncoder().encode(S.codigo) }]);
+    await downloads.save({ filename: base + '.zip', data: blob });
+    st.textContent = 'Salvo: ' + base + '.zip. No Fatiador, toque em Abrir modelo e escolha esse arquivo.';
+    agendarSalvar(0);
+  } catch (e) {
+    const c = e && e.code;
+    st.textContent = c === 'declined' ? 'Download cancelado.' : c === 'rate_limited' ? 'Já há um download aberto. Tente de novo em instantes.' : 'Não foi possível salvar aqui (' + (c || 'erro') + ').';
+  }
+}
+
+/* ================= Modelos guardados na conta (db) ================= */
+const conta = { db: null, uid: null, col: null, salvando: false, depois: false, ultimo: '', timer: null, docs: [] };
+async function iniciarConta() {
+  if (!(window.claude && window.claude.use)) return;
+  let db = null, user = null;
+  try { [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]); } catch (e) { return; }
+  if (!db || !user) return;
+  let uid = null; try { uid = await user.id(); } catch (e) { uid = null; }
+  if (!uid) return;
+  conta.db = db; conta.uid = uid;
+  try { conta.col = db.collection('data/users/' + uid + '/modelos/lista'); } catch (e) { conta.col = null; return; }
+  $('btn-guardados').hidden = false;
+  conta.col.orderBy('atualizado', 'desc').limit(60).onSnapshot((snap) => { conta.docs = snap.docs; mostrarGuardados(); }, () => { $('guardados-vazio').textContent = 'Não consegui ler os modelos guardados agora.'; });
+}
+function agendarSalvar(ms = 2500) { clearTimeout(conta.timer); conta.timer = setTimeout(salvar, ms); }
+async function salvar() {
+  if (!conta.col || S.origem === 'exemplo' || !S.codigo) return;
+  const doc = { titulo: S.titulo, origem: S.origem, pedido: S.pedido || '', spec: S.spec || '', entendimento: S.entendimento || null, codigo: S.codigo, ajustes: S.ajustes, notas: S.notas || '', criado: S.criado || Date.now() };
+  const chave = JSON.stringify(doc);
+  if (chave === conta.ultimo) return;
+  if (chave.length > 240000) { $('baixar-status').textContent = 'Este modelo é grande demais para guardar na conta; baixe o .zip para não perder.'; return; }
+  if (conta.salvando) { conta.depois = true; return; }
+  conta.salvando = true;
+  try { await conta.col.doc(S.projId).set(Object.assign({ atualizado: Date.now() }, doc)); conta.ultimo = chave; }
+  catch (e) { if (e && e.code === 'quota_exceeded') $('baixar-status').textContent = 'A conta encheu: apague modelos antigos em Guardados.'; }
+  finally { conta.salvando = false; if (conta.depois) { conta.depois = false; salvar(); } }
+}
+function mostrarGuardados() {
+  const ul = $('lista-guardados'); ul.innerHTML = '';
+  $('guardados-vazio').hidden = conta.docs.length > 0;
+  $('btn-guardados').textContent = 'Guardados (' + conta.docs.length + ')';
+  conta.docs.forEach((d) => {
+    const x = d.data() || {}, li = el('li'), info = el('div');
+    const quando = x.atualizado ? new Date(x.atualizado).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+    info.append(el('b', null, String(x.titulo || 'Modelo')), el('span', null, quando + ' · ' + (ORIGEM_TXT[x.origem] || '')));
+    const abrir = el('button', 'btn', 'Abrir'), apagar = el('button', 'btn ghost', 'Apagar');
+    abrir.addEventListener('click', () => abrirGuardado(d.id, x));
+    apagar.addEventListener('click', async () => {
+      if (!apagar.classList.contains('confirma')) { apagar.classList.add('confirma'); apagar.textContent = 'Confirmar'; setTimeout(() => { apagar.classList.remove('confirma'); apagar.textContent = 'Apagar'; }, 4000); return; }
+      apagar.disabled = true;
+      try { await conta.col.doc(d.id).delete(); } catch (e) { apagar.disabled = false; apagar.textContent = 'Falhou'; }
+    });
+    li.append(info, abrir, apagar); ul.append(li);
+  });
+}
+async function abrirGuardado(id, x) {
+  if (S.ocupado) return;
+  S.projId = id; S.criado = x.criado || Date.now(); S.pedido = x.pedido || ''; S.spec = x.spec || ''; S.entendimento = x.entendimento || null;
+  S.ajustes = x.ajustes || {}; S.notas = x.notas || ''; S.editadoAMao = false;
+  conta.ultimo = '';
+  $('pedido').value = S.pedido;
+  definirTitulo(x.titulo || 'Modelo');
+  definirCodigo(String(x.codigo || ''), x.origem || 'manual');
+  $('notas').textContent = S.notas; $('notas').hidden = !S.notas;
+  $('card-ent').hidden = true; $('card-guardados').hidden = true;
+  actModelo.limpar();
+  $('card-modelo').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  await compilarEMostrar(S.codigo, { forcar: true });
+}
+
+/* ================= Ligações da interface ================= */
+function trocarAba(relevo) {
+  $('tab-ia').setAttribute('aria-selected', String(!relevo)); $('tab-relevo').setAttribute('aria-selected', String(relevo));
+  $('pane-ia').hidden = relevo; $('pane-relevo').hidden = !relevo;
+}
+$('tab-ia').addEventListener('click', () => trocarAba(false));
+$('tab-relevo').addEventListener('click', () => trocarAba(true));
+$('in-fotos').addEventListener('change', (e) => { adicionarFotos(e.target.files); e.target.value = ''; });
+$('in-relevo').addEventListener('change', (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) abrirRelevo(f).catch((err) => { $('r-info').textContent = 'Não consegui abrir essa imagem (' + err.message + ').'; $('relevo-ctl').hidden = false; }); });
+['r-limiar', 'r-suave', 'r-manchas', 'r-inverter'].forEach((id) => $(id).addEventListener('input', atualizarRelevo));
+$('btn-relevo').addEventListener('click', gerarRelevo);
+$('btn-entender').addEventListener('click', entender);
+$('btn-direto').addEventListener('click', () => gerar(true));
+$('btn-gerar').addEventListener('click', () => gerar(false));
+$('btn-mudar').addEventListener('click', mudar);
+$('btn-conferir').addEventListener('click', conferirManual);
+$('btn-compilar').addEventListener('click', async () => {
+  const code = $('codigo').value;
+  if (code !== S.codigo) { S.editadoAMao = true; if (S.origem === 'exemplo') S.origem = 'manual'; }
+  definirCodigo(code, S.origem);
+  const r = await compilarEMostrar(code, { forcar: true, salvar: true });
+  if (r.ok) $('erro-comp').hidden = true;
+});
+$('btn-baixar').addEventListener('click', baixar);
+$('titulo').addEventListener('change', () => { definirTitulo($('titulo').value); agendarSalvar(); });
+$('btn-guardados').addEventListener('click', () => { const c = $('card-guardados'); c.hidden = !c.hidden; if (!c.hidden) c.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+$('btn-balanco').addEventListener('click', () => { V.overOn = !V.overOn; $('btn-balanco').setAttribute('aria-pressed', String(V.overOn)); recolorir(); });
+$('btn-centro').addEventListener('click', enquadrar);
+$('pedido').value = local.get('modelador.pedido') || '';
+$('pedido').addEventListener('input', () => local.set('modelador.pedido', $('pedido').value));
+const tierSalvo = local.get('modelador.tier'); if (tierSalvo) $('tier').value = tierSalvo;
+$('tier').addEventListener('change', () => local.set('modelador.tier', $('tier').value));
+
+/* ================= Início ================= */
+definirTitulo(S.titulo);
+definirCodigo(EXEMPLO, 'exemplo');
+atualizarBotoes();
+init3D();
+iniciarMotor();
+compilarEMostrar(EXEMPLO, { forcar: true });
+iniciarIA();
+iniciarConta();
+(async () => { if (window.claude && window.claude.use) { try { downloads = await window.claude.use('downloads'); } catch (e) { downloads = null; } } })();
+</script>
