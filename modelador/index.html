@@ -200,18 +200,162 @@ details > *:not(summary) { margin-top: 10px; }
 .lista li span { font-size: 12px; color: var(--muted); }
 .lista button { padding: 6px 10px; font-size: 13px; }
 .lista button.confirma { border-color: var(--bad); color: var(--bad); }
+
+/* ================= Tela de entrada ================= */
+.brand { background: none; border: 0; padding: 0; text-align: left; }
+.inicio { max-width: 980px; margin: 0 auto; display: grid; gap: 22px;
+  padding-block: 28px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.inicio h1 { margin: 0; font-size: clamp(22px, 3.4vw, 30px); letter-spacing: -0.02em; text-wrap: balance; }
+.inicio > p { margin: -12px 0 0; color: var(--muted); }
+.modos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 14px; }
+.modo { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; align-items: start; text-align: left; padding: 22px 20px; border-radius: 14px;
+  border: 1px solid var(--line); background: var(--panel); transition: border-color .15s, transform .15s; }
+.modo:hover { border-color: var(--accent); }
+.modo:active { transform: scale(.99); }
+.modo svg { grid-row: span 3; width: 46px; height: 46px; color: var(--accent); }
+.modo strong { font-size: 19px; letter-spacing: -0.01em; }
+.modo span { color: var(--muted); font-size: 14px; }
+.modo code { font: 500 12px/1.4 var(--font-mono); color: var(--muted); }
+.recentes { display: grid; gap: 8px; }
+.recentes h2 { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+
+/* ================= Modo Ideias ================= */
+.ideias { display: grid; gap: 16px; padding-block: 14px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.etapas { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; max-width: 1100px; width: 100%; margin: 0 auto; }
+.etapas::-webkit-scrollbar { display: none; }
+.etapas button { flex: 1 0 auto; display: flex; align-items: center; gap: 8px; border: 0; background: none; padding: 8px 10px 10px; border-bottom: 2px solid var(--line); color: var(--muted); font-weight: 600; font-size: 14px; white-space: nowrap; }
+.etapas button .n { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 600 12px/1 var(--font-mono); border: 1.5px solid currentColor; flex: none; }
+.etapas button.feita { color: var(--ink); }
+.etapas button.feita .n { background: var(--ink); border-color: var(--ink); color: var(--panel); }
+.etapas button[aria-current="step"] { color: var(--accent); border-bottom-color: var(--accent); }
+.etapas button[aria-current="step"] .n { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.etapas button:disabled { opacity: .45; cursor: default; }
+.etapa { display: grid; gap: 14px; max-width: 1100px; width: 100%; margin: 0 auto; min-width: 0; }
+.coluna { max-width: 760px; width: 100%; margin: 0 auto; display: grid; gap: 14px; }
+.lead { margin: 0; font-size: 15px; }
+.restricoes { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.restricoes li { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; font-size: 14px; padding: 8px 10px; border-radius: 8px; background: var(--warn-bg); }
+.restricoes li b { font: 600 11px/1 var(--font-mono); letter-spacing: .04em; text-transform: uppercase; color: var(--warn); padding-top: 3px; min-width: 64px; }
+.perguntas { display: grid; gap: 14px; }
+.perg { display: grid; gap: 6px; }
+.perg > label, .perg > .lbl-p { font-size: 14px; font-weight: 600; }
+.perg .porque { font-size: 12px; color: var(--muted); margin: -2px 0 0; }
+.opcoes { display: flex; flex-wrap: wrap; gap: 6px; }
+.opcoes button { border: 1px solid var(--line); background: var(--soft); border-radius: 999px; padding: 6px 12px; font-size: 13px; }
+.opcoes button[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--panel)); color: var(--ink); font-weight: 600; }
+.respondidas { font-size: 13px; color: var(--muted); }
+.respondidas dl { margin: 8px 0 0; display: grid; gap: 6px; }
+.respondidas dt { font-weight: 600; color: var(--ink); }
+.respondidas dd { margin: 0; }
+.estilos { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 8px; }
+.estilos button { display: grid; gap: 6px; justify-items: start; text-align: left; border: 1px solid var(--line); background: var(--soft); border-radius: 10px; padding: 10px 12px; }
+.estilos button svg { width: 38px; height: 28px; color: var(--muted); }
+.estilos button b { font-size: 14px; }
+.estilos button span { font-size: 12px; color: var(--muted); }
+.estilos button[aria-checked="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--panel)); }
+.estilos button[aria-checked="true"] svg { color: var(--accent); }
+
+.evitar { margin: 0; font-size: 13px; padding: 10px 12px; border-radius: 8px; background: var(--soft); }
+.evitar b { display: block; margin-bottom: 4px; }
+.evitar ul { margin: 0; padding-left: 18px; }
+.grade-ideias { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 12px; }
+.ideia { display: grid; grid-template-rows: auto 1fr auto; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; min-width: 0; transition: border-color .15s, box-shadow .15s; }
+.ideia.escolhida { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.ideia-esboco { aspect-ratio: 3 / 2; background: #ffffff; border-bottom: 1px solid var(--line); display: grid; place-items: center; position: relative; }
+.ideia-esboco img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.ideia-esboco .ph { color: #5d6875; font-size: 13px; display: grid; gap: 8px; justify-items: center; }
+.ideia-esboco .ph .prog { width: 120px; }
+.ideia-corpo { padding: 12px 14px; display: grid; gap: 8px; align-content: start; }
+.ideia-corpo h3 { margin: 0; font-size: 16px; line-height: 1.25; text-wrap: balance; }
+.ideia-corpo .problema { margin: 0; font-size: 13px; color: var(--accent); font-weight: 600; }
+.ideia-corpo .desc { margin: 0; font-size: 14px; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px; }
+.meta span { font: 500 12px/1 var(--font-mono); color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 5px 8px; }
+.riscos { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; font-size: 12px; color: var(--warn); }
+.riscos li::before { content: "! "; font-weight: 700; }
+.ideia-acoes { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; padding: 10px 14px; border-top: 1px solid var(--line); background: var(--soft); }
+.quero { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; margin-right: auto; cursor: pointer; }
+.quero input { width: 20px; height: 20px; accent-color: var(--accent); margin: 0; }
+.ideia-refazer { grid-column: 1 / -1; display: grid; gap: 8px; padding: 0 14px 12px; background: var(--soft); }
+.barra-acao { position: sticky; bottom: max(10px, env(safe-area-inset-bottom, 0px)); z-index: 4; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: space-between;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; box-shadow: 0 6px 24px rgba(0,0,0,.12); }
+.barra-acao b { font-size: 15px; }
+
+.bancada { max-width: none; }
+@media (min-width: 900px) {
+  .bancada { grid-template-columns: minmax(0, 1fr) minmax(360px, 460px); align-items: start; }
+  .bancada .view { position: sticky; top: calc(var(--bar-h) + env(safe-area-inset-top, 0px) + 16px); }
+  .bancada .stage { height: calc(100vh - var(--bar-h) - 250px); min-height: 360px; }
+}
+.slot-view, .slot-col { display: grid; gap: 14px; min-width: 0; align-content: start; }
+.pecas { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.peca { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px 6px 6px; cursor: pointer; background: var(--panel); }
+.peca.aberta { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.peca .mini { width: 64px; height: 64px; border-radius: 7px; background: #f6f7f9; display: grid; place-items: center; overflow: hidden; grid-row: span 2; }
+.peca .mini img { width: 100%; height: 100%; object-fit: contain; }
+.peca .mini .dot { margin: 0; }
+.peca b { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+.peca .linha2 { font-size: 12px; color: var(--muted); grid-column: 2; }
+.peca .estado { font: 600 11px/1 var(--font-mono); letter-spacing: .03em; text-transform: uppercase; padding: 4px 7px; border-radius: 999px; background: var(--soft); color: var(--muted); white-space: nowrap; }
+.peca .estado.base { background: var(--soft); color: var(--ink); }
+.peca .estado.acabada { background: var(--ok-bg); color: var(--ok); }
+.peca .estado.erro { background: var(--bad-bg); color: var(--bad); }
+.peca .estado.run { background: var(--warn-bg); color: var(--warn); }
+.peca .kit { grid-column: 3; display: inline-flex; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); }
+.peca .kit input { width: 18px; height: 18px; accent-color: var(--accent); margin: 0; }
+.kit-tab { width: 100%; border-collapse: collapse; font-size: 13px; }
+.kit-tab th { text-align: left; font-weight: 600; color: var(--muted); font-size: 12px; padding: 0 6px 6px 0; }
+.kit-tab td { padding: 7px 6px 7px 0; border-top: 1px solid var(--line); vertical-align: top; }
+.kit-tab td.num, .kit-tab th.num { text-align: right; white-space: nowrap; }
+.kit-tab tfoot td { font-weight: 600; }
+.kit-tab button { padding: 4px 8px; font-size: 12px; }
+.cuidados { margin: 0; padding-left: 18px; font-size: 13px; display: grid; gap: 4px; }
+.modo-ideias #card-modelo h2 .n { display: none; }
+@media (max-width: 599px) {
+  #brand-sub { display: none; }
+  .bar .chips { order: 3; width: 100%; }
+  .etapas button { flex: 0 0 auto; }
+  .etapas button[aria-current="step"] { flex: 1 0 auto; }
+  .etapas button:not([aria-current="step"]) .rot { display: none; }
+  .modo { padding: 18px 16px; gap: 6px 12px; }
+  .modo svg { width: 36px; height: 36px; }
+}
 </style>
 
 <header class="bar">
-  <div class="brand"><strong>Modelador V3 SE</strong><span>pedido → OpenSCAD → STL</span></div>
+  <button class="brand" id="brand" title="Voltar ao início"><strong>Modelador V3 SE</strong><span id="brand-sub">ideias e peças para imprimir</span></button>
   <div class="chips">
     <span class="chip num" id="chip-motor">OpenSCAD: carregando</span>
     <span class="chip num" id="chip-ia">Claude: verificando</span>
   </div>
   <button class="btn ghost" id="btn-guardados" hidden>Guardados</button>
+  <button class="btn ghost" id="btn-inicio" hidden>Início</button>
 </header>
 
-<main class="layout">
+<main class="inicio" id="tela-inicio">
+  <h1>O que vamos fazer?</h1>
+  <p>Dois caminhos separados. Os dois terminam num STL para abrir no Fatiador.</p>
+  <div class="modos">
+    <button class="modo" id="ir-ideias">
+      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M24 6a13 13 0 0 0-7.6 23.6c1.6 1.2 2.6 3 2.6 5V36h10v-1.4c0-2 1-3.8 2.6-5A13 13 0 0 0 24 6Z"/><path d="M19 41h10"/><path d="M24 14v8M20 18h8"/></svg>
+      <strong>Ideias para uma situação</strong>
+      <span>Conte um problema ou uma oportunidade. A IA tira dúvidas, sugere peças com esboço, você escolhe e ela modela o conjunto com o mesmo estilo.</span>
+      <code>situação → dúvidas → ideias → modelos → acabamento</code>
+    </button>
+    <button class="modo" id="ir-modelar">
+      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M24 5 41 14.5v19L24 43 7 33.5v-19L24 5Z"/><path d="M7 14.5 24 24l17-9.5M24 24v19"/></svg>
+      <strong>Modelar uma peça</strong>
+      <span>Você já sabe o que quer. Descreva com medidas, mande um esboço ou uma foto, cole código OpenSCAD ou transforme uma imagem em relevo.</span>
+      <code>pedido → esboço → OpenSCAD → STL</code>
+    </button>
+  </div>
+  <section class="recentes" id="recentes" hidden>
+    <h2>Projetos de ideias</h2>
+    <ul class="lista" id="lista-projetos"></ul>
+  </section>
+</main>
+
+<main class="layout" id="tela-modelador" hidden>
   <section class="view vazio" id="view" aria-label="Prévia do modelo">
     <div class="stage" id="stage">
       <canvas id="cv"></canvas>
@@ -296,7 +440,7 @@ details > *:not(summary) { margin-top: 10px; }
     </article>
 
     <article class="card" id="card-modelo" hidden>
-      <h2><span class="n">3</span>Modelo <span class="aside" id="modelo-origem"></span></h2>
+      <h2><span class="n">3</span><span id="modelo-h">Modelo</span> <span class="aside" id="modelo-origem"></span></h2>
       <input type="text" id="titulo" class="titulo-in" aria-label="Nome do modelo" value="">
       <div class="atividade" id="act-modelo" hidden></div>
       <p class="notas" id="notas" hidden></p>
@@ -329,6 +473,133 @@ details > *:not(summary) { margin-top: 10px; }
       <p class="hint">Aqui o app só salva .zip. Dentro vão o <b>.stl</b> e o <b>.scad</b> (o código, para editar depois). No Fatiador, abra o .zip direto; ou toque nele no app Arquivos para extrair o .stl.</p>
       <p class="status" id="baixar-status"></p>
     </article>
+  </section>
+</main>
+
+<main class="ideias" id="tela-ideias" hidden>
+  <nav class="etapas" id="etapas" aria-label="Etapas do projeto">
+    <button data-etapa="1"><span class="n">1</span><span class="rot">Situação</span></button>
+    <button data-etapa="2"><span class="n">2</span><span class="rot">Dúvidas</span></button>
+    <button data-etapa="3"><span class="n">3</span><span class="rot">Ideias</span></button>
+    <button data-etapa="4"><span class="n">4</span><span class="rot">Modelos</span></button>
+    <button data-etapa="5"><span class="n">5</span><span class="rot">Acabamento</span></button>
+  </nav>
+
+  <section class="etapa" id="et-1">
+    <div class="coluna">
+      <article class="card">
+        <h2>Qual é a situação?</h2>
+        <p class="hint">Um problema para resolver ou uma oportunidade. Quanto mais concreto (onde, quem, com o quê), melhores as ideias.</p>
+        <textarea id="situacao" rows="6" placeholder="Ex.: vou para a praia semana que vem com a família e quero imprimir coisinhas úteis para a viagem. Vamos de carro, levamos guarda-sol e duas cadeiras de alumínio."></textarea>
+        <div class="fotos" id="i-fotos"></div>
+        <div class="row">
+          <label class="btn ghost file" for="in-i-fotos">Adicionar fotos</label>
+          <input type="file" id="in-i-fotos" accept="image/*" multiple hidden>
+          <span class="hint" id="i-fotos-hint">Do lugar ou dos objetos onde as peças vão encaixar, de preferência com uma régua junto.</span>
+        </div>
+        <div class="row">
+          <label class="lbl" for="i-tier">IA</label>
+          <select id="i-tier">
+            <option value="complex">Mais capaz (mais lenta)</option>
+            <option value="default">Equilibrada</option>
+          </select>
+        </div>
+        <div class="actions">
+          <button class="btn primary" id="btn-analisar">Analisar a situação</button>
+          <button class="btn ghost" id="btn-novo-proj" hidden>Começar outro projeto</button>
+        </div>
+        <p class="note warn" id="i-ia-off" hidden></p>
+        <div class="atividade" id="act-i1" hidden></div>
+      </article>
+    </div>
+  </section>
+
+  <section class="etapa" id="et-2" hidden>
+    <div class="coluna">
+      <article class="card">
+        <h2 id="i-titulo">Situação</h2>
+        <p class="lead" id="i-resumo"></p>
+        <span class="lbl" id="i-restr-lbl">Cuidados com o PLA nesta situação</span>
+        <ul class="restricoes" id="i-restricoes"></ul>
+      </article>
+      <article class="card">
+        <h2>Dúvidas <span class="aside" id="i-rodada"></span></h2>
+        <p class="hint">Responda o que souber. Medidas em mm, com paquímetro ou régua. Se deixar em branco, vale a sugestão em cinza.</p>
+        <div class="perguntas" id="i-perguntas"></div>
+        <p class="hint" id="i-sem-perguntas" hidden>A IA não tem mais dúvidas. Se quiser, conte mais no campo abaixo.</p>
+        <details class="respondidas" id="i-respondidas" hidden><summary>Respondidas antes</summary><dl id="i-resp-lista"></dl></details>
+        <label class="lbl" for="i-extra">Algo mais que a IA deveria saber?</label>
+        <textarea id="i-extra" rows="2" placeholder="Ex.: já temos porta-copos; o carro fica no sol o dia todo."></textarea>
+      </article>
+      <article class="card">
+        <h2>Estilo do conjunto</h2>
+        <p class="hint">Vale para todas as peças, para o kit ter cara de família. Entra só no acabamento, nas partes que não encaixam em nada.</p>
+        <div class="estilos" id="i-estilos" role="radiogroup" aria-label="Estilo do conjunto"></div>
+        <label class="lbl" for="i-gravar">Texto gravado nas peças (opcional)</label>
+        <input type="text" id="i-gravar" placeholder="Ex.: as iniciais da família" maxlength="24">
+        <div class="actions">
+          <button class="btn primary" id="btn-gerar-ideias">Gerar ideias</button>
+          <button class="btn ghost" id="btn-mais-perguntas">Mais uma rodada de perguntas</button>
+        </div>
+        <div class="atividade" id="act-i2" hidden></div>
+      </article>
+    </div>
+  </section>
+
+  <section class="etapa" id="et-3" hidden>
+    <div class="coluna">
+      <article class="card">
+        <h2>Ideias <span class="aside" id="i-n-ideias"></span></h2>
+        <p class="hint">Marque as que quer modelar. Para mudar alguma, use “Refazer esta”; para variações de uma boa, “Mais parecidas”. Os esboços chegam aos poucos.</p>
+        <div class="evitar" id="i-evitar" hidden></div>
+      </article>
+    </div>
+    <div class="grade-ideias" id="i-grade"></div>
+    <div class="coluna">
+      <article class="card">
+        <h2>Pedir outras ideias</h2>
+        <label class="lbl" for="i-iterar">O que você quer diferente? (opcional)</label>
+        <textarea id="i-iterar" rows="2" placeholder="Ex.: menos coisas para o carro, mais para a areia; nada que precise de parafuso."></textarea>
+        <div class="actions">
+          <button class="btn" id="btn-refazer-todas">Refazer as não marcadas</button>
+          <button class="btn ghost" id="btn-mais-ideia">Mais uma ideia</button>
+        </div>
+        <div class="atividade" id="act-i3" hidden></div>
+      </article>
+    </div>
+    <div class="barra-acao" id="barra-ideias">
+      <b id="i-escolhidas">Nenhuma ideia marcada</b>
+      <button class="btn primary" id="btn-modelos-base" disabled>Criar os modelos base</button>
+    </div>
+  </section>
+
+  <section class="etapa bancada" id="et-4" hidden>
+    <div class="slot-view" id="slot-view"></div>
+    <div class="slot-col">
+      <article class="card" id="card-pecas">
+        <h2>Peças <span class="aside" id="pecas-resumo"></span></h2>
+        <p class="hint" id="pecas-hint">Toque numa peça para ver em 3D, ajustar as medidas ou pedir mudança. Desmarque “kit” nas que não vai imprimir.</p>
+        <ul class="pecas" id="lista-pecas"></ul>
+        <div class="atividade" id="act-i4" hidden></div>
+      </article>
+      <div class="slot-col" id="slot-modelo"></div>
+      <article class="card" id="card-acab">
+        <h2>Acabamento <span class="aside" id="acab-resumo"></span></h2>
+        <p class="hint">Uma rodada final só de estética, no estilo do conjunto: cantos, bordas, faces à mostra e o texto gravado. As medidas do grupo “Medidas funcionais” ficam travadas, e a página confere que não mudaram. Depois a IA confere as vistas de cada peça.</p>
+        <p class="note" id="acab-estilo"></p>
+        <div class="actions"><button class="btn primary" id="btn-acabamento" disabled>Fazer o acabamento</button></div>
+      </article>
+      <article class="card" id="card-kit">
+        <h2>Kit <span class="aside" id="kit-resumo"></span></h2>
+        <table class="kit-tab" id="kit-tab"></table>
+        <p class="hint">Tempo e filamento são estimativas (±20%) a partir do volume e da área de cada peça com o seu perfil. O Fatiador dá o valor certo.</p>
+        <span class="lbl">Cuidados de uso</span>
+        <ul class="cuidados" id="kit-cuidados"></ul>
+        <div class="actions"><button class="btn primary" id="btn-baixar-kit" disabled>Baixar o kit (.zip)</button></div>
+        <p class="hint">O .zip leva o .stl e o .scad de cada peça e um LEIA-ME com os cuidados. O Fatiador abre a primeira peça do .zip; para as outras, extraia o .zip no app Arquivos ou use “Baixar” em cada linha.</p>
+        <p class="status" id="kit-status"></p>
+      </article>
+    </div>
   </section>
 </main>
 
@@ -400,13 +671,16 @@ const local = {
 };
 
 /* ================= Estado ================= */
-const S = {
+// S é a peça que está na bancada (prévia 3D + cartão Modelo). No modo Modelar é SM; no modo
+// Ideias é a peça aberta do projeto, que tem os mesmos campos. OC diz se a IA está trabalhando.
+const SM = {
   projId: novoId(), origem: null, titulo: '', fase: null,
   pedido: '', fotos: [], entendimento: null, esboco: null, esbocoPNG: null, spec: '', codigo: '', notas: '',
   ajustes: {}, editadoAMao: false,
   stl: null, pos: null, analise: null, compiledCode: null,
   ocupado: false, criado: Date.now(),
 };
+let S = SM, OC = false, modo = 'inicio';
 const ORIGEM_TXT = { ia: 'gerado pela IA', relevo: 'imagem em relevo', manual: 'código colado ou editado' };
 
 /* ================= Motor OpenSCAD =================
@@ -499,8 +773,9 @@ function atualizarPalco(fase) {
   let t, sub;
   if (motor.falhou) { t = 'O OpenSCAD não abriu'; sub = motor.erro + '. Verifique a internet e recarregue a página.'; }
   else if (S.pos && !V.ok) { t = 'Sem prévia 3D'; sub = V.falha || 'Este aparelho não abriu a prévia 3D.'; }
-  else if (S.fase === 'gerando') { t = 'A IA está desenhando a peça'; sub = 'Acompanhe o andamento na etapa Modelo. Pode levar alguns minutos.'; }
-  else if (S.fase === 'erro') { t = 'O código não compilou'; sub = 'Veja o erro na etapa Modelo.'; }
+  else if (S.fase === 'gerando') { t = 'A IA está desenhando a peça'; sub = modo === 'ideias' ? 'Acompanhe o andamento em Peça aberta. Cada peça leva de um a alguns minutos.' : 'Acompanhe o andamento na etapa Modelo. Pode levar alguns minutos.'; }
+  else if (S.fase === 'erro') { t = 'O código não compilou'; sub = modo === 'ideias' ? 'Veja o erro em Peça aberta.' : 'Veja o erro na etapa Modelo.'; }
+  else if (modo === 'ideias') { t = 'Nenhuma peça aberta'; sub = 'Toque numa peça da lista para ver em 3D.'; }
   else { t = 'Nenhum modelo ainda'; sub = 'Descreva a peça na etapa 1 e toque em Entender o pedido.'; }
   if (!motor.ready && !motor.falhou) sub += ' Carregando o OpenSCAD (14 MB, só na primeira vez)…';
   $('stage-txt').textContent = t; $('stage-sub').textContent = sub;
@@ -763,10 +1038,11 @@ function arrastar(dx, dy) {
   posCamera();
 }
 
-/* Quatro vistas (frente, direita, topo, perspectiva) numa imagem para a IA conferir. */
+/* Quatro vistas (frente, direita, topo, perspectiva) numa imagem para a IA conferir.
+   Com so = true, só a perspectiva, pequena: a miniatura da lista de peças. */
 let rVistas = null;
-function vistasCanvas() {
-  const a = S.analise, pos = S.pos;
+function vistasCanvas(pecaPos, pecaA, so) {
+  const a = pecaA || S.analise, pos = pecaPos || S.pos;
   if (!V.ok || !a || !pos) return null;
   const T = 512;
   if (!rVistas) { rVistas = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); rVistas.setPixelRatio(1); rVistas.setSize(T, T); }
@@ -785,15 +1061,16 @@ function vistasCanvas() {
   if (a.n < 250000) { bordas = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 25), new THREE.LineBasicMaterial({ color: 0x1d2630 })); sc.add(bordas); }
   const c = [(a.min[0] + a.max[0]) / 2, (a.min[1] + a.max[1]) / 2, (a.min[2] + a.max[2]) / 2];
   const maior = Math.max(a.size[0], a.size[1], a.size[2], 1), s = T * 0.78 / maior;
-  const vs = [
+  let vs = [
     { nome: 'FRENTE', sub: 'olhando de −Y', dir: [0, -1, 0], up: [0, 0, 1], h: 0, v: 2, hn: 'X', vn: 'Z' },
     { nome: 'DIREITA', sub: 'olhando de +X', dir: [1, 0, 0], up: [0, 0, 1], h: 1, v: 2, hn: 'Y', vn: 'Z' },
     { nome: 'TOPO', sub: 'de cima', dir: [0, 0, 1], up: [0, 1, 0], h: 0, v: 1, hn: 'X', vn: 'Y' },
     { nome: 'PERSPECTIVA', sub: 'de frente, à direita e de cima', dir: [0.75, -1, 0.7], up: [0, 0, 1] },
   ];
-  const out = document.createElement('canvas'); out.width = out.height = 2 * T;
+  if (so) vs = [Object.assign({}, vs[3], { nome: '', sub: '' })];
+  const out = document.createElement('canvas'); out.width = out.height = so ? T : 2 * T;
   const g = out.getContext('2d');
-  g.fillStyle = '#ffffff'; g.fillRect(0, 0, 2 * T, 2 * T);
+  g.fillStyle = '#ffffff'; g.fillRect(0, 0, out.width, out.height);
   vs.forEach((vw, i) => {
     const x0 = (i % 2) * T, y0 = Math.floor(i / 2) * T;
     const d = new THREE.Vector3(...vw.dir).normalize();
@@ -831,7 +1108,7 @@ function vistasCanvas() {
     }
     g.restore();
   });
-  g.strokeStyle = '#8e99a6'; g.lineWidth = 2; g.beginPath(); g.moveTo(T, 0); g.lineTo(T, 2 * T); g.moveTo(0, T); g.lineTo(2 * T, T); g.stroke();
+  if (!so) { g.strokeStyle = '#8e99a6'; g.lineWidth = 2; g.beginPath(); g.moveTo(T, 0); g.lineTo(T, 2 * T); g.moveTo(0, T); g.lineTo(2 * T, T); g.stroke(); }
   geo.dispose(); malha.material.dispose(); if (bordas) { bordas.geometry.dispose(); bordas.material.dispose(); }
   return out;
 }
@@ -937,7 +1214,7 @@ function mostrarParams() {
     }
     fs.append(row);
   });
-  travarParams(S.ocupado);
+  travarParams(OC);
 }
 function travarParams(sim) { document.querySelectorAll('#params fieldset').forEach((f) => { f.disabled = sim; }); }
 let tParam = null;
@@ -966,8 +1243,9 @@ async function compilarEMostrar(code, opt = {}) {
   const pos = lerSTL(r.stl), a = analisar(pos);
   S.stl = r.stl; S.compiledCode = code;
   mostrarModelo(pos, a);
-  $('card-baixar').hidden = false;
+  if (S === SM) $('card-baixar').hidden = false;
   $('tag-origem').hidden = !S.origem;
+  if (S.tipo === 'peca') pecaCompilou(S);
   if (opt.salvar) agendarSalvar();
   return { ok: true, pos, a, stl: r.stl, log: r.log, code };
 }
@@ -988,16 +1266,19 @@ function definirTitulo(t) {
   $('titulo').value = S.titulo;
   $('nome-arq').value = S.titulo ? slug(S.titulo) : '';
 }
-// Tira o modelo da tela (prévia, parâmetros, código). O que já foi gerado continua em Guardados.
-function limparModelo() {
-  versaoComp++; clearTimeout(tParam);
-  S.pos = null; S.analise = null; S.stl = null; S.compiledCode = null; S.notas = ''; S.ajustes = {}; S.editadoAMao = false; S.origem = null;
+function limparPalco() {
   if (V.ok) {
     if (V.mesh) { V.scene.remove(V.mesh); V.mesh.geometry.dispose(); V.mesh.material.dispose(); V.mesh = null; }
     if (V.bed) { V.scene.remove(V.bed); V.bed.children.forEach((c) => { c.geometry.dispose(); c.material.dispose(); }); V.bed = null; }
     V.quadro = null; pedirQuadro();
   }
   $('dim').textContent = '—'; $('checks').innerHTML = '';
+}
+// Tira o modelo da tela (prévia, parâmetros, código). O que já foi gerado continua em Guardados.
+function limparModelo() {
+  versaoComp++; clearTimeout(tParam);
+  S.pos = null; S.analise = null; S.stl = null; S.compiledCode = null; S.notas = ''; S.ajustes = {}; S.editadoAMao = false; S.origem = null;
+  limparPalco();
   $('notas').hidden = true; $('erro-comp').hidden = true; $('det-vistas').hidden = true; $('log').textContent = ''; $('baixar-status').textContent = '';
   definirCodigo('', null);
   $('card-modelo').hidden = true; $('card-baixar').hidden = true;
@@ -1013,7 +1294,7 @@ function novoProjeto() {
   definirTitulo('');
 }
 function colarCodigo() {
-  if (S.ocupado) return;
+  if (OC) return;
   novoProjeto();
   S.origem = 'manual'; S.spec = 'Modelo escrito ou colado pelo usuário.';
   definirTitulo('Modelo');
@@ -1032,9 +1313,14 @@ async function iniciarIA() {
   if (!sample) { iaDesligada('A IA não está disponível nesta visualização. Abra o artefato no app do Claude ou em claude.ai. A imagem em relevo e o editor de código funcionam mesmo assim.'); return; }
   try { caps = await sample.limits(); } catch (e) { caps = null; }
   const tiers = caps && caps.modelTiers;
-  if (tiers) Array.from($('tier').options).forEach((o) => { if (!tiers.includes(o.value)) o.disabled = true; });
-  if ($('tier').selectedOptions[0] && $('tier').selectedOptions[0].disabled) $('tier').value = 'default';
-  if (!(caps && caps.images)) $('fotos-hint').textContent = 'Esta visualização não envia imagens ao Claude; descreva a peça em texto.';
+  ['tier', 'i-tier'].forEach((id) => {
+    if (tiers) Array.from($(id).options).forEach((o) => { if (!tiers.includes(o.value)) o.disabled = true; });
+    if ($(id).selectedOptions[0] && $(id).selectedOptions[0].disabled) $(id).value = 'default';
+  });
+  if (!(caps && caps.images)) {
+    $('fotos-hint').textContent = 'Esta visualização não envia imagens ao Claude; descreva a peça em texto.';
+    $('i-fotos-hint').textContent = 'Esta visualização não envia imagens ao Claude; descreva em texto, com as medidas.';
+  }
   $('chip-ia').textContent = 'Claude: disponível';
   $('chip-ia').className = 'chip num on';
   atualizarBotoes();
@@ -1044,6 +1330,7 @@ function iaDesligada(msg) {
   $('chip-ia').textContent = 'Claude: indisponível';
   $('chip-ia').className = 'chip num off';
   $('ia-off').textContent = msg; $('ia-off').hidden = false;
+  $('i-ia-off').textContent = msg.replace(/ A imagem em relevo e o editor de código (funcionam mesmo assim|continuam funcionando)\./, ' O modo Ideias precisa do Claude.'); $('i-ia-off').hidden = false;
   atualizarBotoes();
 }
 function maxImagens() { return caps && caps.images ? caps.images.maxCount || 1 : 0; }
@@ -1065,9 +1352,9 @@ function erroIA(e) {
   return 'Falha na conexão com o Claude. Tente de novo.';
 }
 let iaCtl = null;
-function perguntar(prompt, { imagens = [], ferramentas = null, json = false, act = null } = {}) {
-  const opts = { signal: iaCtl.signal };
-  const tier = $('tier').value, tiers = caps && caps.modelTiers;
+function perguntar(prompt, { imagens = [], ferramentas = null, json = false, act = null, signal = null } = {}) {
+  const opts = { signal: signal || iaCtl.signal };
+  const tier = $(modo === 'ideias' ? 'i-tier' : 'tier').value, tiers = caps && caps.modelTiers;
   if (!tiers || tiers.includes(tier)) opts.modelTier = tier;
   const imgs = imagens.filter(Boolean).slice(0, maxImagens());
   if (imgs.length) opts.images = imgs;
@@ -1114,13 +1401,13 @@ function Atividade(box) {
 const actPedido = Atividade($('act-pedido')), actModelo = Atividade($('act-modelo'));
 
 function ocupar(sim) {
-  S.ocupado = sim;
+  OC = sim; S.ocupado = sim;
   if (sim) iaCtl = new AbortController();
   atualizarBotoes();
   travarParams(sim);
 }
 function atualizarBotoes() {
-  const semIA = !sample, oc = S.ocupado;
+  const semIA = !sample, oc = OC;
   $('btn-entender').disabled = semIA || oc;
   $('btn-direto').disabled = semIA || oc;
   $('btn-gerar').disabled = semIA || oc;
@@ -1132,6 +1419,7 @@ function atualizarBotoes() {
   $('btn-relevo').disabled = oc || !(RV.loops && RV.loops.length);
   $('box-mudanca').hidden = semIA || !S.codigo;
   document.querySelectorAll('.atividade [data-parar]').forEach((c) => { c.hidden = !oc; });
+  atualizarBotoesIdeias();
 }
 
 /* ================= Textos para a IA ================= */
@@ -1164,9 +1452,9 @@ const CODIGO = `FORMATO DO CÓDIGO
 - Escreva você mesmo os módulos auxiliares: cantos arredondados com offset(r) em 2D ou hull() de cilindros e esferas; chanfros com hull() ou linear_extrude(scale=); furo em gota com hull() de um círculo e um quadrado girado 45°; rosca com linear_extrude(twist=) de um perfil deslocado ou com polyhedron(). fill() e text() estão disponíveis.
 - Uma peça só, a não ser que o pedido peça várias; nesse caso, espaçadas 5 mm na mesa.`;
 
-function verificar() {
+function verificar(max = 4) {
   return temFerramentas()
-    ? 'Antes da resposta final, compile o código com a ferramenta compilar_e_medir e confira se o resultado bate com a especificação: caixa delimitadora, peça apoiada em z = 0, uma parte só (salvo pedido), sem balanço acima de 45° que dava para evitar, superfície fechada. Se algo não bater, corrija e compile de novo (no máximo 4 compilações).\n\n'
+    ? 'Antes da resposta final, compile o código com a ferramenta compilar_e_medir e confira se o resultado bate com a especificação: caixa delimitadora, peça apoiada em z = 0, uma parte só (salvo pedido), sem balanço acima de 45° que dava para evitar, superfície fechada. Se algo não bater, corrija e compile de novo (no máximo ' + max + ' compilações).\n\n'
     : 'Revise o código com cuidado antes de responder: ele precisa compilar no OpenSCAD 2025.07 sem erros.\n\n';
 }
 function ajustesTexto() {
@@ -1192,7 +1480,7 @@ function promptEntender(pedido, descImgs, anterior, correcoes) {
 function imagensDoProjeto(vistas, nomeEsboco) {
   const itens = [];
   if (vistas) itens.push({ blob: vistas, nome: 'as quatro vistas do modelo compilado' });
-  if (S.esbocoPNG) itens.push({ blob: S.esbocoPNG, nome: nomeEsboco || 'o esboço que o usuário aprovou' });
+  if (S.esbocoPNG) itens.push({ blob: S.esbocoPNG, nome: nomeEsboco || S.nomeEsboco || 'o esboço que o usuário aprovou' });
   S.fotos.forEach((f) => itens.push({ blob: f.blob, nome: 'imagem que o usuário mandou com o pedido (esboço, foto ou desenho)' }));
   const usados = itens.slice(0, maxImagens());
   return { blobs: usados.map((x) => x.blob), texto: usados.length ? 'Imagens anexadas, na ordem: ' + usados.map((x, i) => (i + 1) + ') ' + x.nome).join('; ') + '.' : '' };
@@ -1626,7 +1914,7 @@ function atualizarRelevoJa() {
   g.fillStyle = 'rgba(242, 96, 29, 0.55)'; g.fill(path, 'evenodd');
   g.strokeStyle = '#18202a'; g.lineWidth = Math.max(1, RV.W / 400); g.stroke(path);
   $('r-info').textContent = simp.length ? simp.length + ' contornos · ' + total + ' pontos' : 'Nenhum contorno com este limiar. Mexa no limiar ou marque “claro em fundo escuro”.';
-  $('btn-relevo').disabled = !simp.length || S.ocupado;
+  $('btn-relevo').disabled = !simp.length || OC;
 }
 function codigoRelevo() {
   const loops = RV.loops;
@@ -1701,7 +1989,7 @@ ${caminhos.map((c) => '  ' + c).join(',\n')}
 }
 async function gerarRelevo() {
   if (!RV.loops || !RV.loops.length) return;
-  if (S.ocupado) return;
+  if (OC) return;
   novoProjeto();
   definirTitulo('Relevo ' + (RV.nome || 'da imagem'));
   S.spec = 'Relevo (placa ou chaveiro) gerado a partir de uma imagem; os contornos estão em pontos no fim do código.';
@@ -1769,12 +2057,18 @@ async function iniciarConta() {
   if (!uid) return;
   conta.db = db; conta.uid = uid;
   try { conta.col = db.collection('data/users/' + uid + '/modelos/lista'); } catch (e) { conta.col = null; return; }
-  $('btn-guardados').hidden = false;
+  $('btn-guardados').hidden = modo !== 'modelador';
+  iniciarContaIdeias(db, uid);
   conta.col.orderBy('atualizado', 'desc').limit(60).onSnapshot((snap) => { conta.docs = snap.docs; mostrarGuardados(); }, () => { $('guardados-vazio').textContent = 'Não consegui ler os modelos guardados agora.'; });
 }
-function agendarSalvar(ms = 2500) { clearTimeout(conta.timer); conta.timer = setTimeout(salvar, ms); }
+function agendarSalvar(ms = 2500) {
+  if (S.tipo === 'peca') { agendarSalvarPeca(S, ms); return; }
+  if (S !== SM) return;
+  clearTimeout(conta.timer); conta.timer = setTimeout(salvar, ms);
+}
 async function salvar() {
-  if (!conta.col || !S.codigo || !S.compiledCode) return;
+  if (!conta.col || !SM.codigo || !SM.compiledCode) return;
+  const S = SM;
   const doc = { titulo: S.titulo, origem: S.origem, pedido: S.pedido || '', spec: S.spec || '', entendimento: S.entendimento || null, esboco: S.esboco || null, codigo: S.codigo, ajustes: S.ajustes, notas: S.notas || '', criado: S.criado || Date.now() };
   const chave = JSON.stringify(doc);
   if (chave === conta.ultimo) return;
@@ -1804,7 +2098,7 @@ function mostrarGuardados() {
   });
 }
 async function abrirGuardado(id, x) {
-  if (S.ocupado) return;
+  if (OC) return;
   novoProjeto();
   S.projId = id; S.criado = x.criado || Date.now(); S.pedido = x.pedido || ''; S.spec = x.spec || ''; S.entendimento = x.entendimento || null;
   S.ajustes = x.ajustes || {}; S.notas = x.notas || ''; S.editadoAMao = false;
@@ -1817,6 +2111,978 @@ async function abrirGuardado(id, x) {
   $('card-guardados').hidden = true;
   $('card-modelo').scrollIntoView({ behavior: 'smooth', block: 'start' });
   await compilarEMostrar(S.codigo, { forcar: true });
+}
+
+/* ================= Modo Ideias =================
+   Situação → dúvidas (pelo menos uma rodada) → ideias com esboço → modelos base → acabamento → kit.
+   Cada peça do projeto tem os mesmos campos de SM e vai para a bancada (prévia 3D + cartão
+   Modelo) quando é aberta: S = peça. A bancada muda de lugar no DOM entre os dois modos. */
+const ESTILOS = [
+  { id: 'macio', nome: 'Arredondado', sub: 'cantos com raio largo, formas cheias', svg: '<rect x="5" y="5" width="28" height="18" rx="8"/>',
+    txt: 'Arredondado e macio: cantos verticais com raio generoso (3 a 6 mm, conforme o tamanho da peça), bordas de cima arredondadas, formas cheias e amigáveis.' },
+  { id: 'geometrico', nome: 'Chanfrado', sub: 'faces planas e chanfros de 45°', svg: '<path d="M11 5h16l6 6v6l-6 6H11l-6-6v-6z"/>',
+    txt: 'Geométrico chanfrado: faces planas, chanfros de 45° (1 a 3 mm) em todas as arestas à mostra, facetas limpas.' },
+  { id: 'tecnico', nome: 'Técnico', sub: 'nervuras e furos de alívio à mostra', svg: '<rect x="5" y="5" width="28" height="18" rx="2"/><path d="M12 9v10M19 9v10M26 9v10"/>',
+    txt: 'Técnico: nervuras de reforço à mostra, furos de alívio, cantos com raio pequeno (1 a 2 mm), aparência de peça de engenharia.' },
+  { id: 'organico', nome: 'Orgânico', sub: 'curvas contínuas e ondas', svg: '<path d="M5 18c3-12 9 0 13-6s11-7 14 1c2 6-2 10-8 10H11c-4 0-7-2-6-5z"/>',
+    txt: 'Orgânico: curvas contínuas, perfis ondulados e transições suaves entre as partes.' },
+  { id: 'ia', nome: 'A IA escolhe', sub: 'um estilo que combine com a situação', svg: '<path d="M19 3l2.6 7.4L29 13l-7.4 2.6L19 23l-2.6-7.4L9 13l7.4-2.6z"/>',
+    txt: 'A IA escolhe um estilo que combine com a situação e usa o mesmo em todas as peças (diga qual escolheu nas notas).' },
+];
+const MATERIAL = `MATERIAL: PLA
+- Amolece a partir de 55 a 60 °C: carro fechado ao sol, painel, porta-malas no verão, água quente e lava-louças deformam a peça.
+- Sol forte por semanas deixa quebradiço e desbota; ao ar livre por alguns dias, tudo bem.
+- Comida: só contato rápido com alimento seco. As camadas guardam sujeira: nada de copo, talher ou pote de uso contínuo.
+- Água doce ou salgada não estraga, mas areia trava encaixes justos e roscas: folga maior e furos de drenagem.
+- É rígido: clipe que dobra muito ou dobradiça fina quebra. Aguenta bem compressão, mal impacto e esforço que separa as camadas (a peça é mais fraca no eixo Z).`;
+const NOME_ESBOCO_IDEIA = 'o esboço conceitual da ideia (mostra a peça em uso; as cotas dele são aproximadas)';
+const VAZIA = { tipo: 'vazia', titulo: '', codigo: '', origem: null, ajustes: {}, fotos: [], pos: null, analise: null, stl: null, compiledCode: null, notas: '', spec: '' };
+let PJ = null;
+const actI1 = Atividade($('act-i1')), actI2 = Atividade($('act-i2')), actI3 = Atividade($('act-i3')), actI4 = Atividade($('act-i4'));
+
+function novoPJ() {
+  return { id: novoId(), criado: Date.now(), titulo: '', situacao: '', fotos: [], entendimento: null, rodadas: [], extra: '', estilo: 'ia', gravar: '',
+    ideias: [], evitar: [], pecas: [], etapa: 1, seq: 0, aberta: null };
+}
+function estiloDe(id) { return ESTILOS.find((e) => e.id === id) || ESTILOS[ESTILOS.length - 1]; }
+function txt(v, max = 400) { return String(v == null ? '' : v).slice(0, max); }
+function lista(v, n) { return Array.isArray(v) ? v.slice(0, n) : []; }
+
+/* ---------- Troca de modo e bancada ---------- */
+const casa = {};
+function guardarCasas() {
+  casa.view = { pai: $('view').parentNode, depois: $('view').nextSibling };
+  casa.modelo = { pai: $('card-modelo').parentNode, depois: $('card-modelo').nextSibling };
+}
+function bancadaEm(onde) {
+  if (onde === 'ideias') { $('slot-view').append($('view')); $('slot-modelo').append($('card-modelo')); $('modelo-h').textContent = 'Peça aberta'; }
+  else { casa.view.pai.insertBefore($('view'), casa.view.depois); casa.modelo.pai.insertBefore($('card-modelo'), casa.modelo.depois); $('modelo-h').textContent = 'Modelo'; }
+  document.body.classList.toggle('modo-ideias', onde === 'ideias');
+  requestAnimationFrame(redimensionar);
+}
+// Mostra S na bancada: prévia, parâmetros, código, notas.
+function mostrarBancada() {
+  versaoComp++; clearTimeout(tParam);
+  definirTitulo(S.titulo || '');
+  definirCodigo(S.codigo || '', S.origem || null);
+  $('card-modelo').hidden = S.tipo === 'peca' ? false : !(S.codigo || S.origem);
+  $('notas').textContent = S.notas || ''; $('notas').hidden = !S.notas;
+  $('erro-comp').hidden = true; $('det-vistas').hidden = true; $('log').textContent = '';
+  actModelo.limpar();
+  if (S.pos && S.analise) { V.quadro = null; mostrarModelo(S.pos, S.analise); }
+  else { limparPalco(); atualizarPalco(null); }
+  atualizarBotoes();
+}
+function irPara(m) {
+  if (OC || m === modo) return;
+  modo = m;
+  $('tela-inicio').hidden = m !== 'inicio'; $('tela-modelador').hidden = m !== 'modelador'; $('tela-ideias').hidden = m !== 'ideias';
+  $('btn-inicio').hidden = m === 'inicio';
+  $('btn-guardados').hidden = m !== 'modelador' || !conta.col;
+  $('brand-sub').textContent = m === 'ideias' ? 'ideias para uma situação' : m === 'modelador' ? 'pedido → OpenSCAD → STL' : 'ideias e peças para imprimir';
+  if (m === 'modelador') { bancadaEm('modelador'); S = SM; mostrarBancada(); }
+  else if (m === 'ideias') {
+    bancadaEm('ideias');
+    if (!PJ) { PJ = novoPJ(); $('situacao').value = local.get('ideias.situacao') || ''; }
+    S = pecaPorId(PJ.aberta) || VAZIA; mostrarBancada(); mostrarProjeto();
+  } else mostrarRecentes();
+  window.scrollTo(0, 0);
+  atualizarBotoes(); atualizarPalco();
+}
+
+/* ---------- Etapas ---------- */
+function alcancavel(k) {
+  if (!PJ) return k === 1;
+  if (k === 1) return true;
+  if (k === 2) return !!PJ.entendimento;
+  if (k === 3) return PJ.ideias.length > 0;
+  return PJ.pecas.length > 0;
+}
+function irEtapa(n, rolar = true) {
+  if (!alcancavel(n)) return;
+  PJ.etapa = n;
+  [1, 2, 3].forEach((k) => { $('et-' + k).hidden = k !== n; });
+  $('et-4').hidden = n < 4;
+  $('barra-ideias').hidden = n !== 3;
+  marcarEtapas();
+  if (n >= 4) { requestAnimationFrame(redimensionar); mostrarKit(); }
+  if (rolar) {
+    if (n === 5) $('card-acab').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    else window.scrollTo(0, 0);
+  }
+  agendarSalvarProjeto();
+}
+function marcarEtapas() {
+  document.querySelectorAll('#etapas button').forEach((b) => {
+    const k = +b.dataset.etapa;
+    b.disabled = !alcancavel(k);
+    b.classList.toggle('feita', alcancavel(k + 1) && k < 5 && k !== PJ.etapa);
+    if (k === PJ.etapa) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+  });
+}
+function mostrarProjeto() {
+  $('situacao').value = PJ.situacao || $('situacao').value;
+  $('btn-novo-proj').hidden = !PJ.entendimento;
+  $('btn-analisar').textContent = PJ.entendimento ? 'Analisar de novo' : 'Analisar a situação';
+  mostrarFotosIdeias();
+  mostrarDuvidas(); mostrarIdeias(); atualizarListaPecas(); mostrarKit();
+  irEtapa(alcancavel(PJ.etapa) ? PJ.etapa : 1, false);
+}
+function novoProjetoIdeias() {
+  if (OC) return;
+  pararEsbocos();
+  PJ = novoPJ(); S = VAZIA;
+  $('situacao').value = ''; local.set('ideias.situacao', '');
+  $('i-extra').value = ''; $('i-gravar').value = ''; $('i-iterar').value = '';
+  [actI1, actI2, actI3, actI4].forEach((a) => a.limpar());
+  mostrarBancada(); mostrarProjeto();
+  $('situacao').focus();
+}
+
+/* ---------- Fotos da situação ---------- */
+async function adicionarFotosIdeias(files) {
+  for (const f of Array.from(files)) {
+    try { PJ.fotos.push(await normalizarFoto(f)); } catch (e) { $('i-fotos-hint').textContent = 'Não consegui abrir ' + f.name + '.'; }
+  }
+  mostrarFotosIdeias();
+}
+function mostrarFotosIdeias() {
+  const box = $('i-fotos'); box.innerHTML = '';
+  PJ.fotos.forEach((f, i) => {
+    const d = el('div', 'foto'), im = el('img'); im.src = f.url; im.alt = 'Foto ' + (i + 1) + ' da situação';
+    const x = el('button', null, '×'); x.setAttribute('aria-label', 'Tirar foto ' + (i + 1));
+    x.addEventListener('click', () => { URL.revokeObjectURL(f.url); PJ.fotos.splice(i, 1); mostrarFotosIdeias(); });
+    d.append(im, x); box.append(d);
+  });
+}
+function fotosIA() {
+  const fs = PJ.fotos.slice(0, maxImagens());
+  return { blobs: fs.map((f) => f.blob), texto: fs.length ? 'Imagens anexadas: ' + fs.length + ' foto(s) que o usuário mandou da situação (lugar ou objetos onde as peças vão encaixar).' : '' };
+}
+
+/* ---------- Textos para a IA ---------- */
+const PAPEL = 'Você ajuda a pensar em objetos úteis para imprimir em 3D para uma situação real, com olhar de designer de produto: primeiro a utilidade, depois uma estética agradável.';
+const IMPRESSORA = 'IMPRESSORA\nCreality Ender-3 V3 SE, bico de 0,4 mm, camadas de 0,2 mm, área útil de 220 × 220 × 250 mm. Imprime melhor peças sem suporte, com uma face plana grande na mesa.';
+function respostasTexto() {
+  const linhas = [];
+  PJ.rodadas.forEach((r) => (r.perguntas || []).forEach((q, i) => {
+    const a = (r.respostas && r.respostas[i] || '').trim();
+    linhas.push('- ' + q.texto + ' → ' + (a || 'sem resposta; vale a sugestão: ' + (q.sugestao || 'escolha um valor comum')));
+  }));
+  return linhas.join('\n');
+}
+function contexto(descImgs, comEstilo) {
+  const e = PJ.entendimento;
+  let t = '\nSITUAÇÃO CONTADA PELO USUÁRIO\n"""\n' + (PJ.situacao || '(só imagens)') + '\n"""\n' + (descImgs ? descImgs + '\n' : '');
+  if (e) {
+    t += '\nO QUE VOCÊ ENTENDEU\n' + (e.resumo || '') + '\n';
+    if (e.restricoes && e.restricoes.length) t += 'Cuidados com o PLA nesta situação:\n' + e.restricoes.map((r) => '- ' + r.texto).join('\n') + '\n';
+  }
+  const rs = respostasTexto();
+  if (rs) t += '\nPERGUNTAS E RESPOSTAS (as respostas valem mais que qualquer suposição)\n' + rs + '\n';
+  if (PJ.extra) t += '\nO USUÁRIO ACRESCENTOU\n"""\n' + PJ.extra + '\n"""\n';
+  if (comEstilo) {
+    t += '\nESTILO DO CONJUNTO (entra só no acabamento)\n' + estiloDe(PJ.estilo).txt + '\n';
+    if (PJ.gravar) t += 'Texto que o usuário quer gravado nas peças: "' + PJ.gravar + '".\n';
+  }
+  return t;
+}
+function promptAnalisar(descImgs) {
+  return PAPEL + '\n\n' + IMPRESSORA + '\n\n' + MATERIAL + '\n\nTAREFA\nEntender a situação e levantar as dúvidas que mais mudam o que vale imprimir. Ainda não sugira peças.\n' + contexto(descImgs, false) +
+    '\nResponda só com um bloco ```json, sem texto fora dele:\n' +
+    '{"titulo": "nome curto do projeto, até 5 palavras", "resumo": "duas ou três frases: quem, onde, o que precisa", "restricoes": [{"tipo": "calor|agua|sol|comida|esforco|areia|seguranca|tamanho|outro", "texto": "o cuidado, concreto para esta situação"}], "perguntas": [{"texto": "...", "tipo": "medida|escolha|texto", "opcoes": ["..."], "sugestao": "...", "porque": "..."}]}\n' +
+    '- restricoes: 2 a 5, só as que valem nesta situação.\n' +
+    '- perguntas: 3 a 6. Primeiro as medidas dos objetos reais onde as peças vão encaixar ou apoiar (diâmetro do tubo da cadeira, largura do celular com capa…), pedindo o valor em mm; depois quantas pessoas, o que já têm, onde as peças ficam guardadas e usadas. "opcoes" só no tipo escolha (2 a 5 opções curtas). "sugestao" é o que vale se o usuário não responder. "porque" em até 10 palavras.';
+}
+function promptMaisPerguntas(descImgs) {
+  return PAPEL + '\n\n' + IMPRESSORA + '\n\n' + MATERIAL + '\n\nTAREFA\nVer se ainda falta alguma dúvida importante depois das respostas. Ainda não sugira peças.\n' + contexto(descImgs, false) +
+    '\nResponda só com um bloco ```json, sem texto fora dele:\n' +
+    '{"resumo": "resumo atualizado com as respostas", "restricoes": [{"tipo": "...", "texto": "..."}], "perguntas": [{"texto": "...", "tipo": "medida|escolha|texto", "opcoes": ["..."], "sugestao": "...", "porque": "..."}]}\n' +
+    '- perguntas: 0 a 4, só dúvidas novas que mudam as peças; nenhuma repetida. Lista vazia se não falta nada.';
+}
+function ideiasNaMesa(excluir) {
+  const ls = PJ.ideias.filter((i) => !excluir || !excluir.includes(i));
+  return ls.length ? '\nIDEIAS QUE JÁ ESTÃO NA MESA (não repita)\n' + ls.map((i) => '- ' + i.titulo + ': ' + i.problema).join('\n') + '\n' : '';
+}
+function promptIdeias(o, descImgs) {
+  let tarefa, extra = '';
+  if (o.modo === 'inicial') tarefa = 'Sugerir ' + o.n + ' ideias de peças para imprimir que resolvam a situação.';
+  else if (o.modo === 'refazer') {
+    tarefa = 'Sugerir ' + o.n + ' ideias novas no lugar das que o usuário não quis.';
+    if (o.descartadas.length) extra += '\nDESCARTADAS PELO USUÁRIO (não repita nem faça parecido)\n' + o.descartadas.map((i) => '- ' + i.titulo + ': ' + i.problema).join('\n') + '\n';
+  } else if (o.modo === 'mais') tarefa = 'Sugerir mais ' + o.n + ' ideia(s), diferente(s) das que já estão na mesa.';
+  else if (o.modo === 'parecidas') {
+    tarefa = 'Sugerir ' + o.n + ' variações da ideia abaixo, de que o usuário gostou: o mesmo problema resolvido com outra forma, outro encaixe ou outro jeito de usar.';
+    extra += '\nIDEIA DE QUE O USUÁRIO GOSTOU\n' + JSON.stringify(ideiaParaIA(o.base)) + '\n';
+  } else {
+    tarefa = 'Reescrever a ideia abaixo conforme o pedido do usuário, mantendo o que ele não pediu para mudar.';
+    extra += '\nIDEIA A REESCREVER\n' + JSON.stringify(ideiaParaIA(o.base)) + '\n';
+  }
+  if (o.texto) extra += '\nPEDIDO DO USUÁRIO PARA ESTA RODADA (vale mais que o resto)\n"""\n' + o.texto + '\n"""\n';
+  return PAPEL + '\n\n' + IMPRESSORA + '\n\n' + MATERIAL + '\n\nTAREFA\n' + tarefa + '\n' + contexto(descImgs, false) + ideiasNaMesa(o.modo === 'revisar' ? [o.base] : o.descartadas) + extra +
+    '\nCRITÉRIOS\n' +
+    '- Utilidade real nesta situação vem primeiro; depois uma estética agradável.\n' +
+    '- Cada ideia é uma peça, ou um conjunto de até 3 peças, que a impressora faz em PLA sem suporte (ou com pouco) em até umas 4 horas por peça.\n' +
+    '- Respeite os cuidados com o PLA desta situação: nada que o PLA não aguente aqui.\n' +
+    '- Use as medidas que o usuário deu; onde faltar, diga a medida que você supôs.\n' +
+    '- Ideias variadas entre si: problemas diferentes, não várias versões da mesma coisa' + (o.modo === 'parecidas' ? ' (menos nesta rodada, que pede variações)' : '') + '.\n' +
+    '- Nada que já se compra pronto, barato e melhor, a não ser que haja um motivo nesta situação.\n' +
+    '\nResponda só com um bloco ```json, sem texto fora dele:\n' +
+    '{"ideias": [{"titulo": "nome curto", "problema": "o problema que resolve, uma frase", "descricao": "como é a peça, até duas frases", "como_usa": "uma frase", "medidas": [{"nome": "...", "valor": "... mm"}], "funcionais": ["medida que precisa bater com um objeto real, com o valor"], "pecas": 1, "dificuldade": "fácil|média|difícil", "tempo": "≈ 40 min", "riscos": ["cuidado de uso"]}]' +
+    (o.modo === 'inicial' ? ', "evitar": [{"item": "...", "porque": "..."}]' : '') + '}\n' +
+    '- Exatamente ' + o.n + ' ideia(s). medidas: 2 a 4 principais. funcionais: 0 a 4. riscos: 0 a 2, curtos.' +
+    (o.modo === 'inicial' ? ' evitar: 0 a 3 coisas que parecem boas ideias mas não valem em PLA nesta situação.' : '');
+}
+function ideiaParaIA(i) {
+  return { titulo: i.titulo, problema: i.problema, descricao: i.descricao, como_usa: i.como_usa, medidas: i.medidas, funcionais: i.funcionais, pecas: i.pecas, riscos: i.riscos };
+}
+function promptEsboco(ideia) {
+  return 'Você desenha esboços conceituais de objetos para impressão 3D, claros e simpáticos, no estilo de um caderno de designer.\n\nTAREFA\nDesenhar o esboço da peça abaixo, para o usuário decidir se quer imprimir.\n\nIDEIA\n' +
+    JSON.stringify(ideiaParaIA(ideia)) + '\n\nSITUAÇÃO\n' + ((PJ.entendimento && PJ.entendimento.resumo) || PJ.situacao) + '\n\n' +
+    'Responda só com um bloco ```svg:\n' +
+    '- viewBox="0 0 480 320" width="480" height="320" e um <rect> branco do tamanho todo como fundo.\n' +
+    '- À esquerda, uns dois terços da largura: a peça EM USO, no lugar onde fica, em perspectiva simples. O objeto onde ela encaixa ou apoia em traço cinza #8a94a0, simplificado; a peça preenchida de laranja #f2601d com contorno preto de 2 px.\n' +
+    '- À direita: a peça sozinha, numa vista que mostre bem a forma, com 1 ou 2 cotas principais em azul #1f5fbf (em mm) e setas.\n' +
+    '- No máximo 3 rótulos curtos, com font-family="sans-serif" font-size="13". Nada de script, imagem, link, CSS ou fonte externa. No máximo 10 KB.';
+}
+function specDaIdeia(i) {
+  const L = ['Peça: ' + i.titulo, 'Problema que resolve: ' + i.problema, 'Como é: ' + i.descricao];
+  if (i.como_usa) L.push('Como se usa: ' + i.como_usa);
+  if (i.medidas && i.medidas.length) L.push('Medidas principais:', ...i.medidas.map((m) => '- ' + m.nome + ': ' + m.valor));
+  if (i.funcionais && i.funcionais.length) L.push('Medidas funcionais (precisam bater com objetos reais):', ...i.funcionais.map((f) => '- ' + f));
+  if (i.pecas > 1) L.push('Número de peças: ' + i.pecas + ' (espaçadas 5 mm na mesa).');
+  if (i.riscos && i.riscos.length) L.push('Cuidados de uso: ' + i.riscos.join('; '));
+  L.push('', 'Situação: ' + ((PJ.entendimento && PJ.entendimento.resumo) || PJ.situacao));
+  const rs = respostasTexto(); if (rs) L.push('Respostas do usuário (valem mais que suposições):', rs);
+  if (PJ.extra) L.push('O usuário acrescentou: ' + PJ.extra);
+  return L.join('\n');
+}
+function promptBase(descImgs) {
+  return REGRAS + '\n\n' + MATERIAL + '\n\n' + CODIGO + '\n\nTAREFA\nEscrever o MODELO BASE da peça abaixo, escolhida pelo usuário numa rodada de ideias. Nesta etapa valem a forma certa e as medidas funcionais certas; o acabamento estético vem numa rodada depois. Forma limpa e simples, com cantos vivos ou chanfros pequenos, já pensada para imprimir.\n' +
+    (descImgs ? descImgs + '\n' : '') +
+    '\nPARÂMETROS\n- O primeiro grupo é /* [Medidas funcionais] */, com as medidas que precisam bater com objetos reais (diâmetros, larguras, folgas de encaixe), com os valores que o usuário deu. Se não houver nenhuma, ponha nele a medida principal de uso.\n- Depois /* [Forma] */ e outros grupos que fizerem sentido.\n' +
+    '\nESPECIFICAÇÃO\n' + S.spec + ajustesTexto() + '\n' +
+    (S.esboco ? '\nESBOÇO CONCEITUAL DA IDEIA (SVG; mostra a peça em uso; as cotas são aproximadas e as respostas do usuário valem mais)\n' + S.esboco + '\n' : '') +
+    '\n' + verificar(2) +
+    'RESPOSTA FINAL\nO código completo num único bloco ```openscad. Depois do bloco, no máximo 3 linhas curtas para o usuário: o que você supôs e algum cuidado na impressão.';
+}
+function promptAcabamento(descImgs) {
+  const outras = PJ.pecas.filter((P) => P !== S && P.noKit).map((P) => '- ' + P.titulo);
+  return REGRAS + '\n\n' + CODIGO + '\n\nTAREFA\nFazer o acabamento estético do modelo abaixo. A forma e as medidas já foram aprovadas pelo usuário; agora a peça precisa ficar bonita e coerente com as outras peças do conjunto.\n' +
+    (descImgs ? descImgs + '\n' : '') +
+    '\nESTILO DO CONJUNTO\n' + estiloDe(PJ.estilo).txt + '\n' +
+    (PJ.gravar ? 'Texto gravado: "' + PJ.gravar + '", rebaixado 0,6 mm numa face à mostra que não encosta em nada, letras com pelo menos 5 mm de altura. Se não couber nesta peça, não grave e diga isso nas notas.\n' : '') +
+    (outras.length ? '\nOUTRAS PEÇAS DO CONJUNTO (mesmo estilo em todas)\n' + outras.join('\n') + '\n' : '') +
+    '\nREGRAS DO ACABAMENTO\n' +
+    '- Não mude nome nem valor de nenhum parâmetro do grupo /* [Medidas funcionais] */ e mantenha a geometria que depende deles: encaixes, furos, folgas, superfícies de contato e espessuras que dão resistência.\n' +
+    '- Mexa só no que não encaixa nem apoia em nada: cantos, bordas, faces à mostra, transições e detalhes discretos (texto, nervuras, rebaixos).\n' +
+    '- Arredondar ou chanfrar não pode afinar parede abaixo de 1,2 mm nem tirar material de uma área de contato.\n' +
+    '- Continua imprimível como antes: mesma orientação, face de baixo plana na mesa com chanfro de 0,5 mm, sem criar balanço acima de 45° (arredondado na aresta de baixo vira balanço; lá use chanfro).\n' +
+    '- A caixa delimitadora fica parecida, até uns 10% de diferença.\n' +
+    '- Os parâmetros novos do acabamento (raio dos cantos, tamanho do chanfro, texto) vão num grupo /* [Acabamento] */ depois dos que já existem.\n' +
+    '\nESPECIFICAÇÃO\n' + S.spec + ajustesTexto() +
+    '\n\nCÓDIGO ATUAL\n```openscad\n' + S.codigo + '\n```\n\n' + verificar(3) +
+    'RESPOSTA FINAL\nO código completo num único bloco ```openscad. Depois do bloco, até 3 linhas sobre o que mudou' + (PJ.estilo === 'ia' ? ' e qual estilo você escolheu' : '') + '.';
+}
+// Um objeto JSON na resposta: o bloco ```json ou o primeiro { … } do texto.
+function lerJSON(text) {
+  const tentar = (t) => { try { const v = JSON.parse(t); return v && typeof v === 'object' && !Array.isArray(v) ? v : null; } catch (e) { return null; } };
+  const m = /```json[^\n]*\n([\s\S]*?)```/i.exec(text);
+  let v = m ? tentar(m[1]) : null;
+  if (!v) { const i = text.indexOf('{'), j = text.lastIndexOf('}'); if (i >= 0 && j > i) v = tentar(text.slice(i, j + 1)); }
+  return v;
+}
+function normPerguntas(arr) {
+  return lista(arr, 6).filter((q) => q && (q.texto || q.pergunta)).map((q) => ({
+    texto: txt(q.texto || q.pergunta, 300), tipo: ['medida', 'escolha', 'texto'].includes(q.tipo) ? q.tipo : 'texto',
+    opcoes: lista(q.opcoes, 6).map((o) => txt(o, 60)).filter(Boolean), sugestao: txt(q.sugestao, 120), porque: txt(q.porque, 120) }));
+}
+function normRestricoes(arr) { return lista(arr, 6).filter((r) => r && r.texto).map((r) => ({ tipo: txt(r.tipo || 'outro', 20), texto: txt(r.texto, 300) })); }
+
+/* ---------- Etapa 1 e 2: entender e tirar dúvidas ---------- */
+async function analisarSituacao() {
+  const t = $('situacao').value.trim();
+  if (!t && !PJ.fotos.length) { $('situacao').focus(); return; }
+  PJ.situacao = t;
+  ocupar(true); actI1.limpar(); actI1.rodando();
+  const p = actI1.passo(PJ.fotos.length ? 'Lendo a situação e as fotos…' : 'Lendo a situação…');
+  try {
+    const im = fotosIA();
+    const { text } = await perguntar(promptAnalisar(im.texto), { imagens: im.blobs, act: actI1 });
+    const v = lerJSON(text);
+    if (!v) throw { code: 'invalid_json' };
+    PJ.titulo = txt(v.titulo, 60) || PJ.titulo || 'Projeto';
+    PJ.entendimento = { resumo: txt(v.resumo, 800), restricoes: normRestricoes(v.restricoes) };
+    PJ.rodadas = [{ perguntas: normPerguntas(v.perguntas), respostas: [] }];
+    p.ok('Pronto. Responda as dúvidas.');
+    mostrarProjeto(); irEtapa(2);
+  } catch (e) { p.falhou(erroIA(e)); }
+  finally { ocupar(false); actI1.parado(); }
+}
+function lerRespostasDaTela() {
+  PJ.extra = $('i-extra').value.trim();
+  PJ.gravar = $('i-gravar').value.trim();
+}
+async function maisPerguntas() {
+  lerRespostasDaTela();
+  ocupar(true); actI2.limpar(); actI2.rodando();
+  const p = actI2.passo('Vendo se falta alguma dúvida…');
+  try {
+    const im = fotosIA();
+    const { text } = await perguntar(promptMaisPerguntas(im.texto), { imagens: im.blobs, act: actI2 });
+    const v = lerJSON(text);
+    if (!v) throw { code: 'invalid_json' };
+    if (v.resumo) PJ.entendimento.resumo = txt(v.resumo, 800);
+    const rs = normRestricoes(v.restricoes); if (rs.length) PJ.entendimento.restricoes = rs;
+    const qs = normPerguntas(v.perguntas);
+    if (qs.length) PJ.rodadas.push({ perguntas: qs, respostas: [] });
+    p.ok(qs.length ? qs.length + ' pergunta(s) nova(s).' : 'Sem dúvidas novas. Pode gerar as ideias.');
+    mostrarDuvidas(qs.length === 0);
+    agendarSalvarProjeto(0);
+  } catch (e) { p.falhou(erroIA(e)); }
+  finally { ocupar(false); actI2.parado(); }
+}
+function mostrarDuvidas(semNovas) {
+  const e = PJ.entendimento;
+  $('i-titulo').textContent = PJ.titulo || 'Situação';
+  $('i-resumo').textContent = e ? e.resumo : '';
+  const ul = $('i-restricoes'); ul.innerHTML = '';
+  ((e && e.restricoes) || []).forEach((r) => { const li = el('li'); li.append(el('b', null, r.tipo), el('span', null, r.texto)); ul.append(li); });
+  $('i-restr-lbl').hidden = !ul.children.length;
+  const atual = PJ.rodadas[PJ.rodadas.length - 1];
+  $('i-rodada').textContent = PJ.rodadas.length > 1 ? 'rodada ' + PJ.rodadas.length : '';
+  const box = $('i-perguntas'); box.innerHTML = '';
+  if (atual) atual.perguntas.forEach((q, i) => box.append(campoPergunta(q, atual, i)));
+  $('i-sem-perguntas').hidden = !(semNovas || (atual && !atual.perguntas.length));
+  // Rodadas anteriores, só para ler
+  const ant = PJ.rodadas.slice(0, -1), dl = $('i-resp-lista'); dl.innerHTML = '';
+  ant.forEach((r) => r.perguntas.forEach((q, i) => { dl.append(el('dt', null, q.texto), el('dd', null, (r.respostas[i] || '').trim() || 'sugestão: ' + (q.sugestao || '—'))); }));
+  $('i-respondidas').hidden = !ant.length;
+  $('i-extra').value = PJ.extra || ''; $('i-gravar').value = PJ.gravar || '';
+  const est = $('i-estilos'); est.innerHTML = '';
+  ESTILOS.forEach((s) => {
+    const b = el('button'); b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', String(PJ.estilo === s.id));
+    b.innerHTML = '<svg viewBox="0 0 38 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true">' + s.svg + '</svg>';
+    b.append(el('b', null, s.nome), el('span', null, s.sub));
+    b.addEventListener('click', () => { PJ.estilo = s.id; est.querySelectorAll('button').forEach((x) => x.setAttribute('aria-checked', String(x === b))); mostrarAcabamento(); agendarSalvarProjeto(); });
+    est.append(b);
+  });
+}
+function campoPergunta(q, rodada, i) {
+  const d = el('div', 'perg'), id = 'q_' + PJ.rodadas.indexOf(rodada) + '_' + i;
+  const valor = rodada.respostas[i] || '';
+  const inp = el('input'); inp.type = 'text'; inp.id = id; inp.value = valor;
+  inp.placeholder = q.sugestao ? 'Sugestão: ' + q.sugestao : (q.tipo === 'medida' ? 'em mm' : '');
+  if (q.tipo === 'medida') inp.inputMode = 'text';
+  if (q.tipo === 'escolha' && q.opcoes.length) {
+    const lab = el('span', 'lbl-p', q.texto); d.append(lab);
+    if (q.porque) d.append(el('p', 'porque', q.porque));
+    const ops = el('div', 'opcoes');
+    q.opcoes.forEach((o) => {
+      const b = el('button', null, o); b.type = 'button'; b.setAttribute('aria-pressed', String(valor === o));
+      b.addEventListener('click', () => { const sim = rodada.respostas[i] !== o; rodada.respostas[i] = sim ? o : ''; ops.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(sim && x === b))); inp.value = ''; agendarSalvarProjeto(); });
+      ops.append(b);
+    });
+    d.append(ops);
+    inp.placeholder = 'Outra resposta' + (q.sugestao ? ' (sugestão: ' + q.sugestao + ')' : '');
+    inp.setAttribute('aria-label', 'Outra resposta para: ' + q.texto);
+    if (q.opcoes.includes(valor)) inp.value = '';
+    inp.addEventListener('input', () => { rodada.respostas[i] = inp.value; ops.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', 'false')); agendarSalvarProjeto(); });
+    d.append(inp);
+    return d;
+  }
+  const lab = el('label', null, q.texto); lab.htmlFor = id; d.append(lab);
+  if (q.porque) d.append(el('p', 'porque', q.porque));
+  inp.addEventListener('input', () => { rodada.respostas[i] = inp.value; agendarSalvarProjeto(); });
+  d.append(inp);
+  return d;
+}
+
+/* ---------- Etapa 3: ideias ---------- */
+function normIdeia(v) {
+  return {
+    id: 'i' + (++PJ.seq), titulo: txt(v.titulo, 80) || 'Ideia', problema: txt(v.problema, 300), descricao: txt(v.descricao, 500), como_usa: txt(v.como_usa, 300),
+    medidas: lista(v.medidas, 5).filter((m) => m && m.nome).map((m) => ({ nome: txt(m.nome, 40), valor: txt(m.valor, 40) })),
+    funcionais: lista(v.funcionais, 5).map((f) => txt(f, 160)).filter(Boolean), pecas: Math.max(1, Math.min(6, parseInt(v.pecas, 10) || 1)),
+    dificuldade: txt(v.dificuldade, 20), tempo: txt(v.tempo, 30), riscos: lista(v.riscos, 3).map((r) => txt(r, 200)).filter(Boolean),
+    svg: null, escolhida: false,
+  };
+}
+async function pedirIdeias(o, act) {
+  lerRespostasDaTela();
+  ocupar(true); act.limpar(); act.rodando();
+  const rot = { inicial: 'Pensando nas ideias…', refazer: 'Pensando em ideias novas…', mais: 'Pensando em mais uma ideia…', parecidas: 'Pensando em variações de “' + (o.base && o.base.titulo) + '”…', revisar: 'Refazendo “' + (o.base && o.base.titulo) + '”…' };
+  const p = act.passo(rot[o.modo]);
+  if (o.base) avisoCartao(o.base, rot[o.modo], false);
+  try {
+    const im = fotosIA();
+    const { text } = await perguntar(promptIdeias(o, im.texto), { imagens: im.blobs, act });
+    const v = lerJSON(text);
+    const novas = v ? lista(v.ideias, 8).filter((x) => x && x.titulo).map(normIdeia) : [];
+    if (!novas.length) throw { code: 'invalid_json' };
+    if (o.modo === 'inicial') {
+      PJ.ideias = novas;
+      PJ.evitar = lista(v.evitar, 4).filter((x) => x && x.item).map((x) => ({ item: txt(x.item, 120), porque: txt(x.porque, 200) }));
+    } else if (o.modo === 'refazer') PJ.ideias = PJ.ideias.filter((i) => i.escolhida).concat(novas);
+    else if (o.modo === 'mais') PJ.ideias = PJ.ideias.concat(novas);
+    else {
+      const k = PJ.ideias.indexOf(o.base);
+      const lista2 = o.modo === 'revisar' ? novas.slice(0, 1) : novas;
+      PJ.ideias.splice(k < 0 ? PJ.ideias.length : k + (o.modo === 'revisar' ? 0 : 1), o.modo === 'revisar' && k >= 0 ? 1 : 0, ...lista2);
+    }
+    p.ok(o.modo === 'revisar' ? 'Ideia refeita.' : novas.length + ' ideia(s). Os esboços chegam aos poucos.');
+    mostrarIdeias();
+    novas.forEach(pedirEsboco);
+    agendarSalvarProjeto(0);
+    return true;
+  } catch (e) { p.falhou(erroIA(e)); if (o.base) avisoCartao(o.base, erroIA(e), true); return false; }
+  finally { ocupar(false); act.parado(); }
+}
+function avisoCartao(i, texto, erro) {
+  const c = document.querySelector('.ideia[data-id="' + i.id + '"] .ideia-corpo');
+  if (!c) return;
+  const ant = c.querySelector('.aviso-cartao'); if (ant) ant.remove();
+  const n = el('div', 'note aviso-cartao' + (erro ? ' warn' : ''), texto);
+  if (!erro) { const pr = el('div', 'prog'); pr.style.marginTop = '8px'; pr.append(el('i')); n.append(pr); }
+  c.append(n);
+}
+async function gerarIdeias() {
+  lerRespostasDaTela();
+  const temEscolhidas = PJ.ideias.some((i) => i.escolhida);
+  const o = temEscolhidas ? { modo: 'refazer', n: 6 - Math.min(3, PJ.ideias.filter((i) => i.escolhida).length), descartadas: PJ.ideias.filter((i) => !i.escolhida) } : { modo: 'inicial', n: 6 };
+  if (await pedirIdeias(o, actI2)) irEtapa(3);
+}
+function mostrarIdeias() {
+  const g = $('i-grade'); g.innerHTML = '';
+  PJ.ideias.forEach((i) => g.append(cartaoIdeia(i)));
+  $('i-n-ideias').textContent = PJ.ideias.length ? PJ.ideias.length + ' ideias' : '';
+  const ev = $('i-evitar'); ev.innerHTML = ''; ev.hidden = !PJ.evitar.length;
+  if (PJ.evitar.length) { ev.append(el('b', null, 'Parecem boas ideias, mas não valem em PLA aqui')); const ul = el('ul'); PJ.evitar.forEach((x) => ul.append(el('li', null, x.item + (x.porque ? ': ' + x.porque : '')))); ev.append(ul); }
+  atualizarEscolhidas(); marcarEtapas();
+}
+function cartaoIdeia(i) {
+  const c = el('article', 'ideia' + (i.escolhida ? ' escolhida' : '')); c.dataset.id = i.id;
+  const esb = el('div', 'ideia-esboco'); c.append(esb);
+  const corpo = el('div', 'ideia-corpo');
+  corpo.append(el('h3', null, i.titulo));
+  if (i.problema) corpo.append(el('p', 'problema', i.problema));
+  if (i.descricao) corpo.append(el('p', 'desc', i.descricao + (i.como_usa ? ' ' + i.como_usa : '')));
+  if (i.medidas.length) { const ul = el('ul', 'medidas-lista'); i.medidas.forEach((m) => { const li = el('li'); li.append(document.createTextNode(m.nome + ' '), el('b', 'num', m.valor)); ul.append(li); }); corpo.append(ul); }
+  const meta = el('div', 'meta');
+  if (i.tempo) meta.append(el('span', null, i.tempo));
+  meta.append(el('span', null, i.pecas > 1 ? i.pecas + ' peças' : '1 peça'));
+  if (i.dificuldade) meta.append(el('span', null, i.dificuldade));
+  corpo.append(meta);
+  if (i.riscos.length) { const ul = el('ul', 'riscos'); i.riscos.forEach((r) => ul.append(el('li', null, r))); corpo.append(ul); }
+  c.append(corpo);
+  const ac = el('div', 'ideia-acoes');
+  const q = el('label', 'quero'), cb = el('input'); cb.type = 'checkbox'; cb.checked = i.escolhida;
+  cb.addEventListener('change', () => { i.escolhida = cb.checked; c.classList.toggle('escolhida', cb.checked); atualizarEscolhidas(); agendarSalvarProjeto(); });
+  q.append(cb, document.createTextNode('Quero esta'));
+  const par = el('button', 'linkbtn', 'Mais parecidas'), ref = el('button', 'linkbtn', 'Refazer esta');
+  par.dataset.ia = '1'; ref.dataset.ia = '1';
+  par.addEventListener('click', () => pedirIdeias({ modo: 'parecidas', n: 2, base: i, descartadas: [] }, actI3));
+  ac.append(q, par, ref);
+  c.append(ac);
+  const form = el('div', 'ideia-refazer'); form.hidden = true;
+  const ta = el('textarea'); ta.rows = 2; ta.placeholder = 'O que mudar nesta ideia?'; ta.setAttribute('aria-label', 'O que mudar em ' + i.titulo);
+  const ok = el('button', 'btn', 'Refazer'); ok.dataset.ia = '1';
+  ok.addEventListener('click', () => { const t = ta.value.trim(); if (!t) { ta.focus(); return; } pedirIdeias({ modo: 'revisar', n: 1, base: i, texto: t, descartadas: [] }, actI3); });
+  const acf = el('div', 'actions'); acf.append(ok);
+  form.append(ta, acf); c.append(form);
+  ref.addEventListener('click', () => { form.hidden = !form.hidden; if (!form.hidden) ta.focus(); });
+  pintarEsboco(i, esb);
+  return c;
+}
+function pintarEsboco(i, box) {
+  box = box || document.querySelector('.ideia[data-id="' + i.id + '"] .ideia-esboco');
+  if (!box) return;
+  box.innerHTML = '';
+  if (i.svg) { const im = el('img'); im.src = svgURL(i.svg); im.alt = 'Esboço: ' + i.titulo; box.append(im); return; }
+  const ph = el('div', 'ph');
+  if (i.esbocoFalhou) {
+    ph.append(el('span', null, i.esbocoErro || 'O esboço não veio.'));
+    const b = el('button', 'linkbtn', 'Desenhar de novo'); b.addEventListener('click', () => pedirEsboco(i)); ph.append(b);
+  } else { ph.append(el('span', null, 'Desenhando o esboço…')); const pr = el('div', 'prog'); pr.append(el('i')); ph.append(pr); }
+  box.append(ph);
+}
+function atualizarEscolhidas() {
+  const n = PJ.ideias.filter((i) => i.escolhida).length;
+  $('i-escolhidas').textContent = n ? (n === 1 ? '1 ideia marcada' : n + ' ideias marcadas') : 'Nenhuma ideia marcada';
+  atualizarBotoesIdeias();
+}
+// Esboços: dois de cada vez, em segundo plano (a escolha das ideias continua livre).
+const esbocos = { ativos: 0, fila: [], ctl: new AbortController() };
+function pedirEsboco(i) {
+  i.svg = null; i.esbocoFalhou = false; i.esbocoErro = '';
+  i._esbocoP = new Promise((res) => { esbocos.fila.push({ i, res }); });
+  pintarEsboco(i);
+  proximoEsboco();
+}
+function proximoEsboco() {
+  while (esbocos.ativos < 2 && esbocos.fila.length) {
+    const { i, res } = esbocos.fila.shift(), ctl = esbocos.ctl;
+    esbocos.ativos++;
+    (async () => {
+      try {
+        if (!sample) throw { code: 'sem_ia' };
+        const { text } = await perguntar(promptEsboco(i), { signal: ctl.signal });
+        const ms = /```svg[^\n]*\n([\s\S]*?)```/i.exec(text);
+        i.svg = limparSVG(ms ? ms[1] : (text.match(/<svg[\s\S]*<\/svg>/i) || [])[0]);
+        if (!i.svg) { i.esbocoFalhou = true; i.esbocoErro = 'O esboço veio num formato inesperado.'; }
+      } catch (e) { i.esbocoFalhou = true; i.esbocoErro = e && e.code === 'sem_ia' ? 'Sem o Claude não há esboço.' : erroIA(e); }
+      finally {
+        esbocos.ativos--; res();
+        if (ctl === esbocos.ctl) { pintarEsboco(i); agendarSalvarProjeto(); }
+        proximoEsboco();
+      }
+    })();
+  }
+}
+function pararEsbocos() {
+  esbocos.ctl.abort(); esbocos.ctl = new AbortController();
+  esbocos.fila.forEach((x) => x.res()); esbocos.fila = [];
+}
+
+/* ---------- Etapa 4: modelos base ---------- */
+function pecaPorId(id) { return PJ && id ? PJ.pecas.find((P) => P.id === id) || null : null; }
+function novaPeca(i) {
+  return { tipo: 'peca', id: novoId(), ideiaId: i.id, ideia: ideiaParaIA(i), titulo: i.titulo, origem: 'ia', fase: null, pedido: '', fotos: PJ.fotos, entendimento: null,
+    esboco: i.svg || null, esbocoPNG: null, nomeEsboco: NOME_ESBOCO_IDEIA, spec: specDaIdeia(i), codigo: '', codigoBase: '', notas: '', ajustes: {}, editadoAMao: false,
+    stl: null, pos: null, analise: null, compiledCode: null, estado: 'fila', noKit: true, thumb: null, criado: Date.now() };
+}
+async function criarModelosBase() {
+  const escolhidas = PJ.ideias.filter((i) => i.escolhida);
+  if (!escolhidas.length || OC) return;
+  const novas = escolhidas.filter((i) => !PJ.pecas.some((P) => P.ideiaId === i.id));
+  if (!novas.length) { irEtapa(4); return; }
+  if (!sample) return;
+  const fila = novas.map((i) => { const P = novaPeca(i); PJ.pecas.push(P); return { P, i }; });
+  ocupar(true); actI4.limpar(); actI4.rodando();
+  irEtapa(4); atualizarListaPecas();
+  try {
+    const pend = novas.filter((i) => !i.svg && !i.esbocoFalhou).map((i) => i._esbocoP).filter(Boolean);
+    if (pend.length) {
+      const p = actI4.passo('Esperando os esboços das ideias marcadas…');
+      await Promise.race([Promise.all(pend), new Promise((r) => setTimeout(r, 240000))]);
+      p.ok('Esboços prontos');
+    }
+    for (const { P, i } of fila) { P.esboco = i.svg || null; if (P.esboco) P.esbocoPNG = await svgParaPNG(P.esboco); }
+    for (let k = 0; k < fila.length; k++) {
+      if (iaCtl.signal.aborted) break;
+      const P = fila[k].P, rot = 'Peça ' + (k + 1) + ' de ' + fila.length + ': ' + P.titulo;
+      const p = actI4.passo(rot);
+      if (await gerarBase(P)) p.ok(rot + ' · ' + fmtDim(P.analise.size)); else p.falhou(rot + ' não saiu (tente de novo na lista)');
+    }
+  } finally {
+    fila.forEach(({ P }) => { if (P.estado === 'fila' || P.estado === 'gerando') P.estado = P.codigo && P.compiledCode === P.codigo ? 'base' : 'erro'; });
+    ocupar(false); actI4.parado(); atualizarListaPecas(); mostrarKit(); marcarEtapas(); agendarSalvarProjeto(0);
+  }
+}
+async function gerarBase(P) {
+  S = P; PJ.aberta = P.id; P.estado = 'gerando';
+  mostrarBancada(); atualizarListaPecas();
+  atualizarPalco('gerando');
+  actModelo.limpar(); actModelo.rodando();
+  const p = actModelo.passo('Escrevendo o modelo base…');
+  try {
+    const reg = { n: 0, ultimo: null };
+    const im = imagensDoProjeto(null);
+    const { text } = await perguntar(promptBase(im.texto), { imagens: im.blobs, ferramentas: ferramentaCompilar(reg, actModelo), act: actModelo });
+    const code = extrairCodigo(text);
+    if (!code) { p.falhou('A resposta não trouxe código.'); P.estado = 'erro'; return false; }
+    p.ok('Código escrito');
+    P.notas = extrairNotas(text);
+    if (P.notas) { $('notas').textContent = P.notas; $('notas').hidden = false; }
+    if (!(await aplicarCodigo(code, reg, 'ia'))) { P.estado = 'erro'; return false; }
+    P.estado = 'base'; P.codigoBase = P.codigo;
+    pecaCompilou(P);
+    return true;
+  } catch (e) { actModelo.passo('').falhou(erroIA(e)); P.estado = P.compiledCode && P.compiledCode === P.codigo ? 'base' : 'erro'; return false; }
+  finally { actModelo.parado(); atualizarPalco(null); atualizarListaPecas(); agendarSalvarPeca(P, 0); }
+}
+async function tentarDeNovo(P) {
+  if (OC || !sample) return;
+  ocupar(true);
+  try { await gerarBase(P); } finally { ocupar(false); mostrarKit(); }
+}
+// Depois de cada compilação de uma peça: miniatura, lista, kit. Ajuste na base vira a nova base.
+function pecaCompilou(P) {
+  miniatura(P);
+  if (P.estado === 'base') P.codigoBase = P.codigo;
+  atualizarListaPecas(); mostrarKit();
+}
+function miniatura(P) {
+  try {
+    const cv = vistasCanvas(P.pos, P.analise, true);
+    if (!cv) return;
+    const m = document.createElement('canvas'); m.width = m.height = 160;
+    m.getContext('2d').drawImage(cv, 0, 0, 160, 160);
+    P.thumb = m.toDataURL('image/png');
+  } catch (e) { /* sem miniatura */ }
+}
+// Compila uma peça sem mexer na prévia (para abrir um projeto guardado e para o kit).
+async function compilarQuieto(P) {
+  if (P.compiledCode === P.codigo && P.stl) return true;
+  if (!P.codigo) return false;
+  const code = P.codigo, r = await compilar(code);
+  if (!r.ok) return false;
+  if (P.codigo !== code) return false;
+  P.stl = r.stl; P.pos = lerSTL(r.stl); P.analise = analisar(P.pos); P.compiledCode = code;
+  miniatura(P);
+  return true;
+}
+function abrirPeca(P) {
+  if (OC || !P || S === P) return;
+  S = P; PJ.aberta = P.id;
+  mostrarBancada(); atualizarListaPecas();
+  if (P.esboco && !P.esbocoPNG) svgParaPNG(P.esboco).then((b) => { P.esbocoPNG = b; });
+  if (P.codigo && !(P.pos && P.compiledCode === P.codigo)) compilarEMostrar(P.codigo, { forcar: true });
+  if (window.innerWidth < 900) $('view').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  agendarSalvarProjeto();
+}
+const ESTADO_TXT = { fila: 'na fila', gerando: 'gerando', base: 'base', acabando: 'acabamento', acabada: 'acabada', erro: 'sem modelo' };
+function atualizarListaPecas() {
+  if (!PJ) return;
+  const ul = $('lista-pecas'); ul.innerHTML = '';
+  PJ.pecas.forEach((P) => {
+    const li = el('li', 'peca' + (S === P ? ' aberta' : ''));
+    const mini = el('div', 'mini');
+    if (P.thumb) { const im = el('img'); im.src = P.thumb; im.alt = ''; mini.append(im); }
+    else if (P.estado === 'gerando' || P.estado === 'fila') { const d = el('span', 'dot'); mini.classList.add(P.estado === 'gerando' ? 'run' : 'x'); mini.append(d); }
+    const info = el('div'); info.append(el('b', null, P.titulo));
+    const est = el('span', 'estado ' + (P.estado === 'gerando' || P.estado === 'acabando' ? 'run' : P.estado), ESTADO_TXT[P.estado] || P.estado);
+    li.append(mini, info, est);
+    const l2 = el('span', 'linha2 num');
+    if (P.analise) { const e = estimar(P.analise); l2.textContent = fmtDim(P.analise.size) + ' · ' + fmtTempo(e.min) + ' · ' + fmt(e.g, 0) + ' g'; }
+    else l2.textContent = P.estado === 'erro' ? 'sem modelo' : P.codigo ? 'compilando…' : '';
+    li.append(l2);
+    const kit = el('label', 'kit'), cb = el('input'); cb.type = 'checkbox'; cb.checked = P.noKit;
+    cb.addEventListener('click', (ev) => ev.stopPropagation());
+    cb.addEventListener('change', () => { P.noKit = cb.checked; mostrarKit(); mostrarAcabamento(); agendarSalvarPeca(P, 0); });
+    kit.append(cb, document.createTextNode('kit'));
+    kit.addEventListener('click', (ev) => ev.stopPropagation());
+    li.append(kit);
+    if (P.estado === 'erro' || P.estado === 'acabada') {
+      const b = el('button', 'linkbtn', P.estado === 'erro' ? 'Tentar de novo' : 'Voltar à base');
+      b.style.gridColumn = '2 / -1';
+      b.disabled = OC || (P.estado === 'erro' && !sample);
+      b.addEventListener('click', (ev) => { ev.stopPropagation(); if (P.estado === 'erro') tentarDeNovo(P); else voltarABase(P); });
+      li.append(b);
+    }
+    li.addEventListener('click', () => abrirPeca(P));
+    ul.append(li);
+  });
+  const nb = PJ.pecas.filter((P) => P.estado === 'base' || P.estado === 'acabada').length;
+  $('pecas-resumo').textContent = PJ.pecas.length ? nb + ' de ' + PJ.pecas.length + ' prontas' : '';
+  mostrarAcabamento();
+}
+async function voltarABase(P) {
+  if (OC || !P.codigoBase) return;
+  P.codigo = P.codigoBase; P.estado = 'base'; P.compiledCode = null;
+  if (S === P) { definirCodigo(P.codigo, P.origem); await compilarEMostrar(P.codigo, { forcar: true }); }
+  else await compilarQuieto(P);
+  atualizarListaPecas(); mostrarKit(); agendarSalvarPeca(P, 0);
+}
+
+/* ---------- Etapa 5: acabamento ---------- */
+function funcionais(code) {
+  const out = {};
+  lerParams(code || '').filter((p) => /funcion/i.test(p.grupo)).forEach((p) => { out[p.nome] = p.valor; });
+  return out;
+}
+function mostrarAcabamento() {
+  if (!PJ) return;
+  const n = PJ.pecas.filter((P) => P.noKit && P.estado === 'base').length, f = PJ.pecas.filter((P) => P.noKit && P.estado === 'acabada').length;
+  $('acab-estilo').textContent = 'Estilo: ' + estiloDe(PJ.estilo).nome + ' (' + estiloDe(PJ.estilo).sub + ')' + (PJ.gravar ? ' · texto “' + PJ.gravar + '”' : '') + '. Para mudar, volte à etapa 2.';
+  $('btn-acabamento').textContent = n ? 'Fazer o acabamento (' + (n === 1 ? '1 peça' : n + ' peças') + ')' : 'Fazer o acabamento';
+  $('acab-resumo').textContent = f ? f + ' acabada(s)' : '';
+  atualizarBotoesIdeias();
+}
+async function fazerAcabamento() {
+  const fila = PJ.pecas.filter((P) => P.noKit && P.estado === 'base');
+  if (!fila.length) return;
+  ocupar(true); actI4.limpar(); actI4.rodando();
+  try {
+    for (let k = 0; k < fila.length; k++) {
+      if (iaCtl.signal.aborted) break;
+      const p = actI4.passo('Acabamento ' + (k + 1) + ' de ' + fila.length + ': ' + fila[k].titulo);
+      const ok = await acabar(fila[k]);
+      if (ok) p.ok('Acabamento ' + (k + 1) + ' de ' + fila.length + ': ' + fila[k].titulo); else p.falhou(fila[k].titulo + ': ficou a base');
+    }
+  } finally {
+    fila.forEach((P) => { if (P.estado === 'acabando') P.estado = 'base'; });
+    ocupar(false); actI4.parado(); atualizarListaPecas(); mostrarKit(); agendarSalvarProjeto(0);
+    $('card-kit').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+async function acabar(P) {
+  S = P; PJ.aberta = P.id;
+  mostrarBancada();
+  if (P.compiledCode !== P.codigo || !P.pos) { const r0 = await compilarEMostrar(P.codigo, { forcar: true }); if (!r0.ok) return false; }
+  const base = P.codigo, trava = funcionais(base);
+  P.estado = 'acabando'; atualizarListaPecas();
+  actModelo.limpar(); actModelo.rodando();
+  const p = actModelo.passo('Acabamento no estilo ' + estiloDe(PJ.estilo).nome.toLowerCase() + '…');
+  try {
+    const reg = { n: 0, ultimo: null };
+    const im = imagensDoProjeto(null);
+    const { text } = await perguntar(promptAcabamento(im.texto), { imagens: im.blobs, ferramentas: ferramentaCompilar(reg, actModelo), act: actModelo });
+    const code = extrairCodigo(text);
+    if (!code) { p.falhou('A resposta não trouxe código; ficou a base.'); await restaurar(P, base); return false; }
+    p.ok('Acabamento escrito');
+    const notas = extrairNotas(text);
+    if (notas) { P.notas = notas; $('notas').textContent = notas; $('notas').hidden = false; }
+    if (!(await aplicarCodigo(code, reg, 'ia'))) { await restaurar(P, base); actModelo.passo('').falhou('O acabamento não compilou; voltei à base.'); return false; }
+    // Trava das medidas funcionais: valor mudado volta ao da base; parâmetro sumido vira aviso.
+    const ps = lerParams(P.codigo), mudou = [], sumiu = [];
+    let novo = P.codigo;
+    Object.keys(trava).forEach((k) => {
+      const q = ps.find((x) => x.nome === k);
+      if (!q) { sumiu.push(k); return; }
+      if (String(q.valor) !== String(trava[k])) { mudou.push(k + ' ' + q.valor + ' → ' + trava[k]); novo = trocarParam(novo, q, trava[k]); }
+    });
+    const pt = actModelo.passo('Conferindo as medidas funcionais…');
+    if (mudou.length) {
+      definirCodigo(novo, P.origem);
+      const r = await compilarEMostrar(novo, { forcar: true });
+      if (!r.ok) { pt.falhou('Com as medidas da base o código não compila; voltei à base.'); await restaurar(P, base); return false; }
+      pt.ok('Voltei ' + mudou.length + ' medida(s) funcional(is) ao valor da base'); pt.itens(mudou);
+    } else if (Object.keys(trava).length) pt.ok('Medidas funcionais iguais às da base (' + Object.keys(trava).length + ')');
+    else pt.ok('A base não tinha o grupo “Medidas funcionais”; a conferência das vistas cuida disso');
+    if (sumiu.length) { const pw = actModelo.passo(''); pw.falhou('Sumiram do grupo “Medidas funcionais”: ' + sumiu.join(', ') + '. Confira as vistas.'); }
+    await conferir(2);
+    P.estado = 'acabada';
+    return true;
+  } catch (e) {
+    actModelo.passo('').falhou(erroIA(e));
+    await restaurar(P, base);
+    return false;
+  } finally { actModelo.parado(); atualizarListaPecas(); agendarSalvarPeca(P, 0); }
+}
+async function restaurar(P, base) {
+  P.estado = 'base';
+  if (P.codigo === base && P.compiledCode === base) return;
+  definirCodigo(base, P.origem);
+  await compilarEMostrar(base, { forcar: true });
+}
+
+/* ---------- Kit ---------- */
+// Estimativa calibrada com o motor do Fatiador e o perfil do Rodrigo (13 peças, de 5 a 260 min:
+// tempo dentro de ±15%, o Benchy 18% abaixo; filamento dentro de ±10%).
+function estimar(a) {
+  const V = Math.abs(a.vol), A = a.area, cam = a.size[2] / 0.2;
+  const casca = Math.min(V, 0.85 * A), dentro = V - casca;
+  return { min: 4.12 * A / 1000 + 0.261 * dentro / 1000 + 0.0654 * cam, g: 1.24e-3 * (casca + 0.18 * dentro) };
+}
+function fmtTempo(min) {
+  const m = Math.max(1, Math.round(min / 5) * 5);
+  return m < 60 ? '≈ ' + m + ' min' : '≈ ' + Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + String(m % 60).padStart(2, '0') : '');
+}
+function pecasDoKit() { return PJ ? PJ.pecas.filter((P) => P.noKit && (P.estado === 'base' || P.estado === 'acabada') && P.codigo) : []; }
+function mostrarKit() {
+  if (!PJ) return;
+  const kit = pecasDoKit(), tab = $('kit-tab'); tab.innerHTML = '';
+  const th = el('thead'), tr = el('tr');
+  [['Peça', ''], ['Medidas (mm)', ''], ['Tempo', 'num'], ['PLA', 'num'], ['', '']].forEach(([t, c]) => tr.append(el('th', c, t)));
+  th.append(tr); tab.append(th);
+  const tb = el('tbody'); let tm = 0, tg = 0;
+  kit.forEach((P) => {
+    const r = el('tr'), e = P.analise ? estimar(P.analise) : null;
+    if (e) { tm += e.min; tg += e.g; }
+    r.append(el('td', null, P.titulo + (P.estado === 'acabada' ? '' : ' (base)')), el('td', 'num', P.analise ? P.analise.size.map((v) => fmt(v, 0)).join(' × ') : '…'),
+      el('td', 'num', e ? fmtTempo(e.min) : '…'), el('td', 'num', e ? fmt(e.g, 0) + ' g' : '…'));
+    const b = el('button', 'btn ghost', 'Baixar'); b.addEventListener('click', () => baixarPeca(P));
+    const td = el('td'); td.append(b); r.append(td); tb.append(r);
+  });
+  tab.append(tb);
+  if (kit.length > 1) { const tf = el('tfoot'), r = el('tr'); r.append(el('td', null, 'Total'), el('td'), el('td', 'num', fmtTempo(tm)), el('td', 'num', fmt(tg, 0) + ' g'), el('td')); tf.append(r); tab.append(tf); }
+  $('kit-resumo').textContent = kit.length ? (kit.length === 1 ? '1 peça' : kit.length + ' peças') : 'vazio';
+  const ul = $('kit-cuidados'); ul.innerHTML = '';
+  cuidadosDoKit(kit).forEach((c) => ul.append(el('li', null, c)));
+  atualizarBotoesIdeias();
+}
+function cuidadosDoKit(kit) {
+  const out = ((PJ.entendimento && PJ.entendimento.restricoes) || []).map((r) => r.texto);
+  kit.forEach((P) => ((P.ideia && P.ideia.riscos) || []).forEach((r) => out.push(P.titulo + ': ' + r)));
+  return out;
+}
+async function garantirSTL(P) {
+  if (P.compiledCode === P.codigo && P.stl) return true;
+  if (S === P) { const r = await compilarEMostrar(P.codigo, { forcar: true }); return r.ok; }
+  return compilarQuieto(P);
+}
+async function baixarPeca(P) {
+  const st = $('kit-status');
+  if (!downloads) { st.textContent = 'Baixar não funciona nesta visualização. Abra o artefato no app do Claude ou em claude.ai.'; return; }
+  st.textContent = 'Preparando ' + P.titulo + '…';
+  if (!(await garantirSTL(P))) { st.textContent = P.titulo + ': o código atual não compila; corrija antes de baixar.'; return; }
+  const base = slug(P.titulo);
+  try {
+    const blob = await zipar([{ nome: base + '.stl', data: new Uint8Array(P.stl) }, { nome: base + '.scad', data: new TextEncoder().encode(P.codigo) }]);
+    await downloads.save({ filename: base + '.zip', data: blob });
+    st.textContent = 'Salvo: ' + base + '.zip.';
+  } catch (e) { st.textContent = erroDownload(e); }
+}
+function erroDownload(e) {
+  const c = e && e.code;
+  return c === 'declined' ? 'Download cancelado.' : c === 'rate_limited' ? 'Já há um download aberto. Tente de novo em instantes.' : 'Não foi possível salvar aqui (' + (c || 'erro') + ').';
+}
+function leiaMe(kit, nomes) {
+  const L = [PJ.titulo || 'Projeto', 'Gerado pelo Modelador V3 SE em ' + new Date().toLocaleDateString('pt-BR') + '.', '', 'Situação:', PJ.situacao, ''];
+  let tm = 0, tg = 0;
+  L.push('Peças (' + kit.length + '):');
+  kit.forEach((P, k) => {
+    const e = estimar(P.analise); tm += e.min; tg += e.g;
+    L.push((k + 1) + '. ' + P.titulo + ' (' + nomes[k] + '.stl)' + (P.estado === 'acabada' ? '' : ' — sem acabamento'));
+    L.push('   ' + fmtDim(P.analise.size) + ' · ' + fmtTempo(e.min) + ' · ' + fmt(e.g, 0) + ' g de PLA');
+    if (P.ideia) { if (P.ideia.problema) L.push('   Para: ' + P.ideia.problema); if (P.ideia.como_usa) L.push('   Uso: ' + P.ideia.como_usa); (P.ideia.riscos || []).forEach((r) => L.push('   Cuidado: ' + r)); }
+    if (P.notas) P.notas.split('\n').forEach((n) => L.push('   Nota: ' + n));
+  });
+  L.push('', 'Total: ' + fmtTempo(tm) + ' de impressão, ' + fmt(tg, 0) + ' g de PLA (estimativas, ±20%; o Fatiador dá o valor certo).');
+  const rs = (PJ.entendimento && PJ.entendimento.restricoes) || [];
+  if (rs.length) { L.push('', 'Cuidados com o PLA nesta situação:'); rs.forEach((r) => L.push('- ' + r.texto)); }
+  if (PJ.evitar.length) { L.push('', 'Parecem boas ideias, mas não valem em PLA aqui:'); PJ.evitar.forEach((x) => L.push('- ' + x.item + (x.porque ? ': ' + x.porque : ''))); }
+  L.push('', 'O Fatiador abre a primeira peça do .zip. Para as outras, extraia o .zip no app Arquivos e abra cada .stl. O .scad de cada peça abre no Modelador (Já tenho o código OpenSCAD).');
+  return L.join('\n') + '\n';
+}
+async function baixarKit() {
+  const st = $('kit-status');
+  if (!downloads) { st.textContent = 'Baixar não funciona nesta visualização. Abra o artefato no app do Claude ou em claude.ai.'; return; }
+  const kit = pecasDoKit();
+  if (!kit.length) return;
+  ocupar(true);
+  try {
+    for (let k = 0; k < kit.length; k++) {
+      st.textContent = 'Compilando ' + (k + 1) + ' de ' + kit.length + '…';
+      if (!(await garantirSTL(kit[k]))) { st.textContent = kit[k].titulo + ': o código atual não compila; corrija antes de baixar o kit.'; return; }
+    }
+    const usados = new Set(), nomes = kit.map((P, k) => { let n = String(k + 1).padStart(2, '0') + '_' + slug(P.titulo); while (usados.has(n)) n += '_'; usados.add(n); return n; });
+    const arqs = [];
+    kit.forEach((P, k) => { arqs.push({ nome: nomes[k] + '.stl', data: new Uint8Array(P.stl) }, { nome: nomes[k] + '.scad', data: new TextEncoder().encode(P.codigo) }); });
+    arqs.push({ nome: 'LEIA-ME.txt', data: new TextEncoder().encode(leiaMe(kit, nomes)) });
+    const base = slug(PJ.titulo || 'kit') + '_kit';
+    st.textContent = 'Preparando ' + base + '.zip…';
+    const blob = await zipar(arqs);
+    await downloads.save({ filename: base + '.zip', data: blob });
+    st.textContent = 'Salvo: ' + base + '.zip (' + kit.length + ' peças).';
+  } catch (e) { st.textContent = erroDownload(e); }
+  finally { ocupar(false); }
+}
+
+function atualizarBotoesIdeias() {
+  $('btn-inicio').disabled = OC; $('brand').disabled = OC;
+  if (!PJ) return;
+  const semIA = !sample, oc = OC;
+  ['btn-analisar', 'btn-gerar-ideias', 'btn-mais-perguntas', 'btn-refazer-todas', 'btn-mais-ideia'].forEach((id) => { $(id).disabled = semIA || oc; });
+  $('btn-novo-proj').disabled = oc;
+  document.querySelectorAll('#i-grade [data-ia]').forEach((b) => { b.disabled = semIA || oc; });
+  const esc = PJ.ideias.filter((i) => i.escolhida), novas = esc.filter((i) => !PJ.pecas.some((P) => P.ideiaId === i.id));
+  $('btn-modelos-base').disabled = oc || !esc.length || (novas.length > 0 && semIA);
+  $('btn-modelos-base').textContent = novas.length ? (novas.length === esc.length ? 'Criar os modelos base' : 'Criar ' + novas.length + ' modelo(s) novo(s)') : esc.length ? 'Ver os modelos' : 'Criar os modelos base';
+  $('btn-acabamento').disabled = oc || semIA || !PJ.pecas.some((P) => P.noKit && P.estado === 'base');
+  $('btn-baixar-kit').disabled = oc || !pecasDoKit().length;
+  document.querySelectorAll('#lista-pecas .linkbtn').forEach((b) => { b.disabled = oc; });
+}
+
+/* ---------- Projetos guardados na conta ---------- */
+const contaI = { col: null, docs: [], timer: null, salvando: false, depois: false, ultimo: '', pecaTimers: new Map(), pecaUltimo: new Map() };
+function iniciarContaIdeias(db, uid) {
+  try { contaI.col = db.collection('data/users/' + uid + '/ideias/projetos'); } catch (e) { contaI.col = null; return; }
+  contaI.col.orderBy('atualizado', 'desc').limit(30).onSnapshot((snap) => { contaI.docs = snap.docs; mostrarRecentes(); }, () => { /* sem lista */ });
+}
+function colPecas(projId) { return conta.db.collection('data/users/' + conta.uid + '/ideias/projetos/' + projId + '/pecas'); }
+function agendarSalvarProjeto(ms = 1500) { if (!contaI.col || !PJ || !PJ.entendimento) return; clearTimeout(contaI.timer); contaI.timer = setTimeout(salvarProjeto, ms); }
+function docProjeto() {
+  const ideias = PJ.ideias.map((i) => { const o = Object.assign({}, i); delete o._esbocoP; delete o.esbocoErro; delete o.esbocoFalhou; return o; });
+  const d = { titulo: PJ.titulo, situacao: PJ.situacao, entendimento: PJ.entendimento, rodadas: PJ.rodadas, extra: PJ.extra, estilo: PJ.estilo, gravar: PJ.gravar,
+    ideias, evitar: PJ.evitar, etapa: PJ.etapa, seq: PJ.seq, aberta: PJ.aberta, npecas: PJ.pecas.length, criado: PJ.criado };
+  if (JSON.stringify(d).length > 230000) d.ideias.forEach((i) => { if (!i.escolhida) i.svg = null; });
+  return d;
+}
+async function salvarProjeto() {
+  if (!contaI.col || !PJ || !PJ.entendimento) return;
+  const doc = docProjeto(), chave = JSON.stringify(doc);
+  if (chave === contaI.ultimo) return;
+  if (contaI.salvando) { contaI.depois = true; return; }
+  contaI.salvando = true;
+  try { await contaI.col.doc(PJ.id).set(Object.assign({ atualizado: Date.now() }, doc)); contaI.ultimo = chave; }
+  catch (e) { if (e && e.code === 'quota_exceeded') $('kit-status').textContent = 'A conta encheu: apague projetos antigos na tela de início.'; }
+  finally { contaI.salvando = false; if (contaI.depois) { contaI.depois = false; salvarProjeto(); } }
+}
+function agendarSalvarPeca(P, ms = 2500) {
+  if (!contaI.col || !P || P.tipo !== 'peca') return;
+  clearTimeout(contaI.pecaTimers.get(P.id));
+  contaI.pecaTimers.set(P.id, setTimeout(() => salvarPeca(P), ms));
+  agendarSalvarProjeto();
+}
+async function salvarPeca(P) {
+  if (!contaI.col || !P.codigo || !PJ || !PJ.pecas.includes(P)) return;
+  const doc = { ideiaId: P.ideiaId, ideia: P.ideia, titulo: P.titulo, esboco: P.esboco, spec: P.spec, codigo: P.codigo, codigoBase: P.codigoBase || '', notas: P.notas || '',
+    ajustes: P.ajustes, editadoAMao: !!P.editadoAMao, estado: P.estado === 'gerando' || P.estado === 'acabando' || P.estado === 'fila' ? 'base' : P.estado, noKit: P.noKit, criado: P.criado };
+  const chave = JSON.stringify(doc);
+  if (chave === contaI.pecaUltimo.get(P.id)) return;
+  if (chave.length > 240000) return;
+  try { await colPecas(PJ.id).doc(P.id).set(Object.assign({ atualizado: Date.now() }, doc)); contaI.pecaUltimo.set(P.id, chave); }
+  catch (e) { /* tenta na próxima mudança */ }
+}
+const ETAPA_TXT = ['', 'situação', 'dúvidas', 'ideias', 'modelos', 'acabamento'];
+function mostrarRecentes() {
+  const ul = $('lista-projetos'); ul.innerHTML = '';
+  $('recentes').hidden = !contaI.docs.length;
+  contaI.docs.forEach((d) => {
+    const x = d.data() || {}, li = el('li'), info = el('div');
+    const quando = x.atualizado ? new Date(x.atualizado).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+    info.append(el('b', null, String(x.titulo || 'Projeto')), el('span', null, quando + ' · ' + (ETAPA_TXT[x.etapa] || '') + (x.npecas ? ' · ' + x.npecas + ' peça(s)' : '')));
+    const abrir = el('button', 'btn', 'Abrir'), apagar = el('button', 'btn ghost', 'Apagar');
+    abrir.addEventListener('click', () => abrirProjeto(d.id, x));
+    apagar.addEventListener('click', async () => {
+      if (!apagar.classList.contains('confirma')) { apagar.classList.add('confirma'); apagar.textContent = 'Confirmar'; setTimeout(() => { apagar.classList.remove('confirma'); apagar.textContent = 'Apagar'; }, 4000); return; }
+      apagar.disabled = true;
+      try {
+        const ps = await colPecas(d.id).get();
+        for (const p of ps.docs) await colPecas(d.id).doc(p.id).delete();
+        await contaI.col.doc(d.id).delete();
+        if (PJ && PJ.id === d.id) { PJ = null; S = SM; }
+      } catch (e) { apagar.disabled = false; apagar.textContent = 'Falhou'; }
+    });
+    li.append(info, abrir, apagar); ul.append(li);
+  });
+}
+async function abrirProjeto(id, x) {
+  if (OC) return;
+  pararEsbocos();
+  const pj = novoPJ();
+  Object.assign(pj, { id, criado: x.criado || Date.now(), titulo: x.titulo || '', situacao: x.situacao || '', entendimento: x.entendimento || null,
+    rodadas: Array.isArray(x.rodadas) ? x.rodadas.map((r) => ({ perguntas: normPerguntas(r.perguntas), respostas: Array.isArray(r.respostas) ? r.respostas.map((a) => txt(a, 300)) : [] })) : [],
+    extra: x.extra || '', estilo: x.estilo || 'ia', gravar: x.gravar || '', evitar: Array.isArray(x.evitar) ? x.evitar : [], etapa: x.etapa || 1, seq: x.seq || 0, aberta: x.aberta || null });
+  PJ = pj;
+  PJ.ideias = (Array.isArray(x.ideias) ? x.ideias : []).map((i) => Object.assign(normIdeiaGuardada(i), { svg: typeof i.svg === 'string' ? limparSVG(i.svg) : null, escolhida: !!i.escolhida }));
+  S = VAZIA;
+  try {
+    const ps = await colPecas(id).get();
+    PJ.pecas = ps.docs.map((d) => {
+      const y = d.data() || {}, i = PJ.ideias.find((k) => k.id === y.ideiaId);
+      const P = novaPeca(i || normIdeiaGuardada(y.ideia || { titulo: y.titulo }));
+      Object.assign(P, { id: d.id, ideiaId: y.ideiaId, ideia: y.ideia || P.ideia, titulo: y.titulo || P.titulo, esboco: typeof y.esboco === 'string' ? limparSVG(y.esboco) : null, spec: y.spec || P.spec,
+        codigo: String(y.codigo || ''), codigoBase: String(y.codigoBase || ''), notas: y.notas || '', ajustes: y.ajustes || {}, editadoAMao: !!y.editadoAMao,
+        estado: y.estado === 'acabada' || y.estado === 'erro' ? y.estado : y.codigo ? 'base' : 'erro', noKit: y.noKit !== false, criado: y.criado || Date.now() });
+      contaI.pecaUltimo.set(P.id, null);
+      return P;
+    }).sort((a, b) => a.criado - b.criado);
+  } catch (e) { PJ.pecas = []; }
+  contaI.ultimo = '';
+  // A peça aberta e a bancada: começa sem peça e compila as miniaturas em segundo plano.
+  const aberta = PJ.aberta; PJ.aberta = null;
+  if (modo === 'ideias') { S = VAZIA; mostrarBancada(); mostrarProjeto(); } else irPara('ideias');
+  (async () => {
+    for (const P of PJ.pecas) { if (PJ.pecas.includes(P) && S !== P) { await compilarQuieto(P); atualizarListaPecas(); mostrarKit(); } }
+    const P = pecaPorId(aberta); if (P && PJ.etapa >= 4 && S === VAZIA) abrirPeca(P);
+  })();
+}
+function normIdeiaGuardada(i) {
+  const v = Object.assign({}, i || {}); const seq = PJ.seq; const n = normIdeia(v); PJ.seq = seq;
+  n.id = v.id || n.id; return n;
 }
 
 /* ================= Ligações da interface ================= */
@@ -1845,16 +3111,43 @@ $('btn-compilar').addEventListener('click', async () => {
   if (r.ok) $('erro-comp').hidden = true;
 });
 $('btn-baixar').addEventListener('click', baixar);
-$('titulo').addEventListener('change', () => { definirTitulo($('titulo').value); agendarSalvar(); });
+$('titulo').addEventListener('change', () => { definirTitulo($('titulo').value); agendarSalvar(); if (S.tipo === 'peca') { atualizarListaPecas(); mostrarKit(); } });
 $('btn-guardados').addEventListener('click', () => { const c = $('card-guardados'); c.hidden = !c.hidden; if (!c.hidden) c.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
 $('btn-balanco').addEventListener('click', () => { V.overOn = !V.overOn; $('btn-balanco').setAttribute('aria-pressed', String(V.overOn)); recolorir(); });
 $('btn-centro').addEventListener('click', enquadrar);
+// Tela de entrada e modo Ideias
+$('ir-ideias').addEventListener('click', () => irPara('ideias'));
+$('ir-modelar').addEventListener('click', () => irPara('modelador'));
+$('btn-inicio').addEventListener('click', () => irPara('inicio'));
+$('brand').addEventListener('click', () => irPara('inicio'));
+document.querySelectorAll('#etapas button').forEach((b) => b.addEventListener('click', () => irEtapa(+b.dataset.etapa)));
+$('situacao').addEventListener('input', () => { local.set('ideias.situacao', $('situacao').value); if (PJ) PJ.situacao = $('situacao').value.trim(); });
+$('in-i-fotos').addEventListener('change', (e) => { adicionarFotosIdeias(e.target.files); e.target.value = ''; });
+$('btn-analisar').addEventListener('click', analisarSituacao);
+$('btn-novo-proj').addEventListener('click', novoProjetoIdeias);
+$('btn-mais-perguntas').addEventListener('click', maisPerguntas);
+$('btn-gerar-ideias').addEventListener('click', gerarIdeias);
+$('i-extra').addEventListener('change', () => { lerRespostasDaTela(); agendarSalvarProjeto(); });
+$('i-gravar').addEventListener('change', () => { lerRespostasDaTela(); mostrarAcabamento(); agendarSalvarProjeto(); });
+$('btn-refazer-todas').addEventListener('click', () => {
+  const nao = PJ.ideias.filter((i) => !i.escolhida);
+  pedirIdeias({ modo: 'refazer', n: Math.max(3, Math.min(6, nao.length)), descartadas: nao, texto: $('i-iterar').value.trim() }, actI3).then((ok) => { if (ok) $('i-iterar').value = ''; });
+});
+$('btn-mais-ideia').addEventListener('click', () => {
+  pedirIdeias({ modo: 'mais', n: 1, descartadas: [], texto: $('i-iterar').value.trim() }, actI3).then((ok) => { if (ok) $('i-iterar').value = ''; });
+});
+$('btn-modelos-base').addEventListener('click', criarModelosBase);
+$('btn-acabamento').addEventListener('click', fazerAcabamento);
+$('btn-baixar-kit').addEventListener('click', baixarKit);
+const iTierSalvo = local.get('ideias.tier'); if (iTierSalvo) $('i-tier').value = iTierSalvo;
+$('i-tier').addEventListener('change', () => local.set('ideias.tier', $('i-tier').value));
 $('pedido').value = local.get('modelador.pedido') || '';
 $('pedido').addEventListener('input', () => local.set('modelador.pedido', $('pedido').value));
 const tierSalvo = local.get('modelador.tier'); if (tierSalvo) $('tier').value = tierSalvo;
 $('tier').addEventListener('change', () => local.set('modelador.tier', $('tier').value));
 
 /* ================= Início ================= */
+guardarCasas();
 definirTitulo('');
 atualizarBotoes();
 init3D();

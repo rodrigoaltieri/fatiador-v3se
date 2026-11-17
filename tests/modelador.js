@@ -85,6 +85,8 @@ async function abrir(browser, viewport, extra) {
   await page.addInitScript((cdn) => { window.__CDN_MODELADOR = cdn; }, BASE + '/tests/out/cdn-npm/');
   if (extra) await page.addInitScript(extra);
   await page.goto(BASE + '/modelador/index.html');
+  // A página abre na tela de entrada; o modo Modelar fica atrás de um dos dois botões grandes.
+  await page.click('#ir-modelar');
   return { page, erros };
 }
 async function espera(page, fn, arg, ms, rotulo) {
