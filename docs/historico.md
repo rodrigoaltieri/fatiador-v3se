@@ -68,3 +68,10 @@
 - OrcaSlicer 2.5.1 rodado pela linha de comando (pacote do Flathub) com os perfis oficiais da V3 SE e os valores calibrados; cubo de 20 mm, cilindro Ø20 e 3DBenchy.
 - Antes de mexer no motor: `npm test` com 21 "OK sem erros" e `tests/pages.py` passando. Depois: 23 (os 21 mais cubo e cilindro comparados com o Orca) e `tests/pages.py` passando.
 - `three-slicer` 0.4.3 avaliado em Node: fatia o Benchy em 1,9 s, mas não reproduz o Orca (parede externa primeiro, 0,46 mm, 20% de preenchimento com o perfil de 15%, borda de 5 mm com o perfil sem borda). Descartado como substituto.
+
+## Modelador V3 SE (17/11/2026)
+
+- Artefato novo (`modelador/index.html`) que transforma descrição, esboço ou imagem em STL. A IA escreve OpenSCAD em vez de gerar malha: medidas exatas, sólido fechado e parâmetros ajustáveis. Antes de modelar, mostra o que entendeu para o Rodrigo corrigir; depois compila, mede e confere as vistas contra o pedido.
+- Primeira tentativa usava o OpenSCAD 2026.07 com BOSL2 publicados junto do artefato. Trocado pelo pacote `openscad-wasm@0.0.4` (OpenSCAD 2025.07) carregado do jsDelivr, porque Claude não publica arquivos que não consegue ler inteiros (o `.wasm` e os 2 MB da BOSL2). Perde a BOSL2; a IA escreve os auxiliares em OpenSCAD puro.
+- O Fatiador passou a abrir o `.zip` que o Modelador salva.
+- Primeira revisão do Rodrigo (17/11): o modelo de exemplo carregado na abertura confundia (os parâmetros dele ficavam na tela durante um pedido novo) → a página abre vazia e cada pedido novo limpa o anterior. A etapa "O que a IA entendeu" tinha informação e campos demais → virou "Confere o esboço": esboço técnico em SVG feito pela IA, resumo curto, medidas principais só para ler, uma pergunta no máximo e um campo único de correção.

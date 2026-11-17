@@ -206,7 +206,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); height: 28px; }
     <div class="pickhint" id="pickhint">Toque na face que deve ficar apoiada na mesa</div>
     <div class="empty" id="empty">
       <div class="empty-card">
-        <h2>Abra um STL, 3MF ou OBJ para fatiar</h2>
+        <h2>Abra um STL, 3MF, OBJ ou o .zip do Modelador para fatiar</h2>
         <p>O perfil já está ajustado para a sua Ender-3 V3 SE com PLA. O G-code sai pronto para o cartão microSD.</p>
         <div class="row">
           <label class="btn primary" for="file">Escolher arquivo</label>
@@ -914,12 +914,20 @@ async function openFile(file) {
   if (!file) return;
   setStatus('Lendo ' + file.name + '…');
   try {
-    var buf = await file.arrayBuffer(), ext = (file.name.split('.').pop() || '').toLowerCase(), tris;
+    var buf = await file.arrayBuffer(), nome = file.name, ext = (nome.split('.').pop() || '').toLowerCase(), tris;
     stlCut = null;
+    if (ext === 'zip') { // o Modelador V3 SE salva .zip com o .stl dentro (o app do Claude não salva .stl)
+      var zfiles = await unzip(buf), dentro = Object.keys(zfiles).filter(function (n) { return /\.(stl|3mf|obj)$/i.test(n) && !/(^|\/)(__MACOSX|\.)/.test(n); });
+      dentro.sort(function (a, b) { return /\.stl$/i.test(b) - /\.stl$/i.test(a); });
+      if (!dentro.length) throw new Error('o .zip não tem STL, 3MF nem OBJ');
+      var dados = await inflate(zfiles[dentro[0]]);
+      buf = dados.buffer.slice(dados.byteOffset, dados.byteOffset + dados.byteLength);
+      nome = dentro[0].split('/').pop(); ext = (nome.split('.').pop() || '').toLowerCase();
+    }
     if (ext === '3mf') tris = await parse3MF(buf);
     else if (ext === 'obj') tris = parseOBJ(new TextDecoder().decode(buf));
     else tris = parseSTL(buf);
-    loadModel(file.name.replace(/\.[^.]+$/, ''), tris, null, meshWarning(tris));
+    loadModel(nome.replace(/\.[^.]+$/, ''), tris, null, meshWarning(tris));
   } catch (err) {
     setStatus('Não consegui ler esse arquivo (' + (err.message || err) + '). Tente exportar como STL.');
   }
